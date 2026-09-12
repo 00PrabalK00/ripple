@@ -1,0 +1,14 @@
+__pycache__/
+.pytest_cache/
+.venv/
+*.sqlite3*
+build/
+install/
+log/
+.env
+node_modules/
+smr300l_gazebo_ros2control/
+*.generated.yaml
+*.docx
+.agents/
+.codex/

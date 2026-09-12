@@ -1,0 +1,9 @@
+fastapi==0.141.1
+uvicorn==0.52.4
+openai==3.13.0
+pydantic==2.13.5
+pyrealsense2==2.58.4.10922
+python-dotenv>=0.19.2
+numpy>=1.21
+Pillow>=9
+PyYAML>=6

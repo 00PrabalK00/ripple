@@ -1,0 +1,11 @@
+--- a/src/next_ros2ws_core/next_ros2ws_core/keepout_zone_publisher.py
++++ b/src/next_ros2ws_core/next_ros2ws_core/keepout_zone_publisher.py
+@@ -173,7 +173,7 @@
+             s = CostmapFilterInfo()
+             s.header.stamp = now
+             s.header.frame_id = map_frame
+-            s.type = 1
++            s.type = 2
+             s.filter_mask_topic = "/speed_filter_mask"
+             s.base = 0.0
+             s.multiplier = self.max_speed_mps / 100.0

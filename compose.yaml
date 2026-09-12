@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: ripple-postgres
+    environment:
+      POSTGRES_USER: ripple
+      POSTGRES_DB: ripple
+      POSTGRES_PASSWORD: ${RIPPLE_DB_PASSWORD:?Set RIPPLE_DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - ripple_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ripple -d ripple"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+volumes:
+  ripple_pgdata:
