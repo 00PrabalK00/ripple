@@ -41,3 +41,22 @@ kept separately, including the failed unbuffered boundary test.
 Current scope: indefinite rectangular keepouts and removal by explicit zone ID.
 Time-limited requests ask for clarification; slow zones, conversational removal,
 constraint updates during motion and autonomous recovery remain pending.
+
+
+## Visual alignment regression checks
+
+The map now draws the published ROS mask (red), separately from the focused draft
+(amber) and current selection (cyan). Applying does not recompute draft geometry.
+The canvas preserves its intrinsic aspect ratio at narrow widths so pointer
+coordinates cannot include letterboxing. Only the focused draft is highlighted;
+old drafts and unrelated test restrictions no longer appear as one implied change.
+
+`node scripts/test_map_alignment.mjs` performs real browser drags, preview/apply,
+observed-mask pixel comparison and removal for four corners, including 320-pixel
+mobile width. It refuses to run over existing active restrictions. Results:
+`evidence/map-ui-alignment.json`; screenshots stay local in
+`recordings/alignment-tests/`. A one-cell raster boundary tolerance is explicit.
+
+The moving test around a buffered restriction moved but ended ABORTED. This is
+not an arrival pass. See `evidence/navigation-keepout-aborted.json`. Automatic
+recovery scaffolding is disabled by default until its live workflow is validated.

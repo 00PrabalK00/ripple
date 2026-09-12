@@ -9,7 +9,9 @@
 - [x] Natural-language map image interpretation and drawn-region previews.
 - [x] Durable rectangular keepouts with observed mask/costmap and blocked-destination/restored-path checks.
 - [x] Verify buffered planner detour: SUCCEEDED with at least 0.667 m sampled center clearance.
-- [ ] Verify moving navigation around restrictions.
+- [ ] Verify moving navigation around restrictions (latest attempt moved, then ABORTED; not passed).
+- [x] Check preview-to-published-mask alignment through four browser drags, including mobile width.
+- [x] Display actual ROS mask separately from focused drafts.
 - [ ] Slow zones and scheduled expiry.
 - [ ] Autonomous evidence-based diagnosis with bounded recovery and escalation.
 - [ ] Human-assisted restriction, reroute and verified mission continuation.

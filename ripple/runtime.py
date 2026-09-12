@@ -14,6 +14,8 @@ from rclpy.parameter import Parameter
 from . import agent
 from .contracts import Target
 from .robot_adapter import Nav2Adapter
+from .incidents import Incidents, diagnosis
+from .map_projection import mask_png
 from .store import Store
 from .site import SiteMemory, rectangle, buffered_bounds
 from PIL import Image
@@ -79,7 +81,10 @@ class Runtime:
         self.camera = None
         self.rosscope_observation = None
         self.observer = RosScopeObserver(self.events, ROOT)
-        self.incidents = [r for r in self.store.receipts() if r["kind"] == "incident_opened"][-50:]
+        self.incidents = Incidents(self.store)
+        self.recovery_deadlines = {}
+        self.recovery_enabled = os.environ.get('RIPPLE_AUTOMATIC_RECOVERY') == '1'
+        self.recent_logs = []
         self.ready.set()
         try:
             while not self.stopping.is_set():
@@ -93,6 +98,7 @@ class Runtime:
                     except Exception as error:
                         future.set_exception(error)
                 self.s.tick()
+                self.recovery_tick()
                 if self.pending_site and self.pending_site.done():
                     future, self.pending_site = self.pending_site, None
                     try:
@@ -113,7 +119,9 @@ class Runtime:
                         self.vision_description = str(error)
                     self.pending_vision = None
                 if (not self.s.paused and not self.s.interpreting and self.s.goal_id is None
-                        and not self.actions_active and self.site_ready()):
+                        and not self.actions_active and self.site_ready()
+                        and not any(i['state'] in ('DIAGNOSING','CLEARING COSTMAPS','REPLANNING')
+                                    for i in self.incidents.items.values())):
                     for p in self.s.proposals.values():
                         if p.id not in self.attempted and p.state in ('APPROVED', 'EXPIRED') and p.operator:
                             self.attempted.add(p.id)
@@ -133,7 +141,22 @@ class Runtime:
 
     def robot_event(self, event):
         d = event.data
-        if event.kind == 'rosscope':
+        if event.kind == 'tf_health':
+            self.s.observe('robot.tf_healthy', d['healthy'], 'map to base_link TF', 2, d['received_at'])
+        elif event.kind == 'navigation_log':
+            self.recent_logs.append(d)
+            self.recent_logs = self.recent_logs[-30:]
+        elif event.kind == 'costmaps_cleared':
+            item = self.incidents.items.get(event.goal_id)
+            if item and item['state'] == 'CLEARING COSTMAPS':
+                if d['success']:
+                    self.incidents.update(item['id'], state='REPLANNING', question='Costmaps cleared; checking the route. Motion remains held.')
+                    self.recovery_deadlines[item['id']] = time.monotonic()+30
+                    self.adapter.probe(item['id'], item['target'])
+                else: self.recovery_escalate(item['id'], 'Costmap service failed. Inspect navigation before retrying.')
+        elif event.kind == 'recovery_plan':
+            self.finish_recovery_plan(event.goal_id, d)
+        elif event.kind == 'rosscope':
             self.rosscope_observation = d
         elif event.kind == 'camera':
             old = self.s.facts['camera.B'].value
@@ -168,10 +191,16 @@ class Runtime:
         elif event.kind == 'accepted':
             self.s.accepted(event.goal_id)
         elif event.kind == 'terminal':
+            if event.goal_id != self.s.goal_id: return
+            if d['outcome'] == 'SUCCEEDED' and self.s.active_proposal:
+                for item in list(self.incidents.items.values()):
+                    if item.get('retry_proposal_id') == self.s.active_proposal.id:
+                        self.incidents.update(item['id'], state='VERIFYING STOP', completed_goal=event.goal_id)
             self.s.terminal(event.goal_id, d['outcome'], d['final_pose'])
             if d['outcome'] == 'ABORTED':
                 self.open_incident(event.goal_id, 'Nav2 aborted navigation')
         elif event.kind == 'rejected':
+            if event.goal_id != self.s.goal_id: return
             self.s.terminal(event.goal_id, 'REJECTED')
             self.open_incident(event.goal_id, 'Nav2 rejected navigation')
         elif event.kind == 'uncertain':
@@ -211,16 +240,81 @@ class Runtime:
         return all(self.site_verification(z).startswith('MASK AND COSTMAP OBSERVED')
                    for z in self.site.zones.values() if z['state'] == 'APPLIED')
 
+    def recovery_evidence(self):
+        now = time.monotonic()
+        def valid(key):
+            f = self.s.facts.get(key)
+            return bool(f and f.value is True and f.fresh(now))
+        return dict(localization=valid('robot.localized'), tf=valid('robot.tf_healthy'),
+                    safety=valid('robot.safety_clear'), odometry=valid('robot.odom_fresh'),
+                    rosscope=rosscope_snapshot(self.rosscope_observation, now),
+                    recent_logs=self.recent_logs[-15:], pose=self.adapter.pose)
+
     def open_incident(self, goal_id, symptom):
-        from uuid import uuid4
-        incident = dict(id=str(uuid4()), goal_id=goal_id, symptom=symptom,
-            state='NEEDS INVESTIGATION', pose=self.adapter.pose,
-            observation=rosscope_snapshot(self.rosscope_observation, time.monotonic()),
-            question='Navigation failed. Is there a physical obstruction or a new site restriction?',
-            recovery_attempts=0)
-        self.store.append('incident_opened', **incident)
-        self.incidents.append(incident)
-        self.message = incident['question']
+        proposal = self.s.active_proposal
+        for item in list(self.incidents.items.values()):
+            if proposal and item.get('retry_proposal_id') == proposal.id:
+                self.recovery_escalate(item['id'], 'The approved retry failed. No more automatic recovery; confirm site conditions.')
+                return
+        item = self.incidents.open(goal_id, symptom,
+            asdict(proposal.target) if proposal else None, self.recovery_evidence())
+        item = self.incidents.update(item['id'], mission_revision=self.s.revision)
+        self.recovery_deadlines[item['id']] = time.monotonic()+20
+        self.s.paused = True
+        self.message = 'Navigation failed. Checking ROS evidence and waiting for confirmed stop.'
+
+    def recovery_escalate(self, incident_id, question):
+        self.incidents.update(incident_id, state='NEEDS HUMAN', question=question)
+        self.message = question
+        self.s.paused = True
+
+    def recovery_tick(self):
+        now = time.monotonic()
+        for item in list(self.incidents.items.values()):
+            iid = item['id']; state = item['state']
+            stationary = (self.s.goal_id is None and self.actions_active == []
+                          and self.stopped_since is not None and now-self.stopped_since > 1)
+            if state == 'VERIFYING STOP' and stationary and self.s.state == 'ARRIVED':
+                self.incidents.update(iid, state='RESOLVED', question='Nav2 SUCCEEDED and fresh stopped odometry verified.')
+            elif state == 'DIAGNOSING':
+                if not stationary:
+                    if now > self.recovery_deadlines.get(iid, 0):
+                        self.recovery_escalate(iid, 'Could not confirm a stopped robot. Inspect its state.')
+                    continue
+                if not self.recovery_enabled:
+                    self.recovery_escalate(iid, 'Automatic recovery is disabled pending live validation. Inspect the incident evidence and site.')
+                    continue
+                evidence = self.recovery_evidence()
+                reasons = diagnosis(evidence)
+                if reasons or not item.get('target') or not self.site_ready():
+                    self.incidents.update(iid, evidence=evidence)
+                    self.recovery_escalate(iid, 'Recovery held: '+('; '.join(reasons) or 'target/site constraint evidence unavailable')+'. Please inspect the site.')
+                else:
+                    self.incidents.update(iid, evidence=evidence)
+                    self.incidents.claim_clear(iid)
+                    self.recovery_deadlines[iid] = now+15
+                    self.adapter.clear_costmaps(iid)
+            elif state in ('CLEARING COSTMAPS','REPLANNING') and now > self.recovery_deadlines.get(iid, 0):
+                self.recovery_escalate(iid, 'Recovery response timed out; outcome is uncertain. Inspect before retrying.')
+
+    def finish_recovery_plan(self, incident_id, result):
+        item = self.incidents.items.get(incident_id)
+        if not item or item['state'] != 'REPLANNING': return
+        if not result['success']:
+            self.recovery_escalate(incident_id, 'The route is still unavailable after one costmap clear. Is there an obstruction or a closed aisle?')
+            return
+        target = Target(**item['target'])
+        available = self.s.facts.get(f'station.{target.station}.available')
+        if (self.s.goal_id or self.s.reconciliation_required or self.s.interpreting
+                or item.get('mission_revision') != self.s.revision
+                or not available or available.value is not True or not available.fresh(time.monotonic())
+                or target != self.targets().get(target.station) or not self.site_ready()):
+            self.recovery_escalate(incident_id, 'Route found, but mission context changed. Review a fresh instruction.')
+            return
+        proposal = self.s.propose(target, 'Recovery route found after one costmap clear. Review this fresh retry destination.')
+        self.incidents.update(incident_id, state='AWAITING RETRY APPROVAL', retry_proposal_id=proposal.id,
+            question='A route is available. Approve the new exact destination and release dispatch pause to retry.')
+        self.message = self.incidents.items[incident_id]['question']
 
     def snapshot(self):
         now = time.monotonic()
@@ -231,7 +325,9 @@ class Runtime:
             camera={'state': 'DISABLED', 'fresh': False, 'calibrated': False},
             operating_mode='simulation',
             rosscope=rosscope_snapshot(self.rosscope_observation, now),
-            incidents=self.incidents[-50:],
+            incidents=list(self.incidents.items.values())[-50:],
+            recent_logs=self.recent_logs,
+            automatic_recovery=self.recovery_enabled,
             site_zones=[dict(z, verification=self.site_verification(z)) for z in self.site.zones.values()],
             site_interpreting=bool(self.pending_site),
             vision_description=self.vision_description,
@@ -246,7 +342,21 @@ class Runtime:
     def command(self, name, data):
         if name == 'state':
             return self.snapshot()
-        if name == 'site_preview':
+        if name == 'keepout_image':
+            sample = self.adapter.keepout_mask
+            if not sample or time.monotonic()-sample[1] > 5:
+                raise ValueError('Published keepout mask is unavailable or stale')
+            msg = sample[0]; i = msg.info; p = i.origin.position; q = i.origin.orientation
+            yaw = math.atan2(2*(q.w*q.z+q.x*q.y), 1-2*(q.y*q.y+q.z*q.z))
+            meta = yaml.safe_load((ROOT / 'smr300l_gazebo_ros2control/maps/smr_map.yaml').read_text())
+            with Image.open(ROOT / 'smr300l_gazebo_ros2control/maps/smr_map.pgm') as im:
+                return mask_png(msg.data,i.width,i.height,i.resolution,[p.x,p.y,yaw],msg.header.frame_id,meta,im.size)
+        if name == 'incident_context':
+            if not data['text'].strip(): raise ValueError('Describe the physical site condition')
+            self.incidents.update(data['incident_id'], human_context=data['text'],
+                state='NEEDS HUMAN', question='Site context recorded. Draw or describe a keepout, then request a fresh mission.')
+            self.message = 'Recorded engineer context; no site geometry or motion inferred without review.'
+        elif name == 'site_preview':
             if data.get('bounds'):
                 self.site_preview(data['bounds'], data['text'], data['operator'])
             else:

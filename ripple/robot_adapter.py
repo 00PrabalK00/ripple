@@ -5,7 +5,11 @@ from uuid import UUID
 
 from action_msgs.msg import GoalStatus, GoalStatusArray
 from geometry_msgs.msg import PoseWithCovarianceStamped
-from nav2_msgs.action import NavigateToPose
+from nav2_msgs.action import NavigateToPose, ComputePathToPose
+from nav2_msgs.srv import ClearEntireCostmap
+from rcl_interfaces.msg import Log
+from tf2_ros import Buffer, TransformListener
+from rclpy.time import Time
 from nav_msgs.msg import Odometry, OccupancyGrid
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -22,6 +26,13 @@ class Nav2Adapter(Node):
     def __init__(self, events):
         super().__init__('ripple_robot_adapter')
         self.events = events
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+        self.create_timer(.5, self._check_tf)
+        self.create_subscription(Log, '/rosout', self._log, 100)
+        self.planner = ActionClient(self, ComputePathToPose, '/compute_path_to_pose')
+        self.clear_clients = [self.create_client(ClearEntireCostmap, path) for path in
+            ('/global_costmap/clear_entirely_global_costmap', '/local_costmap/clear_entirely_local_costmap')]
         self.client = ActionClient(self, NavigateToPose, '/navigate_to_pose')
         self.handles = {}
         self.pose = None
@@ -47,6 +58,56 @@ class Nav2Adapter(Node):
         self.create_timer(0.25, self._poll_safety)
         self.localization_update = self.create_client(Empty, '/request_nomotion_update')
         self.create_timer(1.0, self._refresh_localization)
+
+    def _check_tf(self):
+        try:
+            transform = self.tf_buffer.lookup_transform('map', 'base_link', Time())
+            age = (self.get_clock().now().nanoseconds - Time.from_msg(transform.header.stamp).nanoseconds)/1e9
+            self.emit('tf_health', healthy=0 <= age < 1, age_seconds=age)
+        except Exception:
+            self.emit('tf_health', healthy=False, age_seconds=None)
+
+    def _log(self, msg):
+        if msg.level >= 30 and any(name in msg.name for name in
+            ('planner_server','controller_server','bt_navigator','amcl','behavior_server','costmap')):
+            self.emit('navigation_log', node=msg.name, level=msg.level, message=msg.msg[:1200])
+
+    def clear_costmaps(self, incident_id):
+        if not all(c.service_is_ready() for c in self.clear_clients):
+            self.emit('costmaps_cleared', incident_id, success=False)
+            return
+        remaining = [len(self.clear_clients)]
+        errors = []
+        def complete(f):
+            try: f.result()
+            except Exception: errors.append(True)
+            remaining[0] -= 1
+            if not remaining[0]: self.emit('costmaps_cleared', incident_id, success=not errors)
+        for client in self.clear_clients:
+            client.call_async(ClearEntireCostmap.Request()).add_done_callback(complete)
+
+    def probe(self, incident_id, target):
+        if not self.planner.server_is_ready():
+            self.emit('recovery_plan', incident_id, success=False, points=0)
+            return
+        goal = ComputePathToPose.Goal()
+        goal.goal.header.frame_id = target['frame']
+        goal.goal.pose.position.x = float(target['x'])
+        goal.goal.pose.position.y = float(target['y'])
+        goal.goal.pose.orientation.w = 1.
+        goal.use_start = False
+        def result(f):
+            try:
+                r=f.result();n=len(r.result.path.poses)
+                self.emit('recovery_plan', incident_id, success=r.status == 4 and n>0, points=n)
+            except Exception: self.emit('recovery_plan', incident_id, success=False, points=0)
+        def accepted(f):
+            try:
+                h=f.result()
+                if not h.accepted: raise ValueError('Planner rejected probe')
+                h.get_result_async().add_done_callback(result)
+            except Exception: self.emit('recovery_plan', incident_id, success=False, points=0)
+        self.planner.send_goal_async(goal).add_done_callback(accepted)
 
     def _refresh_localization(self):
         # AMCL normally publishes after movement. Ask it to process a real laser

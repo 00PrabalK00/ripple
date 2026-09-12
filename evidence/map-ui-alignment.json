@@ -1,0 +1,173 @@
+{
+  "results": [
+    {
+      "name": "upper-left",
+      "screen_selection": [
+        0.1,
+        0.14999999433499145,
+        0.25,
+        0.25
+      ],
+      "preview": {
+        "id": "e4e1c5bc-0b52-414a-a22e-1181eb1f059c",
+        "shape": {
+          "type": "rectangle",
+          "x1": -6.140000000000001,
+          "x2": -2.9399999999999995,
+          "y1": 4.762500000000001,
+          "y2": 7.95750011868193
+        },
+        "bounds": [
+          0.060714285714285714,
+          0.12374701104143537,
+          0.2892857142857143,
+          0.2762529832935561
+        ],
+        "reason": "UI alignment test upper-left 1789232910842 (Includes 0.55 m robot clearance.)",
+        "operator": "local operator",
+        "created_at": "2026-09-12T17:08:31.087030+00:00",
+        "expires_at": null,
+        "state": "PREVIEW",
+        "verification": "not applied"
+      },
+      "observed_mask": {
+        "width": 280,
+        "height": 419,
+        "bounds": [
+          16,
+          51,
+          81,
+          116
+        ]
+      },
+      "applied_geometry_unchanged": true
+    },
+    {
+      "name": "lower-right",
+      "screen_selection": [
+        0.7,
+        0.730000027192041,
+        0.8399999830457899,
+        0.8499999773399658
+      ],
+      "preview": {
+        "id": "cfc04316-f87c-466e-acb3-b6acc447d4c5",
+        "shape": {
+          "type": "rectangle",
+          "x1": 2.26,
+          "x2": 5.319999762641059,
+          "y1": -7.807499525272283,
+          "y2": -4.19350056967326
+        },
+        "bounds": [
+          0.6607142857142857,
+          0.703747043898485,
+          0.8792856973315042,
+          0.8762529606335219
+        ],
+        "reason": "UI alignment test lower-right 1789232920462 (Includes 0.55 m robot clearance.)",
+        "operator": "local operator",
+        "created_at": "2026-09-12T17:08:41.020610+00:00",
+        "expires_at": null,
+        "state": "PREVIEW",
+        "verification": "not applied"
+      },
+      "observed_mask": {
+        "width": 280,
+        "height": 419,
+        "bounds": [
+          184,
+          294,
+          247,
+          368
+        ]
+      },
+      "applied_geometry_unchanged": true
+    },
+    {
+      "name": "upper-right-mobile",
+      "screen_selection": [
+        0.75,
+        0.12000001068365633,
+        0.87000002740587,
+        0.23000000457870987
+      ],
+      "preview": {
+        "id": "02f41cf9-c980-4dfd-a2ec-590ab1951c08",
+        "shape": {
+          "type": "rectangle",
+          "x1": 2.960000000000001,
+          "x2": 5.740000383682181,
+          "y1": 5.181499904076029,
+          "y2": 8.5859997761774
+        },
+        "bounds": [
+          0.7107142857142857,
+          0.09374702739010024,
+          0.9092857416915843,
+          0.25625298787226597
+        ],
+        "reason": "UI alignment test upper-right-mobile 1789232930175 (Includes 0.55 m robot clearance.)",
+        "operator": "local operator",
+        "created_at": "2026-09-12T17:08:50.407587+00:00",
+        "expires_at": null,
+        "state": "PREVIEW",
+        "verification": "not applied"
+      },
+      "observed_mask": {
+        "width": 280,
+        "height": 419,
+        "bounds": [
+          198,
+          39,
+          255,
+          108
+        ]
+      },
+      "applied_geometry_unchanged": true
+    },
+    {
+      "name": "lower-left-mobile",
+      "screen_selection": [
+        0.11999999885808875,
+        0.7199999877901071,
+        0.25,
+        0.8299999816851605
+      ],
+      "preview": {
+        "id": "a4377663-f3b7-4c8b-bad0-5979c7c260de",
+        "shape": {
+          "type": "rectangle",
+          "x1": -5.860000015986758,
+          "x2": -2.9399999999999995,
+          "y1": -7.388499616304113,
+          "y2": -3.9839997442027437
+        },
+        "bounds": [
+          0.08071428457237445,
+          0.693747004496551,
+          0.2892857142857143,
+          0.8562529649787166
+        ],
+        "reason": "UI alignment test lower-left-mobile 1789232938640 (Includes 0.55 m robot clearance.)",
+        "operator": "local operator",
+        "created_at": "2026-09-12T17:08:59.074619+00:00",
+        "expires_at": null,
+        "state": "PREVIEW",
+        "verification": "not applied"
+      },
+      "observed_mask": {
+        "width": 280,
+        "height": 419,
+        "bounds": [
+          22,
+          290,
+          81,
+          359
+        ]
+      },
+      "applied_geometry_unchanged": true
+    }
+  ],
+  "browser_errors": []
+}

@@ -37,7 +37,8 @@ async def local_mutations(request: Request, call_next):
 
 
 class Command(BaseModel):
-    action: Literal['instruction', 'approve', 'reject', 'pause', 'cancel', 'reconcile', 'calibrate', 'describe', 'site_preview', 'site_apply', 'site_remove']
+    action: Literal['instruction', 'approve', 'reject', 'pause', 'cancel', 'reconcile', 'calibrate', 'describe', 'site_preview', 'site_apply', 'site_remove', 'incident_context']
+    incident_id: str = ''
     zone_id: str = ''
     bounds: list[float] | None = Field(default=None, min_length=4, max_length=4)
     text: str = Field(default='', max_length=4000)
@@ -87,3 +88,12 @@ def camera_image(request: Request):
                         headers={'Cache-Control': 'no-store'})
     except ValueError as error:
         raise HTTPException(503, str(error)) from error
+
+
+@app.get('/api/keepout.png')
+def keepout_image(request: Request):
+    try:
+        return Response(request.app.state.runtime.call('keepout_image'), media_type='image/png',
+                        headers={'Cache-Control':'no-store'})
+    except ValueError as error:
+        raise HTTPException(503,str(error)) from error
