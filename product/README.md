@@ -34,7 +34,7 @@ the foundations compile or unit tests pass.
 ```bash
 # Python 3.10 environment with product/requirements.txt; ROS Humble installed
 source /opt/ros/humble/setup.bash
-export PYTHONPATH="$PWD/product/ripple_edge:$PYTHONPATH"
+export PYTHONPATH="$PWD/product/agent:$PWD/product/ripple_edge:$PYTHONPATH"
 python -m unittest discover -s product/tests -v
 colcon build --base-paths product/ripple_edge --build-base product/build --install-base product/install
 python -m ripple_edge.main --profile product/profiles/smr300.yaml \
@@ -140,3 +140,5 @@ Ripple recovery. The simulator remains running and the demo backend remains off.
 service acknowledgement plus a subsequent costmap update, followed by denial of
 a second request because the incident budget was spent. The incident was an
 explicit integration-test fixture, not a detected simulator stall.
+
+Workspace task/report/sheet/email/chat tools are documented in [agent/README.md](agent/README.md). They are separate from robot-control tools and do not grant ROS access.

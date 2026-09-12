@@ -1,0 +1,117 @@
+{
+  "report_readback": true,
+  "task_readback": true,
+  "task_completed": {
+    "status": "ok",
+    "verified": true,
+    "data": {
+      "id": "ff849257-0a6d-4cb1-89f9-05679040f052",
+      "task_key": "TASK-001",
+      "title": "Verify Ripple workspace tool integration",
+      "description": "Integration-test task owned by Ripple Agent. Verify report, sheet, task and draft readback.",
+      "status": "done",
+      "priority": "medium",
+      "assignee_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+      "creator_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+      "due_date": "2026-09-26",
+      "start_date": null,
+      "parent_task_id": null,
+      "project_id": null,
+      "contact_id": null,
+      "deal_id": null,
+      "sort_order": null,
+      "recurrence_rule": null,
+      "estimate": null,
+      "estimated_minutes": null,
+      "time_spent_minutes": 0,
+      "task_status_id": null,
+      "custom_field_values": {},
+      "goal_id": null,
+      "cycle_id": null,
+      "first_response_at": null,
+      "due_date_source": "sla",
+      "sla": null,
+      "completed_at": "2026-09-12T18:12:38.925Z",
+      "archived_at": null,
+      "trashed_at": null,
+      "created_at": "2026-09-12T18:10:19.670Z",
+      "updated_at": "2026-09-12T18:12:38.925Z",
+      "creator": {
+        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "display_name": "Ripple Agent",
+        "primary_email": null,
+        "type": "agent"
+      },
+      "assignee": {
+        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "display_name": "Ripple Agent",
+        "primary_email": null,
+        "type": "agent"
+      },
+      "subtask_count": 0,
+      "comment_count": 0,
+      "subscriber_count": 1,
+      "subscriber_ids": [
+        "6f6c1ff3-a179-4739-aea6-b5a49a309ec3"
+      ],
+      "labels": []
+    }
+  },
+  "email": {
+    "status": "ok",
+    "verified": true,
+    "data": {
+      "id": "59c3fa9f-e467-4dab-9bd7-cc6207929b60",
+      "subject": "Ripple: workspace tools and engineering update",
+      "read": true,
+      "created_at": "2026-09-12T18:12:59.149Z",
+      "from": {
+        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "display_name": "Ripple Agent",
+        "name": "Ripple Agent",
+        "email": "ripple.agent@ripple.ambi.cc"
+      },
+      "to": [
+        {
+          "id": "a37c631f-b487-47a5-ada7-e0e5140681be",
+          "display_name": "Prabal Khare",
+          "name": "Prabal Khare",
+          "email": "pk3391@nyu.edu"
+        }
+      ],
+      "cc": [],
+      "bcc": [],
+      "delivery_status": "pending_undo",
+      "message_id": "<10099d21-01d0-4a78-9931-33bc4ff1c367@ambi.cc>",
+      "thread_id": "<10099d21-01d0-4a78-9931-33bc4ff1c367@ambi.cc>",
+      "in_reply_to": null,
+      "sent_at": "2026-09-12T18:12:59.142Z",
+      "scheduled_at": null,
+      "undo_send_until": "2026-09-12T18:13:04.088Z",
+      "preview": "Hi Prabal, Ripple can now create and update tasks, write reports, create spreadsheets and append rows, and draft email through Ambiguous. These integr",
+      "archived_count": 0,
+      "deduplicated": false
+    },
+    "verification": {
+      "id": "59c3fa9f-e467-4dab-9bd7-cc6207929b60",
+      "subject": "Ripple: workspace tools and engineering update",
+      "to": [
+        {
+          "email": "pk3391@nyu.edu",
+          "name": "Prabal Khare",
+          "id": "a37c631f-b487-47a5-ada7-e0e5140681be",
+          "display_name": "Prabal Khare",
+          "primary_email": "pk3391@nyu.edu",
+          "username": "prabal.khare",
+          "workspace_email": "prabal.khare@ripple.ambi.cc",
+          "type": "human"
+        }
+      ],
+      "delivery_status": "sent",
+      "folder": "sent",
+      "sent_at": "2026-09-12T18:13:04.667Z",
+      "message_id": "<10099d21-01d0-4a78-9931-33bc4ff1c367@ambi.cc>"
+    }
+  },
+  "delivery_scope": "Verified provider send status is not proof of inbox delivery."
+}

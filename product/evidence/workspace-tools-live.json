@@ -1,0 +1,524 @@
+{
+  "report": {
+    "status": "unknown",
+    "verified": false,
+    "data": {
+      "id": "6e0d8ba7-c502-4770-81b5-2081b72e5317",
+      "type": "doc",
+      "title": "Ripple engineering status \u2014 12 September 2026",
+      "owner_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Ripple engineering status\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Verified: read-only MCP observations, RosScope diagnostics, PostgreSQL recovery budgets, a live local-costmap clear, and two-way Ambiguous session delivery.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Remaining: live stall and escape scenarios, the always-on recovery agent, full human-assisted recovery, goal/map control through the edge, and a second Nav2 profile.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"This is an integration report, not a claim that the full product is complete.\"}]}]}",
+      "visibility": "restricted",
+      "link_expires_at": null,
+      "has_password": false,
+      "link_permission": "viewer",
+      "created_at": "2026-09-12T18:09:16.289Z",
+      "updated_at": "2026-09-12T18:09:16.289Z",
+      "trashed_at": null,
+      "pinned_at": null,
+      "starred_at": null,
+      "parent_folder_id": null,
+      "labels": [],
+      "page_style": {},
+      "owner": {
+        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "display_name": "Ripple Agent",
+        "primary_email": null,
+        "workspace_email": "ripple.agent@ripple.ambi.cc",
+        "username": "ripple.agent",
+        "type": "agent"
+      },
+      "document": {
+        "id": "6e0d8ba7-c502-4770-81b5-2081b72e5317",
+        "type": "doc",
+        "title": "Ripple engineering status \u2014 12 September 2026",
+        "owner_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Ripple engineering status\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Verified: read-only MCP observations, RosScope diagnostics, PostgreSQL recovery budgets, a live local-costmap clear, and two-way Ambiguous session delivery.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Remaining: live stall and escape scenarios, the always-on recovery agent, full human-assisted recovery, goal/map control through the edge, and a second Nav2 profile.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"This is an integration report, not a claim that the full product is complete.\"}]}]}",
+        "visibility": "restricted",
+        "link_expires_at": null,
+        "has_password": false,
+        "link_permission": "viewer",
+        "created_at": "2026-09-12T18:09:16.289Z",
+        "updated_at": "2026-09-12T18:09:16.289Z",
+        "trashed_at": null,
+        "pinned_at": null,
+        "starred_at": null,
+        "parent_folder_id": null,
+        "labels": [],
+        "page_style": {},
+        "owner": {
+          "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+          "display_name": "Ripple Agent",
+          "primary_email": null,
+          "workspace_email": "ripple.agent@ripple.ambi.cc",
+          "username": "ripple.agent",
+          "type": "agent"
+        }
+      },
+      "import_warnings": []
+    }
+  },
+  "sheet": {
+    "status": "ok",
+    "verified": true,
+    "data": {
+      "id": "486aa41b-ec7e-49b2-a018-2976e75c7b44",
+      "title": "Ripple verification ledger",
+      "data": {
+        "sheets": [
+          {
+            "name": "Sheet1",
+            "columns": [
+              {
+                "id": "A",
+                "name": "A",
+                "type": "text"
+              },
+              {
+                "id": "B",
+                "name": "B",
+                "type": "text"
+              },
+              {
+                "id": "C",
+                "name": "C",
+                "type": "text"
+              },
+              {
+                "id": "D",
+                "name": "D",
+                "type": "text"
+              },
+              {
+                "id": "E",
+                "name": "E",
+                "type": "text"
+              },
+              {
+                "id": "F",
+                "name": "F",
+                "type": "text"
+              },
+              {
+                "id": "G",
+                "name": "G",
+                "type": "text"
+              },
+              {
+                "id": "H",
+                "name": "H",
+                "type": "text"
+              },
+              {
+                "id": "I",
+                "name": "I",
+                "type": "text"
+              },
+              {
+                "id": "J",
+                "name": "J",
+                "type": "text"
+              },
+              {
+                "id": "K",
+                "name": "K",
+                "type": "text"
+              },
+              {
+                "id": "L",
+                "name": "L",
+                "type": "text"
+              },
+              {
+                "id": "M",
+                "name": "M",
+                "type": "text"
+              },
+              {
+                "id": "N",
+                "name": "N",
+                "type": "text"
+              },
+              {
+                "id": "O",
+                "name": "O",
+                "type": "text"
+              },
+              {
+                "id": "P",
+                "name": "P",
+                "type": "text"
+              },
+              {
+                "id": "Q",
+                "name": "Q",
+                "type": "text"
+              },
+              {
+                "id": "R",
+                "name": "R",
+                "type": "text"
+              },
+              {
+                "id": "S",
+                "name": "S",
+                "type": "text"
+              },
+              {
+                "id": "T",
+                "name": "T",
+                "type": "text"
+              },
+              {
+                "id": "U",
+                "name": "U",
+                "type": "text"
+              },
+              {
+                "id": "V",
+                "name": "V",
+                "type": "text"
+              },
+              {
+                "id": "W",
+                "name": "W",
+                "type": "text"
+              },
+              {
+                "id": "X",
+                "name": "X",
+                "type": "text"
+              },
+              {
+                "id": "Y",
+                "name": "Y",
+                "type": "text"
+              },
+              {
+                "id": "Z",
+                "name": "Z",
+                "type": "text"
+              }
+            ],
+            "rows": []
+          }
+        ]
+      },
+      "owner_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+      "visibility": "restricted",
+      "link_expires_at": null,
+      "has_password": false,
+      "can_edit": true,
+      "created_at": "2026-09-12T18:09:35.651Z",
+      "updated_at": "2026-09-12T18:09:35.651Z",
+      "starred_at": null,
+      "starred": false,
+      "owner": {
+        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "display_name": "Ripple Agent",
+        "primary_email": ""
+      }
+    }
+  },
+  "rows": {
+    "status": "ok",
+    "verified": true,
+    "data": {
+      "id": "486aa41b-ec7e-49b2-a018-2976e75c7b44",
+      "title": "Ripple verification ledger",
+      "data": {
+        "sheets": [
+          {
+            "name": "Sheet1",
+            "columns": [
+              {
+                "id": "A",
+                "name": "A",
+                "type": "text"
+              },
+              {
+                "id": "B",
+                "name": "B",
+                "type": "text"
+              },
+              {
+                "id": "C",
+                "name": "C",
+                "type": "text"
+              },
+              {
+                "id": "D",
+                "name": "D",
+                "type": "text"
+              },
+              {
+                "id": "E",
+                "name": "E",
+                "type": "text"
+              },
+              {
+                "id": "F",
+                "name": "F",
+                "type": "text"
+              },
+              {
+                "id": "G",
+                "name": "G",
+                "type": "text"
+              },
+              {
+                "id": "H",
+                "name": "H",
+                "type": "text"
+              },
+              {
+                "id": "I",
+                "name": "I",
+                "type": "text"
+              },
+              {
+                "id": "J",
+                "name": "J",
+                "type": "text"
+              },
+              {
+                "id": "K",
+                "name": "K",
+                "type": "text"
+              },
+              {
+                "id": "L",
+                "name": "L",
+                "type": "text"
+              },
+              {
+                "id": "M",
+                "name": "M",
+                "type": "text"
+              },
+              {
+                "id": "N",
+                "name": "N",
+                "type": "text"
+              },
+              {
+                "id": "O",
+                "name": "O",
+                "type": "text"
+              },
+              {
+                "id": "P",
+                "name": "P",
+                "type": "text"
+              },
+              {
+                "id": "Q",
+                "name": "Q",
+                "type": "text"
+              },
+              {
+                "id": "R",
+                "name": "R",
+                "type": "text"
+              },
+              {
+                "id": "S",
+                "name": "S",
+                "type": "text"
+              },
+              {
+                "id": "T",
+                "name": "T",
+                "type": "text"
+              },
+              {
+                "id": "U",
+                "name": "U",
+                "type": "text"
+              },
+              {
+                "id": "V",
+                "name": "V",
+                "type": "text"
+              },
+              {
+                "id": "W",
+                "name": "W",
+                "type": "text"
+              },
+              {
+                "id": "X",
+                "name": "X",
+                "type": "text"
+              },
+              {
+                "id": "Y",
+                "name": "Y",
+                "type": "text"
+              },
+              {
+                "id": "Z",
+                "name": "Z",
+                "type": "text"
+              }
+            ],
+            "rows": [
+              {
+                "A": "Capability",
+                "B": "Status"
+              },
+              {
+                "A": "Live costmap clear",
+                "B": "Verified"
+              },
+              {
+                "A": "Full recovery demo",
+                "B": "Pending"
+              }
+            ]
+          }
+        ]
+      },
+      "owner_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+      "visibility": "restricted",
+      "link_expires_at": null,
+      "has_password": false,
+      "can_edit": true,
+      "created_at": "2026-09-12T18:09:35.651Z",
+      "updated_at": "2026-09-12T18:09:57.483Z",
+      "starred_at": null,
+      "starred": false,
+      "owner": {
+        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "display_name": "Ripple Agent",
+        "primary_email": ""
+      }
+    }
+  },
+  "task": {
+    "status": "unknown",
+    "verified": false,
+    "data": {
+      "task": {
+        "id": "ff849257-0a6d-4cb1-89f9-05679040f052",
+        "task_key": "TASK-001",
+        "title": "Verify Ripple workspace tool integration",
+        "description": "Integration-test task owned by Ripple Agent. Verify report, sheet, task and draft readback.",
+        "status": "todo",
+        "priority": "medium",
+        "assignee_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "creator_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "due_date": "2026-09-26",
+        "start_date": null,
+        "parent_task_id": null,
+        "project_id": null,
+        "contact_id": null,
+        "deal_id": null,
+        "sort_order": null,
+        "recurrence_rule": null,
+        "estimate": null,
+        "estimated_minutes": null,
+        "time_spent_minutes": 0,
+        "task_status_id": null,
+        "custom_field_values": {},
+        "goal_id": null,
+        "cycle_id": null,
+        "first_response_at": null,
+        "due_date_source": "sla",
+        "sla": null,
+        "completed_at": null,
+        "archived_at": null,
+        "trashed_at": null,
+        "created_at": "2026-09-12T18:10:19.670Z",
+        "updated_at": "2026-09-12T18:10:19.670Z",
+        "creator": {
+          "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+          "display_name": "Ripple Agent",
+          "primary_email": null,
+          "type": "agent"
+        },
+        "assignee": {
+          "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+          "display_name": "Ripple Agent",
+          "primary_email": null,
+          "type": "agent"
+        },
+        "subtask_count": 0,
+        "comment_count": 0,
+        "subscriber_count": 0,
+        "subscriber_ids": [],
+        "labels": []
+      }
+    }
+  },
+  "draft": {
+    "status": "ok",
+    "verified": true,
+    "data": {
+      "id": "9e7a1497-77e7-41d3-8518-36db04245a8a",
+      "mailbox_id": "6d194e41-aa81-4eb5-b5b9-e857693dc7ca",
+      "created_at": "2026-09-12T18:10:34.326Z",
+      "subject": "Ripple tools integration \u2014 engineering update",
+      "from": {
+        "email": "ripple.agent@ripple.ambi.cc",
+        "name": "Ripple Agent",
+        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "display_name": "Ripple Agent",
+        "primary_email": "ripple.agent@ripple.ambi.cc",
+        "username": "ripple.agent",
+        "workspace_email": "ripple.agent@ripple.ambi.cc",
+        "type": "agent"
+      },
+      "from_user": {
+        "email": "ripple.agent@ripple.ambi.cc",
+        "name": "Ripple Agent",
+        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "display_name": "Ripple Agent",
+        "primary_email": "ripple.agent@ripple.ambi.cc",
+        "username": "ripple.agent",
+        "workspace_email": "ripple.agent@ripple.ambi.cc",
+        "type": "agent"
+      },
+      "to": [
+        {
+          "email": "pk3391@nyu.edu",
+          "name": "pk3391@nyu.edu",
+          "id": "pk3391@nyu.edu",
+          "display_name": "pk3391@nyu.edu",
+          "primary_email": "pk3391@nyu.edu",
+          "username": null,
+          "workspace_email": null,
+          "type": null
+        }
+      ],
+      "cc": [],
+      "bcc": [],
+      "read": true,
+      "starred": false,
+      "folder": "drafts",
+      "snoozed_until": null,
+      "scheduled_at": null,
+      "sent_at": null,
+      "preview": "Hi Prabal, Ripple now has typed tools for tasks, reports, spreadsheets, email drafts and communications. I am verifying the integrations against Ambig",
+      "body_markdown": "Hi Prabal,\n\nRipple now has typed tools for tasks, reports, spreadsheets, email drafts and communications. I am verifying the integrations against Ambiguous.\n\nThe robot edge has passed live costmap-clear and durable budget tests. The complete autonomous recovery demo remains unfinished.\n\nRipple Agent",
+      "body_html": null,
+      "labels": [],
+      "delivery_status": "draft",
+      "message_id": null,
+      "thread_id": null,
+      "in_reply_to": null,
+      "thread_count": 1,
+      "list_unsubscribe": null,
+      "list_unsubscribe_post": null,
+      "undo_send_until": null,
+      "read_receipt_requested": false,
+      "read_receipt_first_seen_at": null,
+      "read_receipt_last_seen_at": null,
+      "read_receipt_open_count": 0,
+      "calendar_invite": null,
+      "inbound_auth": null,
+      "has_attachments": false,
+      "assignee": null
+    }
+  }
+}
