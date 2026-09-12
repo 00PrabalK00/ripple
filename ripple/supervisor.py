@@ -26,10 +26,11 @@ class Supervisor:
         self.state = 'HELD' if self.reconciliation_required else 'IDLE'
         store.append('startup', reconciliation_required=self.reconciliation_required)
 
-    def observe(self, key, value, source, max_age=None):
+    def observe(self, key, value, source, max_age=None, observed_at=None):
         old = self.facts.get(key)
         version = 1 if old is None else old.version + (old.value != value)
-        self.facts[key] = Fact(key, value, version, source, self.clock(), max_age)
+        self.facts[key] = Fact(key, value, version, source,
+                              self.clock() if observed_at is None else observed_at, max_age)
         if old is None or version != old.version:
             self.store.append('fact_changed', **asdict(self.facts[key]))
         self.tick()
@@ -95,6 +96,10 @@ class Supervisor:
     def dispatch(self, proposal_id, current_target):
         self.tick()
         proposal = self.proposals[proposal_id]
+        if proposal.target != current_target and proposal.state in ('AWAITING APPROVAL', 'APPROVED'):
+            proposal.state = 'EXPIRED'
+            self.store.append('approval_expired', proposal_id=proposal_id,
+                              changed=['destination pose'], target=asdict(current_target))
         reason = dispatch_rejection(proposal, mission_id=self.mission_id,
                                     revision=self.revision, target=current_target,
                                     facts=self.facts, now=self.clock())

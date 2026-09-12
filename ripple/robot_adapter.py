@@ -11,7 +11,7 @@ from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from std_msgs.msg import String
-from std_srvs.srv import Trigger
+from std_srvs.srv import Trigger, Empty
 from unique_identifier_msgs.msg import UUID as RosUUID
 
 from .contracts import RobotEvent
@@ -27,6 +27,7 @@ class Nav2Adapter(Node):
         self.pose = None
         self.pose_at = None
         self.safety_pending = None
+        self.localization_pending = None
         self.create_subscription(Odometry, '/diff_cont/odom', self._odom, 10)
         amcl_qos = QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE,
                              durability=DurabilityPolicy.TRANSIENT_LOCAL)
@@ -38,6 +39,16 @@ class Nav2Adapter(Node):
                 if s.status in (1, 2, 3)]), amcl_qos)
         self.safety = self.create_client(Trigger, '/safety/status')
         self.create_timer(0.25, self._poll_safety)
+        self.localization_update = self.create_client(Empty, '/request_nomotion_update')
+        self.create_timer(1.0, self._refresh_localization)
+
+    def _refresh_localization(self):
+        # AMCL normally publishes after movement. Ask it to process a real laser
+        # observation when stationary instead of treating cached pose as fresh.
+        if self.localization_pending and not self.localization_pending.done():
+            return
+        if self.localization_update.service_is_ready():
+            self.localization_pending = self.localization_update.call_async(Empty.Request())
 
     def emit(self, kind, goal_id=None, **data):
         self.events.put(RobotEvent(kind, goal_id, dict(received_at=monotonic(), **data)))

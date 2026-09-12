@@ -1,4 +1,10 @@
 {
-  "A": {"zone": "A1", "label": "Packing A"},
-  "B": {"zone": "B1", "label": "Packing B"}
+  "A": {
+    "zone": "A1",
+    "label": "Packing A"
+  },
+  "B": {
+    "zone": "EXIT BAY",
+    "label": "Packing B"
+  }
 }

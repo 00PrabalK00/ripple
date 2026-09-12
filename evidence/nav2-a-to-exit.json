@@ -1,0 +1,154 @@
+{
+  "expected": "SUCCEEDED",
+  "moved": true,
+  "receipts": [
+    {
+      "reconciliation_required": false,
+      "sequence": 1,
+      "time": "2026-09-12T16:15:23.897494+00:00",
+      "kind": "startup"
+    },
+    {
+      "key": "station.A.available",
+      "value": true,
+      "version": 1,
+      "source": "explicit simulator integration fixture",
+      "observed_at": 7971.030213768,
+      "max_age": null,
+      "sequence": 2,
+      "time": "2026-09-12T16:15:23.897571+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "key": "robot.localized",
+      "value": true,
+      "version": 1,
+      "source": "AMCL",
+      "observed_at": 7971.036892358,
+      "max_age": 5,
+      "sequence": 3,
+      "time": "2026-09-12T16:15:23.904240+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "key": "robot.odom_fresh",
+      "value": true,
+      "version": 1,
+      "source": "odometry",
+      "observed_at": 7971.038058623,
+      "max_age": 1,
+      "sequence": 4,
+      "time": "2026-09-12T16:15:23.905400+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "key": "robot.safety_clear",
+      "value": true,
+      "version": 1,
+      "source": "safety service",
+      "observed_at": 7971.346139866,
+      "max_age": 1,
+      "sequence": 5,
+      "time": "2026-09-12T16:15:24.213502+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "key": "robot.mode",
+      "value": "zones",
+      "version": 1,
+      "source": "verified safety service",
+      "observed_at": 7971.346244093,
+      "max_age": 1,
+      "sequence": 6,
+      "time": "2026-09-12T16:15:24.213577+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "id": "a0f72d53-531f-42b4-b377-e2e3ba2145b2",
+      "mission_id": "f5dc4f31-776d-42f7-9fb4-6810c5a29550",
+      "revision": 1,
+      "target": {
+        "station": "A",
+        "frame": "map",
+        "x": 4.21,
+        "y": 2.18,
+        "yaw": 0.0
+      },
+      "dependencies": {
+        "station.A.available": 1
+      },
+      "reason": "Explicit live simulator acceptance check",
+      "state": "AWAITING APPROVAL",
+      "operator": null,
+      "expires_at": null,
+      "sequence": 7,
+      "time": "2026-09-12T16:15:24.213694+00:00",
+      "kind": "proposal"
+    },
+    {
+      "id": "a0f72d53-531f-42b4-b377-e2e3ba2145b2",
+      "mission_id": "f5dc4f31-776d-42f7-9fb4-6810c5a29550",
+      "revision": 1,
+      "target": {
+        "station": "A",
+        "frame": "map",
+        "x": 4.21,
+        "y": 2.18,
+        "yaw": 0.0
+      },
+      "dependencies": {
+        "station.A.available": 1
+      },
+      "reason": "Explicit live simulator acceptance check",
+      "state": "APPROVED",
+      "operator": "integration check requested by operator",
+      "expires_at": 8031.346412107,
+      "sequence": 8,
+      "time": "2026-09-12T16:15:24.213757+00:00",
+      "kind": "approved"
+    },
+    {
+      "proposal_id": "a0f72d53-531f-42b4-b377-e2e3ba2145b2",
+      "goal_id": "e2d12a10-16d5-4535-9d3d-777748f8bf1e",
+      "target": {
+        "station": "A",
+        "frame": "map",
+        "x": 4.21,
+        "y": 2.18,
+        "yaw": 0.0
+      },
+      "dependencies": {
+        "station.A.available": 1
+      },
+      "sequence": 9,
+      "time": "2026-09-12T16:15:24.213830+00:00",
+      "kind": "send_claimed"
+    },
+    {
+      "goal_id": "e2d12a10-16d5-4535-9d3d-777748f8bf1e",
+      "sequence": 10,
+      "time": "2026-09-12T16:15:24.215206+00:00",
+      "kind": "goal_accepted"
+    },
+    {
+      "goal_id": "e2d12a10-16d5-4535-9d3d-777748f8bf1e",
+      "outcome": "SUCCEEDED",
+      "final_pose": {
+        "frame": "map",
+        "x": 4.15481043648598,
+        "y": 2.1886930578894686,
+        "qz": 0.20363040461321694,
+        "qw": 0.9790478324969917
+      },
+      "sequence": 11,
+      "time": "2026-09-12T16:15:34.425009+00:00",
+      "kind": "goal_terminal"
+    },
+    {
+      "goal_id": "e2d12a10-16d5-4535-9d3d-777748f8bf1e",
+      "sequence": 12,
+      "time": "2026-09-12T16:15:35.066931+00:00",
+      "kind": "stop_confirmed"
+    }
+  ]
+}

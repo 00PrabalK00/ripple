@@ -1,0 +1,161 @@
+{
+  "expected": "CANCELED",
+  "moved": true,
+  "receipts": [
+    {
+      "sequence": 1,
+      "time": "2026-09-12T15:35:52.842633+00:00",
+      "kind": "startup",
+      "reconciliation_required": false
+    },
+    {
+      "sequence": 2,
+      "time": "2026-09-12T15:35:52.844034+00:00",
+      "kind": "fact_changed",
+      "key": "station.A.available",
+      "value": true,
+      "version": 1,
+      "source": "explicit simulator integration fixture",
+      "observed_at": 5599.975865805,
+      "max_age": null
+    },
+    {
+      "sequence": 3,
+      "time": "2026-09-12T15:35:52.855596+00:00",
+      "kind": "fact_changed",
+      "key": "robot.localized",
+      "value": true,
+      "version": 1,
+      "source": "AMCL",
+      "observed_at": 5599.98798635,
+      "max_age": 5
+    },
+    {
+      "sequence": 4,
+      "time": "2026-09-12T15:35:53.655295+00:00",
+      "kind": "fact_changed",
+      "key": "robot.odom_fresh",
+      "value": true,
+      "version": 1,
+      "source": "odometry",
+      "observed_at": 5600.787624457,
+      "max_age": 1
+    },
+    {
+      "sequence": 5,
+      "time": "2026-09-12T15:35:54.072633+00:00",
+      "kind": "fact_changed",
+      "key": "robot.safety_clear",
+      "value": true,
+      "version": 1,
+      "source": "safety service",
+      "observed_at": 5601.205060359,
+      "max_age": 1
+    },
+    {
+      "sequence": 6,
+      "time": "2026-09-12T15:35:54.073319+00:00",
+      "kind": "fact_changed",
+      "key": "robot.mode",
+      "value": "zones",
+      "version": 1,
+      "source": "verified safety service",
+      "observed_at": 5601.205844876,
+      "max_age": 1
+    },
+    {
+      "sequence": 7,
+      "time": "2026-09-12T15:35:54.074949+00:00",
+      "kind": "proposal",
+      "id": "c3bf5d43-ac8c-4662-8e76-9a918d1b6bbb",
+      "mission_id": "c77a2670-f1c8-47e7-beb9-40e29a07786e",
+      "revision": 1,
+      "target": {
+        "station": "A",
+        "frame": "map",
+        "x": 3.61,
+        "y": 0.47,
+        "yaw": 0.0
+      },
+      "dependencies": {
+        "station.A.available": 1
+      },
+      "reason": "Explicit live simulator acceptance check",
+      "state": "AWAITING APPROVAL",
+      "operator": null,
+      "expires_at": null
+    },
+    {
+      "sequence": 8,
+      "time": "2026-09-12T15:35:54.075793+00:00",
+      "kind": "approved",
+      "id": "c3bf5d43-ac8c-4662-8e76-9a918d1b6bbb",
+      "mission_id": "c77a2670-f1c8-47e7-beb9-40e29a07786e",
+      "revision": 1,
+      "target": {
+        "station": "A",
+        "frame": "map",
+        "x": 3.61,
+        "y": 0.47,
+        "yaw": 0.0
+      },
+      "dependencies": {
+        "station.A.available": 1
+      },
+      "reason": "Explicit live simulator acceptance check",
+      "state": "APPROVED",
+      "operator": "integration check requested by operator",
+      "expires_at": 5661.208247572
+    },
+    {
+      "sequence": 9,
+      "time": "2026-09-12T15:35:54.076380+00:00",
+      "kind": "send_claimed",
+      "proposal_id": "c3bf5d43-ac8c-4662-8e76-9a918d1b6bbb",
+      "goal_id": "2e8b9816-c20c-40b1-b17b-7b384429a20f",
+      "target": {
+        "station": "A",
+        "frame": "map",
+        "x": 3.61,
+        "y": 0.47,
+        "yaw": 0.0
+      },
+      "dependencies": {
+        "station.A.available": 1
+      }
+    },
+    {
+      "sequence": 10,
+      "time": "2026-09-12T15:35:54.086271+00:00",
+      "kind": "goal_accepted",
+      "goal_id": "2e8b9816-c20c-40b1-b17b-7b384429a20f"
+    },
+    {
+      "sequence": 11,
+      "time": "2026-09-12T15:35:57.082507+00:00",
+      "kind": "cancel_requested",
+      "goal_id": "2e8b9816-c20c-40b1-b17b-7b384429a20f",
+      "reason": "integration cancellation check"
+    },
+    {
+      "sequence": 12,
+      "time": "2026-09-12T15:35:57.097962+00:00",
+      "kind": "goal_terminal",
+      "goal_id": "2e8b9816-c20c-40b1-b17b-7b384429a20f",
+      "outcome": "CANCELED",
+      "final_pose": {
+        "frame": "map",
+        "x": 0.4543952593158577,
+        "y": 0.11944602981737079,
+        "qz": 0.18802169755646939,
+        "qw": 0.9821648747781523
+      }
+    },
+    {
+      "sequence": 13,
+      "time": "2026-09-12T15:35:57.829052+00:00",
+      "kind": "stop_confirmed",
+      "goal_id": "2e8b9816-c20c-40b1-b17b-7b384429a20f"
+    }
+  ]
+}

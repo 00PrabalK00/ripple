@@ -11,6 +11,8 @@ def generate_launch_description():
     text = (baseline / 'config/nav2_params_working.yaml').read_text()
     text = text.replace('/home/aun/Downloads/smr300l_gazebo_ros2control-main', str(baseline))
     params = yaml.safe_load(text)
+    # Inherited 20 ms acknowledgement deadline is too short under measured local load.
+    params['bt_navigator']['ros__parameters']['default_server_timeout'] = 1000
     params['amcl']['ros__parameters'].update(set_initial_pose=True,
         initial_pose={'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0})
     runtime = root / 'config/nav2_local.generated.yaml'

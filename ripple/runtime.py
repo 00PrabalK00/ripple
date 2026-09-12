@@ -1,4 +1,4 @@
-"""One owner thread for ROS events, mission mutations and SQLite writes."""
+"""One owner thread for ROS events, mission mutations and PostgreSQL writes."""
 import concurrent.futures
 from dataclasses import asdict
 import json
@@ -58,6 +58,7 @@ class Runtime:
         self.s = Supervisor(self.adapter, self.store)
         self.message = 'Ready for a mission. Packing B requires live camera CLEAR.'
         self.instruction = ''
+        self.conversation = []
         self.pending_model = None
         self.pending_vision = None
         self.vision_description = 'Request a scene description after connecting the camera.'
@@ -115,7 +116,7 @@ class Runtime:
         d = event.data
         if event.kind == 'camera':
             old = self.s.facts['camera.B'].value
-            self.s.observe('camera.B', d['state'], 'D435i fixed region depth', 1)
+            self.s.observe('camera.B', d['state'], 'D435i fixed region depth', 1, d['received_at'])
             if (old != 'CLEAR' and d['state'] == 'CLEAR' and self.s.proposals
                     and not self.pending_model and not self.s.interpreting
                     and self.s.state in ('HELD', 'CANCELLING') and os.environ.get('OPENROUTER_API_KEY')):
@@ -123,7 +124,7 @@ class Runtime:
                                           automatic=True)
         elif event.kind == 'odometry':
             valid = all(math.isfinite(d[k]) for k in ('linear_speed', 'angular_speed'))
-            self.s.observe('robot.odom_fresh', valid, '/diff_cont/odom', 1)
+            self.s.observe('robot.odom_fresh', valid, '/diff_cont/odom', 1, d['received_at'])
             self.s.odometry(d['linear_speed'], d['angular_speed'], d['received_at'])
             if valid and abs(d['linear_speed']) < 0.02 and abs(d['angular_speed']) < 0.02:
                 if self.stopped_since is None:
@@ -134,11 +135,11 @@ class Runtime:
             self.actions_active = d['active']
         elif event.kind == 'localization':
             valid = all(math.isfinite(x) for x in d['covariance'])
-            self.s.observe('robot.localized', valid, '/amcl_pose', 5)
+            self.s.observe('robot.localized', valid, '/amcl_pose', 5, d['received_at'])
         elif event.kind == 'mode':
             self.s.observe('robot.mode', d['value'], '/control_mode', 1)
         elif event.kind == 'safety':
-            self.s.observe('robot.safety_clear', d['clear'], '/safety/status', 1)
+            self.s.observe('robot.safety_clear', d['clear'], '/safety/status', 1, d['received_at'])
             # Service reports the controller's observed mode, even for late joiners.
             lines = [line.strip() for line in d['raw'].splitlines() if line.strip().startswith('Control Mode:')]
             mode = lines[0].split(':', 1)[1].strip() if len(lines) == 1 else 'unknown'
@@ -163,8 +164,11 @@ class Runtime:
             camera=self.camera.status(),
             vision_description=self.vision_description,
             pose=self.adapter.pose, targets={k: asdict(v) for k, v in self.targets().items()},
+            station_zones={k: v['zone'] for k, v in json.loads((ROOT / 'config/stations.json').read_text()).items()},
             facts={k: dict(**asdict(f), fresh=f.fresh(now)) for k, f in self.s.facts.items()},
-            proposals=[asdict(p) for p in self.s.proposals.values()],
+            proposals=[dict(asdict(p), seconds_remaining=max(0, p.expires_at-now)
+                            if p.expires_at is not None and p.state == 'APPROVED' else None)
+                       for p in self.s.proposals.values()],
             receipts=self.store.receipts()[-60:])
 
     def command(self, name, data):
@@ -216,8 +220,10 @@ class Runtime:
         self.s.interpreting = True
         self.message = 'Interpreting instruction; dispatch is held.'
         self.store.append('repair_reconsideration' if automatic else 'operator_input', text=text)
+        self.conversation.append({'role': 'automatic' if automatic else 'operator', 'text': text})
         snapshot = self.snapshot()
         context = {k: snapshot[k] for k in ('state', 'goal_id', 'targets', 'facts', 'proposals')}
+        context['recent_conversation'] = self.conversation[-8:]
         self.pending_versions = {k: f.version for k, f in self.s.facts.items()}
         self.pending_model = self.pool.submit(agent.interpret, text, context)
 
@@ -227,7 +233,8 @@ class Runtime:
             result = future.result()
             if self.automatic_interpretation and result.updates:
                 raise ValueError('Automatic reconsideration cannot change operator facts')
-            self.store.append('interpretation', **result.model_dump())
+            self.store.append('interpretation', result=result.model_dump())
+            self.conversation.append({'role': 'interpretation', 'result': result.model_dump()})
             self.message = result.clarification or result.explanation
             if result.kind == 'clarify':
                 return  # remains held until a resolving operator input

@@ -1,0 +1,58 @@
+[
+  {
+    "case": "closure",
+    "passed": true,
+    "result": {
+      "kind": "update",
+      "updates": [
+        {
+          "station": "A",
+          "available": false,
+          "evidence": "Packing A is being used for inspection now."
+        }
+      ],
+      "destination": "B",
+      "explanation": "A is unavailable for handoff because it is being used for inspection. B is available and camera B is fresh CLEAR, so B is a valid destination.",
+      "clarification": null
+    }
+  },
+  {
+    "case": "alternate",
+    "passed": true,
+    "result": {
+      "kind": "update",
+      "updates": [
+        {
+          "station": "A",
+          "available": false,
+          "evidence": "A cannot accept handoffs during inspection"
+        }
+      ],
+      "destination": "B",
+      "explanation": "A is unavailable due to inspection. B is available and camera B is CLEAR, so B is a valid handoff destination.",
+      "clarification": null
+    }
+  },
+  {
+    "case": "irrelevant",
+    "passed": true,
+    "result": {
+      "kind": "irrelevant",
+      "updates": [],
+      "destination": null,
+      "explanation": "The input concerns the cafeteria menu, which has no bearing on station availability or handoff destinations. Current facts remain unchanged.",
+      "clarification": null
+    }
+  },
+  {
+    "case": "ambiguous",
+    "passed": true,
+    "result": {
+      "kind": "clarify",
+      "updates": [],
+      "destination": null,
+      "explanation": "The instruction does not specify which station (A or B) should be closed. Please specify the station.",
+      "clarification": "Which station should be closed: A or B?"
+    }
+  }
+]

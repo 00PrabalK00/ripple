@@ -1,0 +1,83 @@
+[
+  {
+    "id": "4a92994e-e838-44e9-86c8-823f6606e009",
+    "state": "AWAITING APPROVAL",
+    "reason": "Operator requests handoff at Packing B, which is available with fresh camera CLEAR. All supporting facts are fresh, so the destination is valid.",
+    "target": {
+      "x": 5.46,
+      "y": 0.68,
+      "yaw": 0,
+      "frame": "map",
+      "station": "B"
+    },
+    "operator": null,
+    "revision": 1,
+    "expires_at": null,
+    "mission_id": "07897c98-cb07-4a51-bd12-496495a61f0c",
+    "dependencies": {
+      "camera.B": 2,
+      "station.B.available": 1
+    },
+    "sequence": 91,
+    "time": "2026-09-12 16:09:17.587868+00",
+    "kind": "proposal"
+  },
+  {
+    "id": "4a92994e-e838-44e9-86c8-823f6606e009",
+    "state": "APPROVED",
+    "reason": "Operator requests handoff at Packing B, which is available with fresh camera CLEAR. All supporting facts are fresh, so the destination is valid.",
+    "target": {
+      "x": 5.46,
+      "y": 0.68,
+      "yaw": 0,
+      "frame": "map",
+      "station": "B"
+    },
+    "operator": "local operator",
+    "revision": 1,
+    "expires_at": 7678.588633229,
+    "mission_id": "07897c98-cb07-4a51-bd12-496495a61f0c",
+    "dependencies": {
+      "camera.B": 2,
+      "station.B.available": 1
+    },
+    "sequence": 92,
+    "time": "2026-09-12 16:09:31.455993+00",
+    "kind": "approved"
+  },
+  {
+    "changed": [
+      "camera.B"
+    ],
+    "versions": {
+      "camera.B": 3,
+      "robot.mode": 1,
+      "robot.localized": 1,
+      "robot.odom_fresh": 1,
+      "robot.safety_clear": 1,
+      "station.A.available": 1,
+      "station.B.available": 1
+    },
+    "proposal_id": "4a92994e-e838-44e9-86c8-823f6606e009",
+    "sequence": 94,
+    "time": "2026-09-12 16:09:45.106889+00",
+    "kind": "approval_expired"
+  },
+  {
+    "reason": "approval is not unused and valid",
+    "versions": {
+      "camera.B": 3,
+      "robot.mode": 1,
+      "robot.localized": 1,
+      "robot.odom_fresh": 1,
+      "robot.safety_clear": 1,
+      "station.A.available": 1,
+      "station.B.available": 1
+    },
+    "proposal_id": "4a92994e-e838-44e9-86c8-823f6606e009",
+    "send_attempted": false,
+    "sequence": 97,
+    "time": "2026-09-12 16:10:25.394832+00",
+    "kind": "dispatch_rejected"
+  }
+]

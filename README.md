@@ -72,21 +72,20 @@ python3 scripts/verify_nav2.py             # sends and cancels an actual simulat
 python3 scripts/verify_nav2.py --complete  # attempts arrival
 ```
 
-Six ROS packages build. Eighteen focused tests pass, including two against a separate local PostgreSQL test database. A live owned goal moved,
-returned CANCELED, and produced fresh settled odometry. Full arrival remains
-unverified: tests exposed a speed-filter unit bug (corrected), simulation time
-jumps and a Nav2 action acknowledgement timeout under load. Aborted outcomes
-are recorded honestly. Do not treat these as a passed end-to-end demo.
+Six ROS packages build. Twenty focused tests pass, including two against a separate local PostgreSQL test database (source ROS Humble to include the runtime regression test).
 
-The panel, serialized runtime, approval guards, camera pipeline and OpenRouter
-clients are implemented. The D435i is connected and streaming; calibration awaits operator positioning. The GLM 5.3 text request is live-tested; the complete model/camera/robot scenario remains pending. Restart holds for operator reconciliation; old approvals
-are never replayed. Use Reconcile previous session only after the prior goal
-is resolved and the robot is stopped. One mission owner is required.
+Verified live results:
+- An owned goal moved, returned CANCELED, and produced fresh settled odometry.
+- Packing A=A1 (3.61,0.47) and Packing B=EXIT BAY (4.21,2.18) were reached with Nav2 SUCCEEDED. Both travel directions passed.
+- The handheld D435i observed CLEAR → BLOCKED → CLEAR around the right-hand physical B marker.
+- A human-approved B proposal expired when camera.B changed from version 2 to 3. Releasing dispatch yielded a rejection with `send_attempted=false`.
+- GLM 5.3 passed both inspection-update wordings, irrelevant input and ambiguous input checks. GLM 5.3 Flash returned a live scene description.
 
-The configured station mapping is Packing A=A1, Packing B=B1, from the existing
-zone registry. Reachability of this pair still needs verification. Proposal and
-fact events, send claims, outcomes and receipts are journaled in local PostgreSQL through Drizzle. The
-original web map is represented in the panel using its existing map file.
+Machine-readable examples are in `evidence/`. The complete combined scenario still needs two rehearsals on the final station pair; no full demo/video success is claimed yet.
+
+The original B1 route failed due to the independent rear-obstacle stop and was replaced with the verified EXIT BAY zone. The safety controller was not overridden. A local action acknowledgement timeout was increased from 20 ms to 1000 ms after observed failures. AMCL receives stationary update requests for real fresh laser-based localization.
+
+Restart holds for operator reconciliation; old approvals never replay. Use Reconcile previous session only after the prior goal is resolved and the robot is stopped. One mission owner is required. Model descriptions do not prove motion or arrival; only adapter outcomes do.
 
 ## PostgreSQL and Drizzle
 

@@ -1,77 +1,60 @@
 # Ripple build checklist
 
-Source: `Ripple_For_Robotics_Plan.docx`. One simulated robot, two registered
-destinations, owned Nav2 actions, human-approved repairs, and live camera facts.
+One simulated robot, two registered destinations, owned Nav2 actions, human-approved repairs, and live camera facts. Local PostgreSQL + Drizzle replaces the original plan's SQLite choice at the operator's request.
 
-## 1. Integration and contracts — in progress
-- [x] Read the complete build plan and inspect the inherited simulator interfaces.
-- [x] Verify ROS Humble and Nav2 Python imports on this laptop.
-- [x] Inspect the live ROS graph: only `/rosout` and `/parameter_events` present.
-- [x] Build the inherited ROS packages and resolve local paths/assets.
-- [x] Start simulation; verify map, localization, odometry, mode and safety service.
-- [ ] Map Packing A/B to existing reachable zones and verify their poses.
-- [x] Define initial fact/proposal/target records and robot adapter events.
-- [ ] Send, cancel and complete an owned goal against Nav2.
-  - Live movement, terminal CANCELED and settled odometry verified. Arrival pending.
+## Integration and navigation
+- [x] Read the complete build plan and inspect the inherited interfaces.
+- [x] Build all six ROS Humble packages and resolve local assets/paths.
+- [x] Verify live map, AMCL, odometry, mode and safety service.
+- [x] Verify Packing A=A1 at (3.61,0.47).
+- [x] Verify Packing B=EXIT BAY at (4.21,2.18), including travel in both directions.
+- [x] Send and cancel an owned Nav2 goal; confirm terminal CANCELED and settled odometry.
+- [x] Reach destinations with real Nav2 SUCCEEDED and settled odometry receipts.
 
-## 2. Mission supervision
-- [x] Implement PostgreSQL/Drizzle append-only execution journal (user updated persistence choice).
-- [x] Implement initial versioned facts, freshness and exact-target proposal guards.
-- [x] Implement single-use approvals, 60-second expiry and dispatch pause in the core.
-- [x] Serialize guard checks and persist a send claim before contacting ROS.
-- [x] Require terminal action result AND fresh settled odometry after cancellation.
-- [x] Hold on restart or uncertain send; never replay automatically.
+## Mission supervision
+- [x] Implement PostgreSQL/Drizzle event journal; migrate 34 old receipts without deleting the SQLite backup.
+- [x] Define versioned facts, exact destination proposals and owned adapter events.
+- [x] Check freshness, versions, mission revision, target, mode, overrides and stop flags before dispatch.
+- [x] Persist a send claim before contacting ROS; block dispatch on database failure.
+- [x] Enforce single-use approvals, 60-second expiry and explicit dispatch pause.
+- [x] Require terminal result and fresh settled odometry before replacement dispatch.
+- [x] Hold after restart or uncertain send; old approvals are never replayed.
+- [x] Expire a proposal when a changed target is checked at dispatch.
 
-## 3. Interpretation and operator panel
-- [ ] Connect one model with validated, bounded structured output.
-  - OpenRouter client implemented; GLM 5.3 agent and GLM 5.3 Flash vision configured.
-  - Key configured; real GLM 5.3 initial mission interpretation validated.
-- [ ] Pause dispatch during interpretation; handle unrelated and ambiguous input.
-- [x] Build localhost:8050 panel with proposals, approval/rejection and receipts.
-- [x] Show existing map alongside mission state and explicit dispatch pause.
+## Interpretation and panel
+- [x] Connect GLM 5.3 through OpenRouter with locally validated structured output.
+- [x] Live-test both inspection wordings, unrelated input and ambiguous input.
+- [x] Pause dispatch during interpretation; retain recent conversation for clarification.
+- [x] Serve the operator panel at localhost:8050 with exact-target approval, rejection, map and receipts.
+- [x] Show a visible dispatch pause and approval countdown.
+- [x] Connect on-demand GLM 5.3 Flash scene descriptions; keep them outside motion authorization.
 
-## 4. Live camera
-- [ ] Verify D435i connection; select B region and capture empty baseline.
-  - Camera pipeline, calibration controls and on-demand vision implemented.
-  - D435i connected and streaming; handheld positioning and empty baseline calibration pending.
-- [ ] Align depth to color and apply device depth scale.
-- [ ] Implement validity, hysteresis, stable transitions and one-second freshness.
-- [ ] Invalidate approvals and cancel executing B on BLOCKED or UNKNOWN.
-- [ ] Show camera image/region and explain the physical proxy.
+## Camera
+- [x] Detect and stream the connected D435i.
+- [x] Align depth to color and apply the device depth scale.
+- [x] Calibrate the empty region around the right-hand physical B marker.
+- [x] Observe live CLEAR → BLOCKED → CLEAR with the case.
+- [x] Implement valid-depth thresholds, hysteresis and one-second freshness.
+- [x] Invalidate pending approvals and request cancellation of executing B on BLOCKED/UNKNOWN.
+- [x] Demonstrate a human-approved proposal expiring on camera version change, followed by a rejected dispatch with send_attempted=false.
+- [ ] Verify an actual camera disconnect/reconnect; current freshness/invalid-depth behavior has automated coverage.
+- [ ] Verify the physical blocking of an executing B mission (unit coverage exists; live test pending).
 
-## 5. Acceptance and demo
-- [ ] Test normal success, stale approvals, clear-after-block and camera loss.
-- [ ] Test duplicate clicks, cancellation uncertainty and irrelevant/ambiguous input.
-- [ ] Test target changes, mode, overrides, stops and stale robot observations.
-- [ ] Run the complete live scenario twice, including alternate wording.
-- [ ] Document tested launch sequence, setup, credentials and inherited code.
-- [ ] Record two-minute demo and prepare submission text; publishing requires instruction.
+## Acceptance and demo
+- [x] Pass 20 focused tests, including real PostgreSQL durability and failed-write/no-send.
+- [x] Capture live cancellation, arrival and camera-expiry receipts in evidence/.
+- [ ] Run the complete combined A inspection → cancellation → B expiry → fresh B arrival story twice on the final station pair.
+- [ ] Verify the complete ambiguous-input clarification interaction against the live model/runtime.
+- [ ] Record the two-minute demo and prepare submission text.
+- [ ] Verify the exact inherited simulator revision before submission.
+- [x] Create the public GitHub repository, exclude simulator/secrets/data, and credit the simulator in README.
+- [ ] Verify the newly added GitHub Actions workflow after push.
 
-## Findings
-- Current focused suite: 16 passing tests. Live cancellation verified, arrival
-  still fails (initial speed-unit mismatch fixed; later TF time jumps and action
-  acknowledgement timeout observed). See README for precise current limits.
-- Inherited speed-filter publisher corrected: type 2 (absolute m/s) matches its
-  existing multiplier. Previously type 1 misinterpreted 0.3 m/s as 0.3% speed.
-- All six inherited ROS packages build successfully. Ten isolated foundation
-  tests pass; ROS adapter imports and owned goal UUID API verified locally.
-- Warehouse assets found at `/opt/ros/humble/share/bcr_bot/models`; all 13
-  referenced models are present. Installed the missing
-  `ros-humble-gazebo-ros2-control` package and restarted Gazebo. Both
-  `diff_cont` and `joint_broad` activated. Local launcher: `bash scripts/start_sim.sh`.
-- D435i connection deferred until camera integration is ready, per operator.
-- The supplied launch commands reference `/home/aun/Downloads`; they are not a
-  verified launch sequence for this laptop.
-- `safety/status` is a `std_srvs/Trigger` service returning human-readable text,
-  not a status topic. Parse required fields strictly and fail closed.
-- Existing zone names are A1–A6, B1–B6 and other locations; Packing A/B mapping
-  is configuration, not yet a verified reachable pair.
-- Live simulator and camera acceptance results must remain separate from fake
-  adapter unit tests.
-
-## Latest integration status
-- Local PostgreSQL 17 is healthy; Drizzle schema/migration and journal bridge are live.
-- Imported 34 legacy receipts transactionally; retained SQLite backup.
-- 18 tests pass, including PostgreSQL reconnect durability and failed-write/no-send.
-- Operator requested handheld camera testing: recalibrate after each repositioning.
-- GitHub repository excludes simulator checkout; README credits the simulator and includes setup/patch instructions.
+## Current constraints and fixes
+- The camera is handheld by operator choice. Recalibrate after repositioning; camera movement is not automatically distinguished from object movement.
+- Initial B1 route failed because the independent rear-obstacle stop engaged. It was not overridden. B is now the verified EXIT BAY zone.
+- Corrected inherited speed-filter units from percentage (1) to absolute m/s (2); reproducible patch included.
+- Increased the local Nav2 action acknowledgement timeout from 20 ms to 1000 ms after observed timeouts.
+- AMCL is asked to process real stationary laser observations so cached poses do not remain indefinitely fresh.
+- Raised the bounded GLM response budget after a truncated response, fixed interpretation journal field collision, and added regression coverage.
+- Full combined demo success is not yet claimed. Individual live results and remaining work are listed separately above.

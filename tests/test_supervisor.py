@@ -63,9 +63,18 @@ class ApprovalTests(unittest.TestCase):
         self.assertFalse(self.s.dispatch(p.id, self.target))
         self.assertEqual(p.state, 'EXPIRED')
 
+    def test_delayed_camera_event_is_not_made_fresh_by_processing(self):
+        p = self.proposal()
+        self.now += 2
+        self.s.observe('camera.B', 'CLEAR', 'queued camera frame', 1, observed_at=100)
+        self.assertEqual(p.state, 'EXPIRED')
+        self.assertFalse(self.s.dispatch(p.id, self.target))
+
     def test_changed_target_and_manual_mode_block(self):
         p = self.proposal()
         self.assertFalse(self.s.dispatch(p.id, Target('B', 'map', 9, 2, 0)))
+        self.assertEqual(p.state, 'EXPIRED')
+        p = self.proposal()
         self.s.observe('robot.mode', 'manual', 'robot', 1)
         self.assertFalse(self.s.dispatch(p.id, self.target))
 

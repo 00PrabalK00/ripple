@@ -1,0 +1,154 @@
+{
+  "expected": "SUCCEEDED",
+  "moved": true,
+  "receipts": [
+    {
+      "reconciliation_required": false,
+      "sequence": 1,
+      "time": "2026-09-12T16:02:45.224133+00:00",
+      "kind": "startup"
+    },
+    {
+      "key": "station.A.available",
+      "value": true,
+      "version": 1,
+      "source": "explicit simulator integration fixture",
+      "observed_at": 7212.356840203,
+      "max_age": null,
+      "sequence": 2,
+      "time": "2026-09-12T16:02:45.224181+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "key": "robot.odom_fresh",
+      "value": true,
+      "version": 1,
+      "source": "odometry",
+      "observed_at": 7212.361397425,
+      "max_age": 1,
+      "sequence": 3,
+      "time": "2026-09-12T16:02:45.228737+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "key": "robot.localized",
+      "value": true,
+      "version": 1,
+      "source": "AMCL",
+      "observed_at": 7212.364517962,
+      "max_age": 5,
+      "sequence": 4,
+      "time": "2026-09-12T16:02:45.231853+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "key": "robot.safety_clear",
+      "value": true,
+      "version": 1,
+      "source": "safety service",
+      "observed_at": 7213.40218837,
+      "max_age": 1,
+      "sequence": 5,
+      "time": "2026-09-12T16:02:46.269529+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "key": "robot.mode",
+      "value": "zones",
+      "version": 1,
+      "source": "verified safety service",
+      "observed_at": 7213.402253295,
+      "max_age": 1,
+      "sequence": 6,
+      "time": "2026-09-12T16:02:46.269583+00:00",
+      "kind": "fact_changed"
+    },
+    {
+      "id": "e0dc1a33-f80f-4701-9d5b-9da225cade3d",
+      "mission_id": "45572acd-508b-415f-a5cb-c31dc70dcc4e",
+      "revision": 1,
+      "target": {
+        "station": "A",
+        "frame": "map",
+        "x": 3.61,
+        "y": 0.47,
+        "yaw": 0.0
+      },
+      "dependencies": {
+        "station.A.available": 1
+      },
+      "reason": "Explicit live simulator acceptance check",
+      "state": "AWAITING APPROVAL",
+      "operator": null,
+      "expires_at": null,
+      "sequence": 7,
+      "time": "2026-09-12T16:02:46.269691+00:00",
+      "kind": "proposal"
+    },
+    {
+      "id": "e0dc1a33-f80f-4701-9d5b-9da225cade3d",
+      "mission_id": "45572acd-508b-415f-a5cb-c31dc70dcc4e",
+      "revision": 1,
+      "target": {
+        "station": "A",
+        "frame": "map",
+        "x": 3.61,
+        "y": 0.47,
+        "yaw": 0.0
+      },
+      "dependencies": {
+        "station.A.available": 1
+      },
+      "reason": "Explicit live simulator acceptance check",
+      "state": "APPROVED",
+      "operator": "integration check requested by operator",
+      "expires_at": 7273.402396605,
+      "sequence": 8,
+      "time": "2026-09-12T16:02:46.269731+00:00",
+      "kind": "approved"
+    },
+    {
+      "proposal_id": "e0dc1a33-f80f-4701-9d5b-9da225cade3d",
+      "goal_id": "0f99ba63-4eb9-4f95-b58f-e44ef80dc70e",
+      "target": {
+        "station": "A",
+        "frame": "map",
+        "x": 3.61,
+        "y": 0.47,
+        "yaw": 0.0
+      },
+      "dependencies": {
+        "station.A.available": 1
+      },
+      "sequence": 9,
+      "time": "2026-09-12T16:02:46.269777+00:00",
+      "kind": "send_claimed"
+    },
+    {
+      "goal_id": "0f99ba63-4eb9-4f95-b58f-e44ef80dc70e",
+      "sequence": 10,
+      "time": "2026-09-12T16:02:46.270561+00:00",
+      "kind": "goal_accepted"
+    },
+    {
+      "goal_id": "0f99ba63-4eb9-4f95-b58f-e44ef80dc70e",
+      "outcome": "SUCCEEDED",
+      "final_pose": {
+        "frame": "map",
+        "x": 3.500173394447805,
+        "y": 0.5475736936258758,
+        "qz": -0.20251399894078279,
+        "qw": 0.9792793678174848
+      },
+      "sequence": 11,
+      "time": "2026-09-12T16:02:59.781234+00:00",
+      "kind": "goal_terminal"
+    },
+    {
+      "goal_id": "0f99ba63-4eb9-4f95-b58f-e44ef80dc70e",
+      "sequence": 12,
+      "time": "2026-09-12T16:03:00.407919+00:00",
+      "kind": "stop_confirmed"
+    }
+  ]
+}
