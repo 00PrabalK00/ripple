@@ -9,12 +9,14 @@ import time
 from .contracts import Observation
 
 class RosScopeReader:
-    def __init__(self, binary, domain_id, *, timeout_s=150., max_age_s=90.):
+    def __init__(self, binary, domain_id, *, timeout_s=150., max_age_s=90., interval_s=5.):
         self.binary = str(binary)
         self.domain_id = domain_id
         self.timeout_s = timeout_s
         self.max_age_s = max_age_s
+        self.interval_s = interval_s  # a collection shells out to the ros2 CLI; keep it off the hot path
         self.stop = threading.Event()
+        self.wake = threading.Event()
         self.lock = threading.Lock()
         self.value = None
         self.started = None
@@ -66,10 +68,17 @@ class RosScopeReader:
         with self.lock:
             self.value,self.started,self.error = result,started,error
 
+    def request(self):
+        """Ask for a fresh collection now (e.g. when an incident opens)."""
+        self.wake.set()
+
     def run(self):
         while not self.stop.is_set():
             self.collect()
-            self.stop.wait(5.)
+            self.wake.clear()
+            deadline = time.monotonic() + self.interval_s
+            while not self.stop.is_set() and not self.wake.is_set() and time.monotonic() < deadline:
+                self.stop.wait(.5)
 
     def snapshot(self):
         with self.lock:

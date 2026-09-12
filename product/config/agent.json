@@ -1,0 +1,12 @@
+{
+  "ambiguous": {
+    "user_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+    "workspace_id": "58b6db73-2c70-4161-9f0f-01974dbdd348",
+    "escalation_channel_id": "961943a3-b560-42ad-8f69-2e7a9c45318e"
+  },
+  "operators": [
+    {"id": "a37c631f-b487-47a5-ada7-e0e5140681be", "name": "Prabal Khare", "via": "ambiguous"},
+    {"id": "local-dashboard", "name": "Local operator", "via": "dashboard"}
+  ],
+  "authorization_source": "Operators are site engineers named by the robot owner. Their messages are the approval for the actions they ask for (command-as-approval)."
+}

@@ -13,6 +13,14 @@ def generate_launch_description():
     params = yaml.safe_load(text)
     # Inherited 20 ms acknowledgement deadline is too short under measured local load.
     params['bt_navigator']['ros__parameters']['default_server_timeout'] = 1000
+    # Under simulator load AMCL's map->odom arrives late; the inherited 0.5 s tolerance aborted live goals
+    # with "Transform data too old" (measured ~1.4 s lag at real-time factor 0.84).
+    params['amcl']['ros__parameters']['transform_tolerance'] = 1.5
+    params['controller_server']['ros__parameters']['FollowPath']['transform_tolerance'] = 1.0
+    # 20 Hz missed its deadline continuously under simulator load and DWB oscillated; 10 Hz is ample at 0.3 m/s.
+    params['controller_server']['ros__parameters']['controller_frequency'] = 10.0
+    for costmap in ('local_costmap', 'global_costmap'):
+        params[costmap][costmap]['ros__parameters']['transform_tolerance'] = 1.0
     params['amcl']['ros__parameters'].update(set_initial_pose=True,
         initial_pose={'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0})
     runtime = root / 'config/nav2_local.generated.yaml'

@@ -60,12 +60,18 @@ class Navigation(Strict):
     map_topic: str
     global_frame: str
     base_frame: str
+    plan_topic: str = '/plan'
+    global_costmap_topic: str | None = '/global_costmap/costmap'
+    keepout_clearance_m: float = Field(default=0.55, ge=0, le=2)
+    footprint_radius_m: float = Field(default=0.5, gt=0, le=3)
 
 class Station(Strict):
     frame: str
     x: float
     y: float
     yaw: float
+    label: str | None = None
+    aliases: list[str] = Field(default_factory=list)
 
 class Missions(Strict):
     channel: str
@@ -88,6 +94,17 @@ class Logs(Strict):
     min_level: int = Field(ge=0,le=50)
     journald_services: list[str]
 
+class Teleop(Strict):
+    topic: str
+    mode_topic: str | None = None
+    manual_mode: str = 'manual'
+    restore_mode: str = 'zones'
+    max_speed_mps: float = Field(gt=0, le=.3)
+    max_distance_m: float = Field(gt=0, le=1.0)
+    turn_rate: float = Field(default=.4, gt=0, le=1.0)
+    min_clearance_m: float = Field(default=.2, ge=.1, le=1.0)
+    override_safety: bool = False
+
 class Profile(Strict):
     schema_version: Literal[1]
     robot: str = Field(min_length=1)
@@ -103,7 +120,7 @@ class Profile(Strict):
     covariance_xy_max: float = Field(gt=0)
     covariance_yaw_max: float = Field(gt=0)
     scans: dict[str,Endpoint]
-    mode: Endpoint
+    mode: Endpoint | None = None  # None: the robot has no manual/zones mode to observe
     triggers: Thresholds
     logs: Logs
     missions: Missions
@@ -111,6 +128,8 @@ class Profile(Strict):
     stations: dict[str,Station]
     escalation_channel: str
     reply_timeout_s: float = Field(gt=0)
+    simulation: bool = False
+    teleop: Teleop | None = None
     @model_validator(mode='after')
     def consistent(self):
         checks={'station_registered','facts_fresh','keepouts_verified','route_probe_ok','safety_not_holding','mode_not_manual','single_owner'}
@@ -125,6 +144,8 @@ class Profile(Strict):
             raise ValueError('Lifecycle reset must be limited to declared nodes')
         if len({m.priority for m in self.motion_inputs.values()}) != len(self.motion_inputs):
             raise ValueError('Motion priorities must be unambiguous')
+        if self.teleop and self.teleop.override_safety and not self.simulation:
+            raise ValueError('Teleop may override the safety controller only on a declared simulation')
         return self
 
 class Observation(Strict):
@@ -137,7 +158,7 @@ class Event(Strict):
     schema_version: Literal[1] = 1
     id: str
     robot: str
-    kind: Literal['halted_while_commanded','no_progress','nav_failures','node_not_active','localization_degraded','cause_changed']
+    kind: Literal['halted_while_commanded','no_progress','nav_failures','node_not_active','localization_degraded','cause_changed','navigation_failed']
     cause: Literal['safety_obstacle','emergency_stop','localization_stop','manual_control','nav2_stall','component_down','unknown']
     evidence: dict[str,Observation]
     observed_at: str
