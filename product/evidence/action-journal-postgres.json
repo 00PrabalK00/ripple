@@ -1,0 +1,19 @@
+{
+  "backend": "local PostgreSQL via Drizzle",
+  "robot": "acceptance-dd78c02e-0c32-4a01-bafe-bb962418b0e5",
+  "concurrent_claims": [
+    {
+      "claimed": true
+    },
+    {
+      "claimed": false,
+      "reason": "incident_budget_exhausted"
+    }
+  ],
+  "duplicate_rejected": true,
+  "restart_interrupted": {
+    "interrupted": 1
+  },
+  "replay_rejected": true,
+  "budget_survived_restart": true
+}

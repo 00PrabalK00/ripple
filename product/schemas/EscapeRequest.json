@@ -1,0 +1,60 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "tool": {
+      "const": "escape",
+      "title": "Tool",
+      "type": "string"
+    },
+    "primitive": {
+      "enum": [
+        "backup",
+        "spin"
+      ],
+      "title": "Primitive",
+      "type": "string"
+    },
+    "amount": {
+      "exclusiveMinimum": 0,
+      "title": "Amount",
+      "type": "number"
+    },
+    "speed": {
+      "exclusiveMinimum": 0,
+      "title": "Speed",
+      "type": "number"
+    },
+    "incident_id": {
+      "minLength": 1,
+      "title": "Incident Id",
+      "type": "string"
+    },
+    "authorization_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Authorization Id"
+    }
+  },
+  "required": [
+    "request_id",
+    "tool",
+    "primitive",
+    "amount",
+    "speed",
+    "incident_id"
+  ],
+  "title": "EscapeRequest",
+  "type": "object"
+}

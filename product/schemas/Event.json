@@ -1,0 +1,109 @@
+{
+  "$defs": {
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "title": "Value"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "age_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Age S"
+        },
+        "fresh": {
+          "title": "Fresh",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "value",
+        "source",
+        "fresh"
+      ],
+      "title": "Observation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "robot": {
+      "title": "Robot",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "halted_while_commanded",
+        "no_progress",
+        "nav_failures",
+        "node_not_active",
+        "localization_degraded",
+        "cause_changed"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "cause": {
+      "enum": [
+        "safety_obstacle",
+        "emergency_stop",
+        "localization_stop",
+        "manual_control",
+        "nav2_stall",
+        "component_down",
+        "unknown"
+      ],
+      "title": "Cause",
+      "type": "string"
+    },
+    "evidence": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Observation"
+      },
+      "title": "Evidence",
+      "type": "object"
+    },
+    "observed_at": {
+      "title": "Observed At",
+      "type": "string"
+    },
+    "derived": {
+      "const": true,
+      "default": true,
+      "title": "Derived",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "robot",
+    "kind",
+    "cause",
+    "evidence",
+    "observed_at"
+  ],
+  "title": "Event",
+  "type": "object"
+}

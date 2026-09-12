@@ -1,0 +1,516 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_tasks_list",
+      "description": "Read Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "q": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Q",
+            "type": "string"
+          },
+          "limit": {
+            "default": 20,
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "Search",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_task_get",
+      "description": "Read Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "Resource",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_task_create",
+      "description": "Write Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 20000,
+            "title": "Description",
+            "type": "string"
+          },
+          "priority": {
+            "default": "medium",
+            "enum": [
+              "urgent",
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "assignee_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Assignee Id"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "TaskCreate",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_task_update",
+      "description": "Write Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "todo",
+              "in_progress",
+              "done",
+              "cancelled",
+              "blocked"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "TaskUpdate",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_report_create",
+      "description": "Write Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "content": {
+            "description": "Report text with paragraphs separated by blank lines",
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "content"
+        ],
+        "title": "Report",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_report_get",
+      "description": "Read Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "Resource",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_report_update",
+      "description": "Write Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "content": {
+            "description": "Report text with paragraphs separated by blank lines",
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "content",
+          "id"
+        ],
+        "title": "ReportUpdate",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_sheets_list",
+      "description": "Read Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {},
+        "title": "Empty",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_sheet_create",
+      "description": "Write Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "SheetCreate",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_sheet_get",
+      "description": "Read Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "Resource",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_sheet_append",
+      "description": "Write Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Rows",
+            "type": "array"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sheet"
+          }
+        },
+        "required": [
+          "id",
+          "rows"
+        ],
+        "title": "SheetRows",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_email_search",
+      "description": "Read Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "q": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Q",
+            "type": "string"
+          },
+          "limit": {
+            "default": 20,
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "Search",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_email_get",
+      "description": "Read Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "Resource",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_email_draft",
+      "description": "Write Ambiguous workspace data. ",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "to": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "To",
+            "type": "array"
+          },
+          "subject": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          },
+          "body_markdown": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Body Markdown",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "body_markdown"
+        ],
+        "title": "Mail",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_email_send",
+      "description": "Write Ambiguous workspace data. Delivery requires host-verified authorization for the exact payload.",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "to": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "To",
+            "type": "array"
+          },
+          "subject": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          },
+          "body_markdown": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Body Markdown",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "body_markdown"
+        ],
+        "title": "Mail",
+        "type": "object"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "workspace_chat_send",
+      "description": "Write Ambiguous workspace data. Delivery requires host-verified authorization for the exact payload.",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "channel_id": {
+            "format": "uuid",
+            "title": "Channel Id",
+            "type": "string"
+          },
+          "content": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "thread_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Thread Id"
+          }
+        },
+        "required": [
+          "channel_id",
+          "content"
+        ],
+        "title": "Chat",
+        "type": "object"
+      }
+    }
+  }
+]

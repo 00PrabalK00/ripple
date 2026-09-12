@@ -1,0 +1,339 @@
+{
+  "schema_version": 1,
+  "robot": "smr300_01",
+  "mode": "observe_only",
+  "observations": {
+    "velocity.safety": {
+      "value": {
+        "linear": 0.0,
+        "angular": 0.0
+      },
+      "source": "/cmd_vel_safety",
+      "age_s": 0.02438896300009219,
+      "fresh": true
+    },
+    "velocity.output": {
+      "value": {
+        "linear": 0.0,
+        "angular": 0.0
+      },
+      "source": "/diff_cont/cmd_vel_unstamped",
+      "age_s": 0.023356132000117213,
+      "fresh": true
+    },
+    "localization": {
+      "value": true,
+      "source": "/amcl_pose",
+      "age_s": 0.2697374540002784,
+      "fresh": true
+    },
+    "pose": {
+      "value": {
+        "frame": "map",
+        "x": 3.6136810000366046,
+        "y": 0.5460825312202706
+      },
+      "source": "/amcl_pose",
+      "age_s": 0.26969883900028435,
+      "fresh": true
+    },
+    "goal": {
+      "value": {
+        "active": false,
+        "id": null
+      },
+      "source": "Nav2 status",
+      "age_s": 34.64380763700001,
+      "fresh": false
+    },
+    "lifecycle": {
+      "value": {
+        "/behavior_server": "active",
+        "/bt_navigator": "active",
+        "/amcl": "active",
+        "/planner_server": "active"
+      },
+      "source": "declared GetState services",
+      "age_s": 0.13017937400036317,
+      "fresh": true
+    },
+    "odometry": {
+      "value": {
+        "linear": 1.1549150599117323e-05,
+        "angular": -0.0004729327015459194
+      },
+      "source": "/diff_cont/odom",
+      "age_s": 0.01257580700030303,
+      "fresh": true
+    },
+    "scan.front": {
+      "value": {
+        "minimum_m": 0.7992687821388245,
+        "valid_points": 180
+      },
+      "source": "/scan",
+      "age_s": 0.0006305169999905047,
+      "fresh": true
+    },
+    "scan.rear": {
+      "value": {
+        "minimum_m": 0.32051581144332886,
+        "valid_points": 168
+      },
+      "source": "/scan2",
+      "age_s": 0.13377244000002975,
+      "fresh": true
+    },
+    "safety": {
+      "value": {
+        "known": true,
+        "emergency": false,
+        "obstacle": true,
+        "localization": false,
+        "override": false,
+        "mode": "zones"
+      },
+      "source": "/safety/status",
+      "age_s": 0.3658959290000894,
+      "fresh": true
+    },
+    "mode": {
+      "value": "zones",
+      "source": "/safety/status",
+      "age_s": 0.36587797700030933,
+      "fresh": true
+    }
+  },
+  "velocity_winner": {
+    "value": "safety",
+    "derived": true,
+    "method": "fresh input with greatest configured priority"
+  },
+  "cause": {
+    "value": "safety_obstacle",
+    "derived": true
+  },
+  "events": [
+    {
+      "schema_version": 1,
+      "id": "a4618582-fbaf-46a3-b8fd-0785a909e604",
+      "robot": "smr300_01",
+      "kind": "cause_changed",
+      "cause": "safety_obstacle",
+      "evidence": {
+        "velocity.safety": {
+          "value": {
+            "linear": 0.0,
+            "angular": 0.0
+          },
+          "source": "/cmd_vel_safety",
+          "age_s": 0.06445368000004237,
+          "fresh": true
+        },
+        "velocity.output": {
+          "value": {
+            "linear": 0.0,
+            "angular": 0.0
+          },
+          "source": "/diff_cont/cmd_vel_unstamped",
+          "age_s": 0.059109814000294136,
+          "fresh": true
+        },
+        "localization": {
+          "value": true,
+          "source": "/amcl_pose",
+          "age_s": 0.1538159930000802,
+          "fresh": true
+        },
+        "pose": {
+          "value": {
+            "frame": "map",
+            "x": 3.6127955823119593,
+            "y": 0.5449146928803762
+          },
+          "source": "/amcl_pose",
+          "age_s": 0.1533052019999559,
+          "fresh": true
+        },
+        "goal": {
+          "value": {
+            "active": false,
+            "id": null
+          },
+          "source": "Nav2 status",
+          "age_s": 2.762374332000036,
+          "fresh": false
+        },
+        "lifecycle": {
+          "value": {
+            "/behavior_server": "active",
+            "/bt_navigator": "active",
+            "/amcl": "active"
+          },
+          "source": "declared GetState services",
+          "age_s": 2.0851000044785906e-05,
+          "fresh": true
+        },
+        "odometry": {
+          "value": {
+            "linear": 1.1143975153607841e-05,
+            "angular": -0.00046931437528454695
+          },
+          "source": "/diff_cont/odom",
+          "age_s": 0.011814518000392127,
+          "fresh": true
+        },
+        "scan.front": {
+          "value": {
+            "minimum_m": 0.803867518901825,
+            "valid_points": 180
+          },
+          "source": "/scan",
+          "age_s": 0.09163157600005434,
+          "fresh": true
+        },
+        "scan.rear": {
+          "value": {
+            "minimum_m": 0.32077476382255554,
+            "valid_points": 168
+          },
+          "source": "/scan2",
+          "age_s": 0.07882082600008289,
+          "fresh": true
+        },
+        "safety": {
+          "value": {
+            "known": true,
+            "emergency": false,
+            "obstacle": true,
+            "localization": false,
+            "override": false,
+            "mode": "zones"
+          },
+          "source": "/safety/status",
+          "age_s": 0.2039774950003448,
+          "fresh": true
+        },
+        "mode": {
+          "value": "zones",
+          "source": "/safety/status",
+          "age_s": 0.20396167300032175,
+          "fresh": true
+        }
+      },
+      "observed_at": "2026-09-12T17:32:31.382679+00:00",
+      "derived": true
+    },
+    {
+      "schema_version": 1,
+      "id": "aa8c6bdf-8f51-4747-ba72-18e849d5548f",
+      "robot": "smr300_01",
+      "kind": "node_not_active",
+      "cause": "unknown",
+      "evidence": {
+        "velocity.safety": {
+          "value": {
+            "linear": 0.0,
+            "angular": 0.0
+          },
+          "source": "/cmd_vel_safety",
+          "age_s": 0.12293580999994447,
+          "fresh": true
+        },
+        "velocity.output": {
+          "value": {
+            "linear": 0.0,
+            "angular": 0.0
+          },
+          "source": "/diff_cont/cmd_vel_unstamped",
+          "age_s": 0.12205192999999781,
+          "fresh": true
+        },
+        "localization": {
+          "value": true,
+          "source": "/amcl_pose",
+          "age_s": 1.6551998139998432,
+          "fresh": true
+        },
+        "pose": {
+          "value": {
+            "frame": "map",
+            "x": 3.6127955823119593,
+            "y": 0.5449146928803762
+          },
+          "source": "/amcl_pose",
+          "age_s": 1.6546890229997189,
+          "fresh": true
+        },
+        "goal": {
+          "value": {
+            "active": false,
+            "id": null
+          },
+          "source": "Nav2 status",
+          "age_s": 4.263758152999799,
+          "fresh": false
+        },
+        "lifecycle": {
+          "value": {
+            "/behavior_server": "active",
+            "/bt_navigator": "active",
+            "/amcl": "active"
+          },
+          "source": "declared GetState services",
+          "age_s": 2.2917000023880973e-05,
+          "fresh": true
+        },
+        "odometry": {
+          "value": {
+            "linear": 1.229196873094694e-05,
+            "angular": -0.0004690714236707483
+          },
+          "source": "/diff_cont/odom",
+          "age_s": 0.04456900700006372,
+          "fresh": true
+        },
+        "scan.front": {
+          "value": {
+            "minimum_m": 0.8036684989929199,
+            "valid_points": 180
+          },
+          "source": "/scan",
+          "age_s": 0.00533989899986409,
+          "fresh": true
+        },
+        "scan.rear": {
+          "value": {
+            "minimum_m": 0.3209807872772217,
+            "valid_points": 168
+          },
+          "source": "/scan2",
+          "age_s": 0.13929888499978915,
+          "fresh": true
+        },
+        "safety": {
+          "value": {
+            "known": true,
+            "emergency": false,
+            "obstacle": true,
+            "localization": false,
+            "override": false,
+            "mode": "zones"
+          },
+          "source": "/safety/status",
+          "age_s": 0.48422054999991815,
+          "fresh": true
+        },
+        "mode": {
+          "value": "zones",
+          "source": "/safety/status",
+          "age_s": 0.48420035699973596,
+          "fresh": true
+        }
+      },
+      "observed_at": "2026-09-12T17:32:32.884055+00:00",
+      "derived": true
+    }
+  ],
+  "findings": []
+}

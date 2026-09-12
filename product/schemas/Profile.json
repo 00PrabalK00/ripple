@@ -1,0 +1,645 @@
+{
+  "$defs": {
+    "ActionPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "autonomy": {
+          "enum": [
+            "off",
+            "suggest",
+            "ask",
+            "auto"
+          ],
+          "title": "Autonomy",
+          "type": "string"
+        },
+        "per_incident": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Per Incident",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "autonomy",
+        "per_incident"
+      ],
+      "title": "ActionPolicy",
+      "type": "object"
+    },
+    "Endpoint": {
+      "additionalProperties": false,
+      "properties": {
+        "topic": {
+          "title": "Topic",
+          "type": "string"
+        },
+        "max_age_s": {
+          "exclusiveMinimum": 0,
+          "maximum": 60,
+          "title": "Max Age S",
+          "type": "number"
+        }
+      },
+      "required": [
+        "topic",
+        "max_age_s"
+      ],
+      "title": "Endpoint",
+      "type": "object"
+    },
+    "Escape": {
+      "additionalProperties": false,
+      "properties": {
+        "autonomy": {
+          "enum": [
+            "off",
+            "suggest",
+            "ask",
+            "auto"
+          ],
+          "title": "Autonomy",
+          "type": "string"
+        },
+        "per_incident": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Per Incident",
+          "type": "integer"
+        },
+        "backup_action": {
+          "title": "Backup Action",
+          "type": "string"
+        },
+        "spin_action": {
+          "title": "Spin Action",
+          "type": "string"
+        },
+        "max_backup_m": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Max Backup M",
+          "type": "number"
+        },
+        "max_backup_mps": {
+          "exclusiveMinimum": 0,
+          "maximum": 0.3,
+          "title": "Max Backup Mps",
+          "type": "number"
+        },
+        "max_spin_rad": {
+          "exclusiveMinimum": 0,
+          "maximum": 3.15,
+          "title": "Max Spin Rad",
+          "type": "number"
+        },
+        "requires": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Requires",
+          "type": "array"
+        }
+      },
+      "required": [
+        "autonomy",
+        "per_incident",
+        "backup_action",
+        "spin_action",
+        "max_backup_m",
+        "max_backup_mps",
+        "max_spin_rad",
+        "requires"
+      ],
+      "title": "Escape",
+      "type": "object"
+    },
+    "Logs": {
+      "additionalProperties": false,
+      "properties": {
+        "rosout_topic": {
+          "title": "Rosout Topic",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Nodes",
+          "type": "array"
+        },
+        "min_level": {
+          "maximum": 50,
+          "minimum": 0,
+          "title": "Min Level",
+          "type": "integer"
+        },
+        "journald_services": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Journald Services",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rosout_topic",
+        "nodes",
+        "min_level",
+        "journald_services"
+      ],
+      "title": "Logs",
+      "type": "object"
+    },
+    "Missions": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "title": "Channel",
+          "type": "string"
+        },
+        "operators": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Operators",
+          "type": "array"
+        },
+        "operator_command": {
+          "const": "go",
+          "title": "Operator Command",
+          "type": "string"
+        },
+        "inferred_destination": {
+          "enum": [
+            "go_announce",
+            "ask"
+          ],
+          "title": "Inferred Destination",
+          "type": "string"
+        },
+        "agent_initiated": {
+          "const": "ask",
+          "title": "Agent Initiated",
+          "type": "string"
+        },
+        "dispatch_checks": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Dispatch Checks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "channel",
+        "operators",
+        "operator_command",
+        "inferred_destination",
+        "agent_initiated",
+        "dispatch_checks"
+      ],
+      "title": "Missions",
+      "type": "object"
+    },
+    "MotionInput": {
+      "additionalProperties": false,
+      "properties": {
+        "topic": {
+          "title": "Topic",
+          "type": "string"
+        },
+        "max_age_s": {
+          "exclusiveMinimum": 0,
+          "maximum": 60,
+          "title": "Max Age S",
+          "type": "number"
+        },
+        "priority": {
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Priority",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "topic",
+        "max_age_s",
+        "priority"
+      ],
+      "title": "MotionInput",
+      "type": "object"
+    },
+    "Navigation": {
+      "additionalProperties": false,
+      "properties": {
+        "navigate_action": {
+          "title": "Navigate Action",
+          "type": "string"
+        },
+        "internal_action_clients": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Internal Action Clients",
+          "type": "array"
+        },
+        "goal_input_topics": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Goal Input Topics",
+          "type": "array"
+        },
+        "planner_action": {
+          "title": "Planner Action",
+          "type": "string"
+        },
+        "lifecycle_nodes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Lifecycle Nodes",
+          "type": "array"
+        },
+        "clear_services": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "propertyNames": {
+            "enum": [
+              "local",
+              "global"
+            ]
+          },
+          "title": "Clear Services",
+          "type": "object"
+        },
+        "keepout_adapter": {
+          "enum": [
+            "layers_file",
+            "none"
+          ],
+          "title": "Keepout Adapter",
+          "type": "string"
+        },
+        "keepout_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Keepout Path"
+        },
+        "verify_mask": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Verify Mask"
+        },
+        "map_topic": {
+          "title": "Map Topic",
+          "type": "string"
+        },
+        "global_frame": {
+          "title": "Global Frame",
+          "type": "string"
+        },
+        "base_frame": {
+          "title": "Base Frame",
+          "type": "string"
+        }
+      },
+      "required": [
+        "navigate_action",
+        "planner_action",
+        "lifecycle_nodes",
+        "clear_services",
+        "keepout_adapter",
+        "keepout_path",
+        "verify_mask",
+        "map_topic",
+        "global_frame",
+        "base_frame"
+      ],
+      "title": "Navigation",
+      "type": "object"
+    },
+    "Recovery": {
+      "additionalProperties": false,
+      "properties": {
+        "clear_costmaps": {
+          "$ref": "#/$defs/ActionPolicy"
+        },
+        "retry_goal": {
+          "$ref": "#/$defs/ActionPolicy"
+        },
+        "lifecycle_reset": {
+          "$ref": "#/$defs/ActionPolicy"
+        },
+        "reset_nodes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reset Nodes",
+          "type": "array"
+        },
+        "escape": {
+          "$ref": "#/$defs/Escape"
+        }
+      },
+      "required": [
+        "clear_costmaps",
+        "retry_goal",
+        "lifecycle_reset",
+        "reset_nodes",
+        "escape"
+      ],
+      "title": "Recovery",
+      "type": "object"
+    },
+    "Safety": {
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        },
+        "service": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Service"
+        },
+        "parser": {
+          "enum": [
+            "smr300_text",
+            "none"
+          ],
+          "title": "Parser",
+          "type": "string"
+        },
+        "max_age_s": {
+          "exclusiveMinimum": 0,
+          "maximum": 10,
+          "title": "Max Age S",
+          "type": "number"
+        },
+        "never_touch": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Never Touch",
+          "type": "array"
+        }
+      },
+      "required": [
+        "required",
+        "service",
+        "parser",
+        "max_age_s",
+        "never_touch"
+      ],
+      "title": "Safety",
+      "type": "object"
+    },
+    "Station": {
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "title": "Frame",
+          "type": "string"
+        },
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "yaw": {
+          "title": "Yaw",
+          "type": "number"
+        }
+      },
+      "required": [
+        "frame",
+        "x",
+        "y",
+        "yaw"
+      ],
+      "title": "Station",
+      "type": "object"
+    },
+    "Thresholds": {
+      "additionalProperties": false,
+      "properties": {
+        "speed_below": {
+          "exclusiveMinimum": 0,
+          "maximum": 0.1,
+          "title": "Speed Below",
+          "type": "number"
+        },
+        "turn_below": {
+          "exclusiveMinimum": 0,
+          "maximum": 0.1,
+          "title": "Turn Below",
+          "type": "number"
+        },
+        "halted_for_s": {
+          "exclusiveMinimum": 0,
+          "title": "Halted For S",
+          "type": "number"
+        },
+        "flat_for_s": {
+          "exclusiveMinimum": 0,
+          "title": "Flat For S",
+          "type": "number"
+        },
+        "min_progress_m": {
+          "exclusiveMinimum": 0,
+          "title": "Min Progress M",
+          "type": "number"
+        },
+        "goal_tolerance_m": {
+          "exclusiveMinimum": 0,
+          "title": "Goal Tolerance M",
+          "type": "number"
+        },
+        "failure_count": {
+          "exclusiveMinimum": 0,
+          "title": "Failure Count",
+          "type": "integer"
+        },
+        "failure_window_s": {
+          "exclusiveMinimum": 0,
+          "title": "Failure Window S",
+          "type": "number"
+        },
+        "localization_degraded_s": {
+          "exclusiveMinimum": 0,
+          "title": "Localization Degraded S",
+          "type": "number"
+        }
+      },
+      "required": [
+        "speed_below",
+        "turn_below",
+        "halted_for_s",
+        "flat_for_s",
+        "min_progress_m",
+        "goal_tolerance_m",
+        "failure_count",
+        "failure_window_s",
+        "localization_degraded_s"
+      ],
+      "title": "Thresholds",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "robot": {
+      "minLength": 1,
+      "title": "Robot",
+      "type": "string"
+    },
+    "ros_distro": {
+      "const": "humble",
+      "title": "Ros Distro",
+      "type": "string"
+    },
+    "domain_id": {
+      "maximum": 232,
+      "minimum": 0,
+      "title": "Domain Id",
+      "type": "integer"
+    },
+    "navigation": {
+      "$ref": "#/$defs/Navigation"
+    },
+    "safety": {
+      "$ref": "#/$defs/Safety"
+    },
+    "motion_inputs": {
+      "additionalProperties": {
+        "$ref": "#/$defs/MotionInput"
+      },
+      "title": "Motion Inputs",
+      "type": "object"
+    },
+    "motion_output": {
+      "$ref": "#/$defs/Endpoint"
+    },
+    "odometry": {
+      "$ref": "#/$defs/Endpoint"
+    },
+    "localization": {
+      "$ref": "#/$defs/Endpoint"
+    },
+    "localization_refresh_service": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Localization Refresh Service"
+    },
+    "covariance_xy_max": {
+      "exclusiveMinimum": 0,
+      "title": "Covariance Xy Max",
+      "type": "number"
+    },
+    "covariance_yaw_max": {
+      "exclusiveMinimum": 0,
+      "title": "Covariance Yaw Max",
+      "type": "number"
+    },
+    "scans": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Endpoint"
+      },
+      "title": "Scans",
+      "type": "object"
+    },
+    "mode": {
+      "$ref": "#/$defs/Endpoint"
+    },
+    "triggers": {
+      "$ref": "#/$defs/Thresholds"
+    },
+    "logs": {
+      "$ref": "#/$defs/Logs"
+    },
+    "missions": {
+      "$ref": "#/$defs/Missions"
+    },
+    "recovery": {
+      "$ref": "#/$defs/Recovery"
+    },
+    "stations": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Station"
+      },
+      "title": "Stations",
+      "type": "object"
+    },
+    "escalation_channel": {
+      "title": "Escalation Channel",
+      "type": "string"
+    },
+    "reply_timeout_s": {
+      "exclusiveMinimum": 0,
+      "title": "Reply Timeout S",
+      "type": "number"
+    }
+  },
+  "required": [
+    "schema_version",
+    "robot",
+    "ros_distro",
+    "domain_id",
+    "navigation",
+    "safety",
+    "motion_inputs",
+    "motion_output",
+    "odometry",
+    "localization",
+    "localization_refresh_service",
+    "covariance_xy_max",
+    "covariance_yaw_max",
+    "scans",
+    "mode",
+    "triggers",
+    "logs",
+    "missions",
+    "recovery",
+    "stations",
+    "escalation_channel",
+    "reply_timeout_s"
+  ],
+  "title": "Profile",
+  "type": "object"
+}

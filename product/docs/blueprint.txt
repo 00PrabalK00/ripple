@@ -1,0 +1,362 @@
+
+
+Contents
+
+    Conclusions
+    Demo and product
+    Architecture
+    Your doc, section by section
+    Configuring a robot
+    Why did it stop?
+    Getting unstuck
+    Recovery ladder
+    Commands just run
+    People & workflows
+    Build sequence
+    Test first
+    Your decisions
+
+Ripple · Agent blueprint · 12 Sep 2026
+An always-on site engineer that plugs into any Nav2 robot
+
+This plan turns your architecture doc into an implementation. It is checked against the code that exists today: Ripple's demo, RosScope, Nav2 Humble and the SMR300 simulator. Ripple becomes a standalone agent that teams add to their robots and workflows. It is configured per robot, it notices failures on its own, it recovers inside limits you tune, and it asks a person when software alone can't resolve a physical situation.
+
+    Inputs
+    Your architecture doc; code at 0c7747c
+    Demo
+    Stays with Codex, untouched
+    Status
+    Plan only. No repo files changed.
+
+§1
+Conclusions
+
+    1
+    Split Ripple into an on-robot edge and an agent, and enforce policy on the robot.
+
+    A ROS 2 package (ripple_edge) holds all ROS access, detects events deterministically, and enforces limits next to the wheels. The agent reasons and talks to people, and can only reach the robot through the edge's typed tools. A model that has been misled by a crafted log line or message still can't exceed the robot's policy, because enforcement doesn't live in the model's process.
+    2
+    A command is the approval.
+
+    Text "send the robot to B" and it goes. The operator's message authorizes the move, and nothing asks a second time. What remains are automatic checks, not questions: the destination resolves to a registered station, facts are fresh, keepouts are verified, the route probe finds a path, and the safety controller isn't holding the robot. If a check fails, Ripple says which one (§9).
+    3
+    Use RosScope for seeing, not for doing.
+
+    RosScope's inspection and diagnostics are exactly what Ripple needs. Its control actions (killAllRosProcesses, restartDomain, restartWorkspace) act on a whole domain, and its fleet actions run ssh and bash. Neither fits "no unrestricted shell". Recovery actions become narrow ROS-native calls inside the edge.
+    4
+    A per-robot profile makes it addable.
+
+    One YAML file declares the robot's topics, its safety controller and how to read it, where its logs are, which triggers to watch, and every recovery limit. Adding Ripple to a robot means writing a profile, not changing code.
+    5
+    A teleop-style escape works, but only when the safety controller isn't the one holding the robot.
+
+    On the SMR300, a safety stop zeroes every lower-priority command, including a backup away from the obstacle. So "escape" means Nav2's collision-checked BackUp and Spin behaviors, at bounded speed and distance, with the safety controller still in charge. When the safety controller is the cause, Ripple escalates instead.
+    6
+    The recovery ladder is code; the model advises.
+
+    Deterministic steps with budgets and measurable progress checks guarantee the ladder ends. The model forms hypotheses, writes the escalation, and turns a person's reply into a structured action. If the model fails, Ripple escalates; it never tries more motion.
+    7
+    Nav2 Humble doesn't say why it failed.
+
+    Humble's NavigateToPose result is std_msgs/Empty, and ComputePathToPose returns only a path. Your doc's failure_reason: NO_VALID_PATH has to be derived from a planner probe, /rosout patterns, and the feedback's distance_remaining.
+
+§2
+What the demo already proves
+
+Codex's demo in ripple/ has moved quickly: two commits and incidents.py landed during this review. Much of the product logic exists there in SMR300-specific form. The product keeps what the demo proves and generalises it. It doesn't compete with the demo before the hackathon.
+Capability	In the demo today	Product move
+Owned Nav2 goals	Have Send and cancel, terminal result, settled odometry before a replacement goal	Port into the edge's navigation executor
+Facts & freshness	Have Versioned facts with max age; stale means unknown	Becomes the edge's observation model
+Mission approval	Have A click to approve for every mission; single use; expires when facts change	The operator's command is the approval. Expiry becomes an automatic re-check before the send (§9).
+Keepouts	Have Preview, then atomic write to map_layers.json, then mask and costmap verified	A profile-declared adapter, because other robots store keepouts differently
+Incidents	Have Evidence gate, one costmap clear, planner probe, retry needing approval, escalation. Interrupted recovery never resumes.	Generalise into ladders defined per event type
+Logs	Have /rosout ring buffer, last 30 lines	Profile-declared sources, classified into structured findings
+Halt detection	Missing Only reacts to ABORTED or REJECTED	New: halted-while-commanded, stall, node loss, localization drop
+Cause attribution	Missing	New: which velocity input is winning, plus safety status
+Escape motion	Missing	New: bounded Nav2 behaviors behind preconditions
+Robot-agnostic config	Missing Topics and paths are hard-coded	New: the profile
+
+One-owner rule: while the demo runtime is driving the simulator, the edge under development runs observe-only. Two mission owners on one robot is a failure mode the demo already guards against.
+
+§3
+Architecture
+Where people work
+People & workflows
+
+    Escalations via the ambiguous.ai MCP
+    Claude Code, Cursor or any MCP client: "Why is robot 3 stopped?"
+    Webhooks: Slack, PagerDuty
+
+messages
+MCP
+ripple-agent · on or off the robot
+Ripple Agent
+
+    Orchestrator: incident state machine
+    Diagnostic reasoner: model over evidence
+    Site memory and incident memory (Postgres)
+    Map interpreter: image → polygon
+    Human collaboration
+
+typed tools
+events
+ripple_edge · ROS 2 package
+Edge
+
+    Profile: this robot's contract
+    Observers plus RosScope diagnostics
+    Event detector: deterministic, local
+    Policy engine: levels, limits, budgets
+    Executors: nav, costmap, lifecycle, escape
+    Verify-after on every action
+
+ROS 2
+DDS
+Existing
+Robot stack
+
+    Nav2
+    Safety controller
+    twist_mux, drivers
+
+Anywhere: cloud, laptop or robotOn the robot · works with the agent unreachable
+
+    The edge is an MCP server per robot. Its tools are the typed API in your doc §6, and events arrive as resource updates. The Ripple Agent is one client of it, the always-on, event-driven one. A person's own agent can connect with the same guarantees, because the policy lives in the edge, not in whichever client calls it.
+    The edge is safe on its own. If the agent disconnects mid-incident, the edge finishes or cancels the current bounded action, holds, and records the fact. It never runs a ladder by itself beyond the auto-level steps in the profile.
+    Fleet (your doc §18) means one edge per robot, connecting out to the agent. No SSH is needed.
+
+§4
+Your doc, section by section
+Section	Verdict	Implementation
+§2 Principles	Keep	Each becomes a check the edge enforces: observe before acting (preconditions read fresh state), verify after acting (automatic post-observation), constrained tools (no shell verb exists), escalate uncertainty (budgets and unknown-state rules).
+§3–4 Event loop	Keep	The agent's loop, triggered by edge events or human messages. SAFETY CHECK runs in the edge, not in the loop.
+§5.1 Orchestrator	Keep	It knows tool semantics only; ROS is invisible to it, as your doc says.
+§5.2 Observer	Amend	Summaries first, as written. Each field also carries its age and source, and missing data is unknown, never healthy. The demo already follows this rule.
+§5.3 Diagnosis	Keep	Evidence combination is right. Deterministic rules produce candidate causes (§6 here), and the model weighs them and says what would distinguish them.
+§5.4 Recovery planner	Amend	The ladder is code with budgets, and each step has a defined progress test. "No improvement" must be measurable, not the model's opinion.
+§5.5 Map interpreter	Keep	Port the demo's preview flow: region, then 0.55 m clearance, then map frame, then verification. The demo requires an unrotated map (origin yaw 0); the product needs the general transform.
+§5.6–5.7 Memory	Amend	Use Postgres, not JSON. The demo's journal already exists, and every change stays auditable.
+§5.8 Human agent	Keep	Behind a HumanChannel interface with ambiguous.ai as the first adapter. Replies are untrusted text that becomes a proposal, and the proposal still goes through policy.
+§6 Tool layer	Amend	Observation tools come from RosScope diagnostics plus the edge's observers. restart_node and restart_process become lifecycle reset of declared nodes and restart of profile-declared services. There is no generic process restart, because RosScope's version is domain-wide.
+§7 Responses	Amend	Same shape. On Humble, failure_reason is derived and labelled with its evidence (probe result, matched log pattern), because Nav2 doesn't report it.
+§8 Safety levels	Amend	Keep the four levels. Add an autonomy setting per action (off, suggest, ask, auto) so a site can tune each one. Escape motion gets its own preconditions (§7 here). Level 3 "send navigation goal" needs no extra approval when an operator commanded it; its "stronger validation" is the automatic dispatch checks (§9 here). Removing a keepout always needs a person, because it loosens a restriction.
+§9 Monitoring	Keep	This is the edge's event detector. It is the most important missing piece (§6 here).
+§13 Incident states	Keep	It maps onto the demo's states (DIAGNOSING, CLEARING COSTMAPS, REPLANNING, NEEDS HUMAN). Keep the demo's rule that interrupted recovery never resumes automatically.
+§16 Dashboard	Demo only	The product has no destination UI. The timeline lives in the escalation thread and the MCP resources. Your §20 win condition says "watch", so the demo keeps its dashboard.
+
+§5
+Configuring a robot
+
+This is the SMR300 profile, written from what's actually in the simulator. A second robot is a second file.
+
+robot: smr300_01
+ros: { distro: humble, domain_id: 0 }
+
+navigation:
+  navigate_action: /navigate_to_pose
+  planner_action:  /compute_path_to_pose            # read-only route probe
+  lifecycle_nodes: [/amcl, /planner_server, /controller_server, /bt_navigator, /behavior_server]
+  costmap_clear:   [/global_costmap/clear_entirely_global_costmap,
+                    /local_costmap/clear_entirely_local_costmap]
+  keepout:         { adapter: layers_file, path: ~/map_layers.json, verify_mask: /keepout_filter_mask }
+
+motion_chain:                                     # twist_mux → /diff_cont/cmd_vel_unstamped
+  inputs: { safety: cmd_vel_safety, joystick: cmd_vel_joy, navigation: cmd_vel }
+
+safety:
+  controller: required
+  status:     { service: /safety/status, parser: smr300_text }   # "Obstacle Stop: ACTIVE"
+  holding_signal: cmd_vel_safety                    # zeros here = the safety controller is stopping it
+  never_touch: [/safety/override, /safety/emergency_stop, cmd_vel_safety, cmd_vel_joy, /control_mode]
+
+localization: { pose: /amcl_pose, refresh: /request_nomotion_update }
+odometry:     /diff_cont/odom
+
+logs:
+  rosout:   { nodes: [planner_server, controller_server, bt_navigator, amcl, safety_controller], min_level: warn }
+  journald: []                                      # vendor services on real robots
+
+triggers:
+  halted_while_commanded: { speed_below: 0.02, turn_below: 0.02, for_s: 8 }
+  no_progress:            { distance_remaining_flat_for_s: 15 }
+  nav_failures:           { count: 3, window_s: 120 }
+  node_not_active:        { nodes: navigation.lifecycle_nodes }
+  localization_degraded:  { for_s: 5 }
+
+missions:
+  operators:            { channel: ambiguous, allow: [site-engineers] }  # who can command it
+  operator_command:     go            # "send the robot to B" → dispatch, no second approval
+  inferred_destination: go_announce   # Ripple picked the station → go, say which and why
+  agent_initiated:      ask           # motion nobody commanded
+  dispatch_checks: [station_registered, facts_fresh, keepouts_verified,
+                    route_probe_ok, safety_not_holding, mode_not_manual, single_owner]
+
+recovery:
+  clear_costmaps:  { autonomy: auto, per_incident: 1 }
+  retry_goal:      { autonomy: auto, per_incident: 1 }  # continues the goal the operator commanded
+  lifecycle_reset: { autonomy: ask,  nodes: [/controller_server, /planner_server] }
+  escape:
+    autonomy: ask                                   # off | suggest | ask | auto
+    backup: { max_m: 0.30, max_mps: 0.15 }          # matches nav2_params_working.yaml
+    spin:   { max_rad: 1.57 }
+    per_incident: 2
+    requires: [safety_present, safety_not_holding, mode_not_manual,
+               localization_fresh, no_active_goal, rear_scan_fresh]
+
+escalation: { channel: ambiguous, after_failed_steps: 2, reply_timeout_s: 120 }
+
+§6
+"Why did it stop?" Name the cause before acting
+
+The detector compares two things: what the robot was told to do (an active goal, Nav2 feedback) and what it did (odometry). It then looks at which velocity input is winning and what the safety status says. That attribution travels with every event, so the agent starts from a cause instead of just a symptom.
+Evidence	Likely cause	What Ripple may do
+Zeros on cmd_vel_safety; Obstacle Stop: ACTIVE	Safety controller: an obstacle inside 0.35 m	Report scan distances and escalate. No motion.
+E-Stop: ACTIVE	Emergency stop engaged	Escalate. It never clears the stop.
+Low Confidence Stop: ACTIVE	Localization below 30%	Request a no-motion AMCL update and re-check. If it persists, escalate. It never calls /safety/override.
+Goal active, no safety stop, odometry near 0, distance_remaining flat	Nav2 stalled: progress checker, oscillation, or stuck in inflation	Ladder: clear the local costmap, escape if allowed, then retry
+Goal ABORTED; planner probe finds no path	Route blocked, or keepouts seal it off	Clear the global costmap once, probe again, then escalate: "Is Aisle 2 obstructed?"
+Lifecycle node not active, or its process gone	Nav2 component down	Reset a declared node (ask), then verify lifecycle and probe
+control_mode = manual	A person has taken control	Ripple stands down completely until the mode returns
+
+§7
+Getting unstuck: your teleop idea
+
+Here is the SMR300's velocity chain, read from twist_mux.yaml and safety_controller.py:
+100
+cmd_vel_safety
+Safety controller. Zeros at 10 Hz while holding.
+90
+cmd_vel_joy
+Human joystick or manual UI
+20
+cmd_vel_tracker
+Sequence following
+10
+cmd_vel
+Nav2 controller and behaviors. Ripple's escape goes here.
+twist_mux
+highest active input wins · 0.5 s timeout
+Wheels
+/diff_cont/cmd_vel_unstamped
+The finding. The obstacle stop fires when more than 3 scan points fall inside 0.35 m, front or rear. The two directions share one obstacle_stop flag, and while it's set, zeros win over everything below, including a backup away from the obstacle. It clears only beyond 0.50 m. The only ways to move the robot while it's held are to override the controller (/safety/override), weaken it (switching to manual scales its zones by 0.1, to 3.5 cm), or impersonate it. All three are Level 4. So when the safety controller is the cause, Ripple escalates. This explains the README's B1 failure from the rear-obstacle stop.
+Where escape does apply. Many real halts aren't safety stops: the footprint sits in inflated cost so the planner and controller refuse to move, the robot oscillates, or the progress checker fails after a localization jump. There, Nav2's own BackUp and Spin behaviors are the right tool. They check the local costmap footprint before moving, they publish on the lowest-priority input so the safety controller and any human still override them, and their distance and speed come from the profile. This is "teleop out of there" without handing the model a joystick.
+Rules the edge enforces for every escape
+
+    Preconditions, read fresh: safety controller present and answering; not holding; mode not manual; localization fresh; no active goal (cancel first and confirm the terminal result); a fresh scan in the direction of travel.
+    Only declared primitives: backup up to 0.30 m at 0.15 m/s, spin up to 90°. The simulator loads only spin, backup and wait. DriveOnHeading and AssistedTeleop are installed but not loaded, so enabling them is a robot-integration step, never something the agent turns on.
+    Never a human's channel: agent motion never publishes on cmd_vel_joy. That would outrank Nav2 and pose as an operator.
+    Verify after: odometry moved about as commanded, then the route probe runs again. No improvement uses up the budget and escalates.
+    No safety layer, no escape: if a robot's profile declares no safety controller (for example Nav2's stock simulation, with no collision monitor running), safety_present is false and escape is off.
+
+Tuning path: how "you'd have to tune it" becomes a procedure
+
+    Suggest: the edge logs what it would do on real incidents. Nothing moves.
+    Simulate: scripted scenarios, such as stuck in inflation, a pallet behind the robot, and a held safety stop that must be refused.
+    Ask: each escape needs a person's confirmation in the escalation thread.
+    Auto within budget: per site, per primitive, once the logs show it behaving.
+
+§8
+Recovery ladder for "navigation stalled"
+
+Each step has a test that decides whether things improved. The model can reorder or skip steps within what the profile allows. It can't add steps, and it can't continue past the budget.
+
+    1
+    Observe: summary state, attribution, recent classified logs
+    Test: a cause is named, or the state is "unknown", which escalates straight away
+    auto
+    2
+    Clear the local costmap
+    Test: distance_remaining falls within 10 s
+    auto
+    3
+    Escape: back up or spin, within profile limits
+    Test: moved as commanded, and the route probe now finds a path
+    ask
+    4
+    Clear the global costmap and probe the route
+    Test: ComputePathToPose returns a non-empty path
+    auto
+    5
+    Retry the commanded goal
+    Test: Nav2 SUCCEEDED plus settled odometry. It continues the operator's command, so it needs no new approval.
+    auto
+    6
+    Escalate with evidence and one specific question
+    The reply becomes a proposal, for example a keepout, which goes through policy and back into the ladder at step 4
+    person
+
+§9
+"Send the robot to B" just runs
+
+When an operator texts a destination, Ripple dispatches. The message is the approval. The safety gates that matter are already in the stack (the robot's safety controller and Nav2's collision checking) and in the edge's automatic checks. A second "Approve?" adds friction without adding safety.
+Situation	What Ripple does
+Operator names a registered station: "Send the robot to B."	Dispatches immediately and replies with what it's doing: "Going to Packing B · EXIT BAY (4.21, 2.18)."
+Operator gives the goal and Ripple picks the station: "A is being inspected, use the other one."	Goes, and says which station and why. A site can set this to confirm first.
+The name matches no station, or two could fit	Asks which one. That is a clarification, not an approval.
+An automatic check fails	Doesn't move, and says which check failed and what would fix it: "The route to B is sealed by keepout 'construction, top-left'."
+Operator says "stop" or "hold"	Cancels and holds immediately, every time
+Motion nobody commanded, such as a new destination Ripple chooses mid-incident	Follows the profile (agent_initiated: ask). A retry of the goal the operator already commanded runs without asking.
+What keeps this safe without a second approval
+
+    Where the command came from. Only a message from an authorized operator on a configured channel counts. A log line, a document or a forwarded message saying "send the robot to B" is evidence, never a command. The channel's access list is now the gate, so choose deliberately who can message the agent.
+    Exact destinations. Commands resolve to registered stations with an exact frame and coordinates. The model can't invent a pose.
+    Checks at dispatch, and again if anything changes before the send: station registered and available, facts fresh, keepouts applied and verified, route probe finds a path, safety controller not holding, mode not manual, and no other mission owner.
+    The journal still records an approval. It stores the operator's identity, the message ID and the resolved target, so the audit trail the demo built is kept.
+
+The demo still asks for a click to approve. Its dispatch loop sends only proposals with an operator set (runtime.py), and the expiry story in DEMO.md depends on that. Matching it to this behaviour is a change in Codex's files, so it's yours to hand to Codex.
+
+§10
+People & workflows
+
+    Escalation via ambiguous.ai. I couldn't read app.ambiguous.ai/connect-mcp: it's a JavaScript app, and the fetch returned only "Ambiguous Workspace". The agent codes against a small HumanChannel interface: send an escalation with evidence and an optional map image, receive replies, and confirm an action. The ambiguous.ai MCP becomes its first adapter once I have its tool list.
+    Replies are data, not commands. "Pallet there, avoid that aisle" becomes a keepout polygon that is validated, clearance-buffered and verified. Adding a restriction can be auto; removing one always asks.
+    Your own agent. Any MCP client can connect to the Ripple Agent and ask "Why is robot 3 stopped?" or "Close Aisle 4". The same policy applies because it lives in the edge.
+    Logs are untrusted input. A /rosout line saying "ignore previous instructions" is just text. The edge's limits make that harmless; the agent's prompt keeps logs fenced as evidence.
+
+§11
+Build sequence
+
+This runs alongside the hackathon demo in a worktree and doesn't touch Codex's files. The first two steps are observe-only, so they coexist with the demo on the same simulator.
+Step	Work	Done when
+0 · Contracts	Tool, event and profile schemas; the SMR300 profile	Schemas validate the SMR300 profile and sample tool responses
+1 · Edge, observe-only	ripple_edge ROS 2 package: profile loader, observers, RosScope diagnostics, event detector with attribution	A held safety stop and a stall are each named correctly in the simulator
+2 · Log classifier	Humble /rosout patterns into findings, tested against recorded failures	The demo's evidence runs classify as expected
+3 · Policy + Level 2	Policy engine, costmap clear, lifecycle reset, cancel, budgets, verify-after	Denials return reasons; budgets can't be exceeded (tested)
+4 · Escape	BackUp and Spin executor in suggest, then ask	All three scenarios pass, including refusing to move during a held safety stop
+5 · Agent	Orchestrator, ladders, model reasoning, site and incident memory	Your Demo 2 runs through the edge
+6 · People	HumanChannel with the ambiguous.ai adapter; MCP for workflows	Your Demo 3 end to end
+7 · Level 3 + map	Goals and keepouts through policy; port the demo's map interpreter	Your Demo 1 through the edge
+8 · Second robot	A profile for Nav2's stock simulation (nav2_bringup is installed)	It runs with no code change, and escape turns itself off
+
+§12
+Test these first
+
+    Held-stop deadlock. Put an obstacle 0.3 m ahead and send BackUp. The expected result is zero motion. This confirms the finding in §7 before anything is built on it.
+    BackUp's own checking. With a pallet behind the robot, confirm BackUp refuses based on the local costmap before the safety controller has to act.
+    Stall thresholds. Rotating in place, waiting at a goal and slow docking must not look like a halt. That's why the trigger uses angular speed and distance_remaining, not only linear speed.
+    Humble log patterns. Planner and controller wording varies by plugin (NavFn, Smac, DWB, RPP). Build the pattern table from recorded runs, not from memory.
+
+An aside about the simulator, not Ripple: the smr300l safety controller's shared front/rear flag makes it impossible to back away from a front obstacle. A direction-aware stop would let the robot's own recovery work. That change is for whoever owns that repo; Ripple won't route around it.
+
+§13
+Your decisions
+Edge and agent split, with policy on the robot?
+
+This is the biggest structural call, and it differs from your doc's single "RosScope bridge".
+
+Recommendation: yes. It is the only way the limits hold no matter which model or client is calling.
+Escape autonomy for the first release
+
+Recommendation: ask by default. Raise it to auto per site after the simulator scenarios and the suggest-mode logs look right.
+Who counts as an operator?
+
+Commands run without a second approval, so the list of people who can message Ripple is the gate.
+
+Recommendation: named site engineers on the configured channel. Anyone else can ask questions, but can't move the robot.
+ambiguous.ai access
+
+I need the MCP endpoint and tool list, or docs. Until then the agent uses a stand-in channel behind the same interface.
+When to start
+
+Recommendation: steps 0–2 now in a worktree. They're observe-only, so they can't collide with Codex or with the demo on the simulator. Step 3 onward waits until after the hackathon, or until the demo runtime is off.
+Grounded in: twist_mux.yaml, safety_controller.py, nav2_params_working.yaml, Humble nav2_msgs action definitions, RosScope src/services, and Ripple at 0c7747c including incidents.py. Read 12 Sep 2026.

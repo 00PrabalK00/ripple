@@ -1,0 +1,598 @@
+{
+  "schema_version": 1,
+  "robot": "smr300_01",
+  "mode": "observe_only",
+  "observations": {
+    "localization": {
+      "value": true,
+      "source": "/amcl_pose",
+      "age_s": 0.4009052639994479,
+      "fresh": true
+    },
+    "pose": {
+      "value": {
+        "frame": "map",
+        "x": 3.610380861165967,
+        "y": 0.5426457876163294
+      },
+      "source": "/amcl_pose",
+      "age_s": 0.4008615809998446,
+      "fresh": true
+    },
+    "goal": {
+      "value": {
+        "active": false,
+        "id": null
+      },
+      "source": "Nav2 status",
+      "age_s": 97.26265930099999,
+      "fresh": false
+    },
+    "lifecycle": {
+      "value": {
+        "/behavior_server": "active",
+        "/bt_navigator": "active",
+        "/planner_server": "active",
+        "/amcl": "active"
+      },
+      "source": "declared GetState services",
+      "age_s": 0.03102311699967686,
+      "fresh": true
+    },
+    "odometry": {
+      "value": {
+        "linear": 1.1441848237332407e-05,
+        "angular": -0.0005320039808439569
+      },
+      "source": "/diff_cont/odom",
+      "age_s": 0.035497310000209836,
+      "fresh": true
+    },
+    "scan.front": {
+      "value": {
+        "minimum_m": 0.7203270196914673,
+        "valid_points": 179
+      },
+      "source": "/scan",
+      "age_s": 0.055681806999928085,
+      "fresh": true
+    },
+    "scan.rear": {
+      "value": {
+        "minimum_m": 0.7939558029174805,
+        "valid_points": 168
+      },
+      "source": "/scan2",
+      "age_s": 0.050744961999953375,
+      "fresh": true
+    },
+    "safety": {
+      "value": {
+        "known": true,
+        "emergency": false,
+        "obstacle": false,
+        "localization": false,
+        "override": false,
+        "mode": "zones"
+      },
+      "source": "/safety/status",
+      "age_s": 0.274672742999428,
+      "fresh": true
+    },
+    "mode": {
+      "value": "zones",
+      "source": "/safety/status",
+      "age_s": 0.27465451399984886,
+      "fresh": true
+    },
+    "rosscope": {
+      "value": {
+        "report": {
+          "completed_at": "2026-09-12T17:41:29.535Z",
+          "domain": "0",
+          "processes": [
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/nav2_controller/controller_server",
+              "memory_percent": 0.375130792371197,
+              "name": "controller_serv",
+              "pid": 15446,
+              "ros_domain_id": "0",
+              "state": "R"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/bash",
+              "memory_percent": 0.02110576823877709,
+              "name": "bash",
+              "pid": 15278,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/teleop_twist_joy/teleop_node",
+              "memory_percent": 0.18398561924050558,
+              "name": "teleop_node",
+              "pid": 14032,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/home/zuci/Ripple/build/rosscope-observe",
+              "memory_percent": 0.07400691642737267,
+              "name": "rosscope-observ",
+              "pid": 103776,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/python3.10",
+              "memory_percent": 0.258091973916353,
+              "name": "ros2",
+              "pid": 13791,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/python3.10",
+              "memory_percent": 0.43166143662912293,
+              "name": "keepout_zone_pu",
+              "pid": 15463,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/nav2_amcl/amcl",
+              "memory_percent": 0.26177118910992075,
+              "name": "amcl",
+              "pid": 15444,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/bash",
+              "memory_percent": 0.02202557203716902,
+              "name": "bash",
+              "pid": 104515,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/python3.10",
+              "memory_percent": 0.5034558520279312,
+              "name": "python",
+              "pid": 104554,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/nav2_lifecycle_manager/lifecycle_manager",
+              "memory_percent": 0.2111571206362457,
+              "name": "lifecycle_manag",
+              "pid": 15456,
+              "ros_domain_id": "0",
+              "state": "R"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/robot_state_publisher/robot_state_publisher",
+              "memory_percent": 0.20014433461766118,
+              "name": "robot_state_pub",
+              "pid": 14028,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/bash",
+              "memory_percent": 0.021080908676658388,
+              "name": "bash",
+              "pid": 13735,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/python3.10",
+              "memory_percent": 0.4075973804982204,
+              "name": "scan_merger",
+              "pid": 15454,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/gzserver-11.10.2",
+              "memory_percent": 2.382043242213923,
+              "name": "gzserver",
+              "pid": 14038,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/python3.10",
+              "memory_percent": 0.22679378520890858,
+              "name": "ros2",
+              "pid": 15280,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/nav2_behaviors/behavior_server",
+              "memory_percent": 0.24717862614624334,
+              "name": "behavior_server",
+              "pid": 15450,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/nav2_planner/planner_server",
+              "memory_percent": 0.37672180434679386,
+              "name": "planner_server",
+              "pid": 15448,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/joy/joy_node",
+              "memory_percent": 0.21757088766287053,
+              "name": "joy_node",
+              "pid": 14030,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/python3.10",
+              "memory_percent": 0.2861584195483664,
+              "name": "ros2",
+              "pid": 104637,
+              "ros_domain_id": "0",
+              "state": "R"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/twist_mux/twist_mux",
+              "memory_percent": 0.18326469193906325,
+              "name": "twist_mux",
+              "pid": 14034,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/nav2_bt_navigator/bt_navigator",
+              "memory_percent": 0.2733557450572354,
+              "name": "bt_navigator",
+              "pid": 15452,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/gzclient-11.10.2",
+              "memory_percent": 3.0275963513123485,
+              "name": "gzclient",
+              "pid": 14040,
+              "ros_domain_id": "0",
+              "state": "R"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/home/zuci/.local/share/claude/versions/2.1.263",
+              "memory_percent": 2.122285677635617,
+              "name": "claude",
+              "pid": 18810,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/python3.10",
+              "memory_percent": 0.15412928513594576,
+              "name": "ros2",
+              "pid": 15305,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/python3.10",
+              "memory_percent": 0.4169694354169707,
+              "name": "safety_controll",
+              "pid": 14036,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/usr/bin/python3.10",
+              "memory_percent": 0.4083680269239002,
+              "name": "python3",
+              "pid": 12804,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/opt/ros/humble/lib/nav2_map_server/map_server",
+              "memory_percent": 0.24822272775522877,
+              "name": "map_server",
+              "pid": 15442,
+              "ros_domain_id": "0",
+              "state": "S"
+            },
+            {
+              "cpu_percent": 0,
+              "executable": "/home/zuci/Ripple/build/rosscope-observe",
+              "memory_percent": 0.06709595815837381,
+              "name": "rosscope-observ",
+              "pid": 104710,
+              "ros_domain_id": "0",
+              "state": "R"
+            }
+          ],
+          "schema_version": 1,
+          "source": "RosScope",
+          "started_at": "2026-09-12T17:40:29.404Z",
+          "tf_nav2": {
+            "domain_id": "0",
+            "nav2": {
+              "action_status": [],
+              "active_action_topics": [],
+              "goal_active": false,
+              "lifecycle_states": [
+                {
+                  "node": "/amcl",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/behavior_server",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/bt_navigator",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/global_costmap/global_costmap",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/map_server",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/planner_server",
+                  "state": "active [3]"
+                }
+              ]
+            },
+            "runtime": {
+              "action_status": [],
+              "active_action_topics": [],
+              "goal_active": false,
+              "lifecycle_states": [
+                {
+                  "node": "/amcl",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/behavior_server",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/bt_navigator",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/global_costmap/global_costmap",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/map_server",
+                  "state": "active [3]"
+                },
+                {
+                  "node": "/planner_server",
+                  "state": "active [3]"
+                }
+              ]
+            },
+            "tf_edges": [
+              {
+                "child": "base_link",
+                "parent": "odom",
+                "topic": "/tf"
+              },
+              {
+                "child": "base_footprint",
+                "parent": "base_link",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "caster_wheel_left",
+                "parent": "chassis",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "caster_wheel_left_rear",
+                "parent": "chassis",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "caster_wheel_right",
+                "parent": "chassis",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "caster_wheel_right_rear",
+                "parent": "chassis",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "chassis",
+                "parent": "base_link",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "face_link",
+                "parent": "chassis",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "imu_link",
+                "parent": "chassis",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "laser_frame",
+                "parent": "chassis",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "laser_frame2",
+                "parent": "chassis",
+                "topic": "/tf_static"
+              },
+              {
+                "child": "point",
+                "parent": "left_wheel",
+                "topic": "/tf_static"
+              }
+            ],
+            "tf_topics": [
+              "/tf",
+              "/tf_static"
+            ],
+            "tf_warnings": [
+              "Multiple publishers detected on /tf",
+              "Multiple publishers detected on /tf_static"
+            ]
+          }
+        },
+        "error": null
+      },
+      "source": "RosScope read-only bridge",
+      "age_s": 97.28153230499993,
+      "fresh": false
+    }
+  },
+  "velocity_winner": {
+    "value": null,
+    "derived": true,
+    "method": "fresh input with greatest configured priority"
+  },
+  "cause": {
+    "value": "unknown",
+    "derived": true
+  },
+  "events": [
+    {
+      "schema_version": 1,
+      "id": "57d122c4-6a3a-470c-ad59-15b359a49887",
+      "robot": "smr300_01",
+      "kind": "node_not_active",
+      "cause": "unknown",
+      "evidence": {
+        "localization": {
+          "value": true,
+          "source": "/amcl_pose",
+          "age_s": 0.14330954900015058,
+          "fresh": true
+        },
+        "pose": {
+          "value": {
+            "frame": "map",
+            "x": 3.6088756026004765,
+            "y": 0.5424208446283432
+          },
+          "source": "/amcl_pose",
+          "age_s": 0.14327339099963865,
+          "fresh": true
+        },
+        "goal": {
+          "value": {
+            "active": false,
+            "id": null
+          },
+          "source": "Nav2 status",
+          "age_s": 4.73422951900011,
+          "fresh": false
+        },
+        "lifecycle": {
+          "value": {
+            "/behavior_server": "active",
+            "/bt_navigator": "active",
+            "/planner_server": "active",
+            "/amcl": "active"
+          },
+          "source": "declared GetState services",
+          "age_s": 2.1099000150570646e-05,
+          "fresh": true
+        },
+        "odometry": {
+          "value": {
+            "linear": 1.124427405548622e-05,
+            "angular": -0.0005247484476762215
+          },
+          "source": "/diff_cont/odom",
+          "age_s": 0.004083931999957713,
+          "fresh": true
+        },
+        "scan.front": {
+          "value": {
+            "minimum_m": 0.7325184345245361,
+            "valid_points": 180
+          },
+          "source": "/scan",
+          "age_s": 0.13140712200038251,
+          "fresh": true
+        },
+        "scan.rear": {
+          "value": {
+            "minimum_m": 0.7978573441505432,
+            "valid_points": 169
+          },
+          "source": "/scan2",
+          "age_s": 0.12511980999988737,
+          "fresh": true
+        },
+        "safety": {
+          "value": {
+            "known": true,
+            "emergency": false,
+            "obstacle": false,
+            "localization": false,
+            "override": false,
+            "mode": "zones"
+          },
+          "source": "/safety/status",
+          "age_s": 0.24244069199994556,
+          "fresh": true
+        },
+        "mode": {
+          "value": "zones",
+          "source": "/safety/status",
+          "age_s": 0.24242228599996452,
+          "fresh": true
+        }
+      },
+      "observed_at": "2026-09-12T17:40:34.108932+00:00",
+      "derived": true
+    }
+  ],
+  "findings": []
+}

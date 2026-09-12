@@ -13,3 +13,7 @@ smr300l_gazebo_ros2control/
 .agents/
 .codex/
 recordings/
+.ambi/
+
+# Also ignore a development dependency symlink.
+node_modules

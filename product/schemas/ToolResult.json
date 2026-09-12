@@ -1,0 +1,100 @@
+{
+  "$defs": {
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "title": "Value"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "age_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Age S"
+        },
+        "fresh": {
+          "title": "Fresh",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "value",
+        "source",
+        "fresh"
+      ],
+      "title": "Observation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "robot": {
+      "title": "Robot",
+      "type": "string"
+    },
+    "request_id": {
+      "title": "Request Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "denied",
+        "unknown",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "observations": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Observation"
+      },
+      "title": "Observations",
+      "type": "object"
+    },
+    "event_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Event Ids",
+      "type": "array"
+    },
+    "verified": {
+      "title": "Verified",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "robot",
+    "request_id",
+    "status",
+    "reason",
+    "observations",
+    "event_ids",
+    "verified"
+  ],
+  "title": "ToolResult",
+  "type": "object"
+}

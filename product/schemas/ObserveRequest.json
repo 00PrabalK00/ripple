@@ -1,0 +1,28 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "tool": {
+      "enum": [
+        "get_robot_health",
+        "get_pose",
+        "get_nav_status",
+        "get_diagnostics",
+        "get_recent_logs",
+        "get_events"
+      ],
+      "title": "Tool",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "tool"
+  ],
+  "title": "ObserveRequest",
+  "type": "object"
+}
