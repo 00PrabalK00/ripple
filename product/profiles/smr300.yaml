@@ -1,0 +1,77 @@
+schema_version: 1
+robot: smr300_01
+ros_distro: humble
+domain_id: 0
+navigation:
+  navigate_action: /navigate_to_pose
+  planner_action: /compute_path_to_pose
+  lifecycle_nodes: [/amcl, /planner_server, /controller_server, /bt_navigator, /behavior_server]
+  clear_services: [/global_costmap/clear_entirely_global_costmap, /local_costmap/clear_entirely_local_costmap]
+  keepout_adapter: layers_file
+  keepout_path: ~/map_layers.json
+  verify_mask: /keepout_filter_mask
+  map_topic: /map
+  global_frame: map
+  base_frame: base_link
+safety:
+  required: true
+  service: /safety/status
+  parser: smr300_text
+  max_age_s: 1.0
+  never_touch: [/safety/override, /safety/emergency_stop, /cmd_vel_safety, /cmd_vel_joy, /control_mode]
+motion_inputs:
+  safety: {topic: /cmd_vel_safety, priority: 100, max_age_s: 0.5}
+  joystick: {topic: /cmd_vel_joy, priority: 90, max_age_s: 0.5}
+  tracker: {topic: /cmd_vel_tracker, priority: 20, max_age_s: 0.5}
+  navigation: {topic: /cmd_vel, priority: 10, max_age_s: 0.5}
+motion_output: {topic: /diff_cont/cmd_vel_unstamped, max_age_s: 0.5}
+odometry: {topic: /diff_cont/odom, max_age_s: 1.0}
+localization: {topic: /amcl_pose, max_age_s: 5.0}
+localization_refresh_service: /request_nomotion_update
+covariance_xy_max: 0.5
+covariance_yaw_max: 0.5
+scans:
+  front: {topic: /scan, max_age_s: 1.0}
+  rear: {topic: /scan2, max_age_s: 1.0}
+mode: {topic: /control_mode, max_age_s: 1.0}
+triggers:
+  speed_below: 0.02
+  turn_below: 0.02
+  halted_for_s: 8
+  flat_for_s: 15
+  min_progress_m: 0.03
+  goal_tolerance_m: 0.25
+  failure_count: 3
+  failure_window_s: 120
+  localization_degraded_s: 5
+logs:
+  rosout_topic: /rosout
+  nodes: [planner_server, controller_server, bt_navigator, amcl, safety_controller]
+  min_level: 30
+  journald_services: []
+missions:
+  channel: ambiguous
+  operators: [site-engineers]
+  operator_command: go
+  inferred_destination: go_announce
+  agent_initiated: ask
+  dispatch_checks: [station_registered, facts_fresh, keepouts_verified, route_probe_ok, safety_not_holding, mode_not_manual, single_owner]
+recovery:
+  clear_costmaps: {autonomy: auto, per_incident: 1}
+  retry_goal: {autonomy: auto, per_incident: 1}
+  lifecycle_reset: {autonomy: ask, per_incident: 1}
+  reset_nodes: [/controller_server, /planner_server]
+  escape:
+    autonomy: ask
+    backup_action: /backup
+    spin_action: /spin
+    max_backup_m: 0.30
+    max_backup_mps: 0.15
+    max_spin_rad: 1.57
+    per_incident: 2
+    requires: [safety_present, safety_not_holding, mode_not_manual, localization_fresh, no_active_goal, rear_scan_fresh]
+stations:
+  A: {frame: map, x: 3.61, y: 0.47, yaw: 0}
+  B: {frame: map, x: 4.21, y: 2.18, yaw: 0}
+escalation_channel: ambiguous
+reply_timeout_s: 120

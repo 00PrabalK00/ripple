@@ -1,0 +1,34 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "tool": {
+      "const": "set_goal",
+      "title": "Tool",
+      "type": "string"
+    },
+    "station": {
+      "minLength": 1,
+      "title": "Station",
+      "type": "string"
+    },
+    "authorization_id": {
+      "description": "Edge-verifiable record from the authenticated operator channel, never identity asserted by the model",
+      "minLength": 1,
+      "title": "Authorization Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "tool",
+    "station",
+    "authorization_id"
+  ],
+  "title": "NavigateRequest",
+  "type": "object"
+}

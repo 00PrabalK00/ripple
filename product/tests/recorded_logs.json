@@ -1,0 +1,36 @@
+{
+  "source": "/tmp/ripple-navigation.log",
+  "sha256": "2c1b8d42ef4ba103599cd2827da30a170df578d1f9573260391ffbd7914c5a24",
+  "records": [
+    {
+      "expected": "controller_no_progress",
+      "line": 28458,
+      "text": "[controller_server-3] [ERROR] [1789232502.798370402] [controller_server]: Failed to make progress"
+    },
+    {
+      "expected": "planner_no_path",
+      "line": 14989,
+      "text": "[planner_server-4] [WARN] [1789231818.234506551] [planner_server]: Planning algorithm  failed to generate a valid path to (3.61, 0.47)"
+    },
+    {
+      "expected": "planner_tolerance_failure",
+      "line": 14988,
+      "text": "[planner_server-4] [WARN] [1789231818.234034124] [planner_server]: GridBased: failed to create plan with tolerance 0.25."
+    },
+    {
+      "expected": "navigation_aborted",
+      "line": 28461,
+      "text": "[bt_navigator-6] [WARN] [1789232502.834410765] [bt_navigator]: [navigate_to_pose] [ActionServer] Aborting handle."
+    },
+    {
+      "expected": "tf_extrapolation",
+      "line": 163,
+      "text": "[planner_server-4] [INFO] [1789231011.067610533] [global_costmap.global_costmap]: Timed out waiting for transform from base_link to map to become available, tf error: Lookup would require extrapolation into the past.  Requested time 34.363000 but the earliest data is at time 35.000000, when looking up transform from frame [base_link] to frame [map]"
+    },
+    {
+      "expected": "service_response_timeout",
+      "line": 15533,
+      "text": "[amcl-2] [WARN] [1789231847.513331695] [amcl.rclcpp]: failed to send response to /amcl/get_state (timeout): client will not receive response, at ./src/rmw_response.cpp:154, at ./src/rcl/service.c:314"
+    }
+  ]
+}

@@ -13,3 +13,4 @@ smr300l_gazebo_ros2control/
 .agents/
 .codex/
 recordings/
+.ambi/
