@@ -57,6 +57,20 @@ class DetectorTests(unittest.TestCase):
         self.observe();self.d.observe('lifecycle',{'/amcl':'active'},'partial sample',2)
         self.assertEqual(self.d.cause(self.d.snapshot()),'unknown')
 
+    def test_idle_and_moving_robot_are_not_attributed_as_stalled(self):
+        self.observe(linear=.1)
+        self.assertEqual(self.d.cause(self.d.snapshot()),'unknown')
+        self.observe()
+        self.d.observe('goal',{'active':False,'id':None},'status',2)
+        self.assertEqual(self.d.cause(self.d.snapshot()),'unknown')
+
+    def test_sampling_gap_restarts_halt_window(self):
+        for tick in range(29):
+            self.now=tick*.25;self.observe();self.d.tick()
+        self.now=8.5;self.observe()
+        events=self.d.tick()
+        self.assertFalse([e for e in events if e.kind=='halted_while_commanded'])
+
     def test_failure_count_deduplicates_and_expires(self):
         self.observe()
         for _ in range(4):self.d.failure('same')

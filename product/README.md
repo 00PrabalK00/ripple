@@ -62,3 +62,21 @@ The post-timeout-change 20-second live run exited cleanly and received fresh
 safety, scan, odometry and localization samples. It reported `unknown` with an
 incomplete lifecycle sample, rather than claiming healthy Nav2. This run does
 not prove a live stall or recovery; the earlier held-stop capture is separate.
+
+## RosScope diagnostics
+
+Build the existing read-only bridge with `scripts/build_rosscope_bridge.sh`, then
+pass `--rosscope-binary "$PWD/build/rosscope-observe"` to the edge observer.
+This is an operator installation option, not an agent tool parameter. The bridge
+uses RosScope inspection services only; its process controls are not exposed.
+The child receives ROS/library environment settings without model or database
+credentials. A collection is bounded to 150 seconds, and reports older than 90
+seconds from collection start are stale. Missing, failed and wrong-domain reports
+are unavailable, never healthy. Fast edge observations continue during collection.
+
+The live product integration received a RosScope report containing TF edges and
+lifecycle observations. Collection took roughly 80–90 seconds on this running
+simulator; the saved capture is already older than the 90-second freshness limit
+and is correctly marked stale. This proves collection and expiry, not complete
+Nav2 health or readiness to dispatch. The fast observer remains the source for
+short-lived safety and motion facts. Live stall acceptance is still pending.

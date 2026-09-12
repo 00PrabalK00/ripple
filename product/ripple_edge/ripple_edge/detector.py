@@ -60,6 +60,12 @@ class Detector:
         states=[lifecycle.get(n) for n in self.profile.navigation.lifecycle_nodes]
         if any(s is None or s=='unknown' for s in states):return 'unknown'
         if any(s!='active' for s in states):return 'component_down'
+        goal=val('goal');odom=val('odometry');distance=val('distance_remaining')
+        t=self.profile.triggers
+        if (not goal or not goal.get('active') or not odom
+            or not isinstance(distance,(int,float)) or distance<=t.goal_tolerance_m
+            or abs(odom['linear'])>=t.speed_below or abs(odom['angular'])>=t.turn_below):
+            return 'unknown'
         return 'nav2_stall'
 
     def winner(self,facts):
@@ -69,6 +75,8 @@ class Detector:
 
     def tick(self):
         now=self.clock();facts=self.snapshot();t=self.profile.triggers;events=[];active=set()
+        # A scheduler/telemetry gap is not evidence of continuous immobility.
+        if self.samples and now-self.samples[-1][0]>1.:self.samples.clear()
         def value(key):return facts[key].value if key in facts and facts[key].fresh else None
         cause=self.cause(facts)
         def emit(key,kind,why=cause):
