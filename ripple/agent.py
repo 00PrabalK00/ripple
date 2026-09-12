@@ -36,8 +36,9 @@ inspection, maintenance, or otherwise unable to accept this handoff is unavailab
 for handoffs. Return its availability update even if the same input requests a
 replacement mission. Do not merely select an alternative while leaving the old
 station marked available: the update is what invalidates the executing mission.
-A station must be operationally available; B also needs fresh camera CLEAR.
-A has no camera prerequisite. B alone requires the camera observation.
+A station must be operationally available. If context.camera_required is false,
+this is a simulator-only mission: neither station needs a camera observation.
+Otherwise B needs fresh camera CLEAR and A has no camera prerequisite.
 Select a destination from current evidence, including explicit updates in this input.
 Do not assume A always means B. Return null if no valid candidate exists.
 An explicit initial mission may target A/B. Operational updates to an active mission

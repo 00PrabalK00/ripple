@@ -1,3 +1,21 @@
+# Current simulator-only product work
+
+- [x] Inspect RosScope upstream and pin the integration revision.
+- [x] Build a read-only bridge using RosScope C++ inspection services.
+- [x] Remove physical camera requirements from simulator missions and dashboard.
+- [x] Consume continuous observations without blocking mission execution.
+- [x] Open durable incidents on aborted/rejected navigation.
+- [ ] Verify live RosScope lifecycle/TF observations in the running simulator.
+- [ ] Natural-language map image interpretation and drawn-region previews.
+- [ ] Durable keepout/slow zones with observed costmap and planner verification.
+- [ ] Autonomous evidence-based diagnosis with bounded recovery and escalation.
+- [ ] Human-assisted restriction, reroute and verified mission continuation.
+- [ ] Record the simulator hero demo.
+
+Detailed scope: [PRODUCT_PLAN.md](docs/PRODUCT_PLAN.md).
+
+# Archived first-prototype checklist
+
 # Ripple build checklist
 
 One simulated robot, two registered destinations, owned Nav2 actions, human-approved repairs, and live camera facts. Local PostgreSQL + Drizzle replaces the original plan's SQLite choice at the operator's request.
@@ -43,12 +61,12 @@ One simulated robot, two registered destinations, owned Nav2 actions, human-appr
 ## Acceptance and demo
 - [x] Pass 20 focused tests, including real PostgreSQL durability and failed-write/no-send.
 - [x] Capture live cancellation, arrival and camera-expiry receipts in evidence/.
-- [ ] Run the complete combined A inspection → cancellation → B expiry → fresh B arrival story twice on the final station pair.
+- [ ] Run the complete combined A inspection → cancellation → B expiry → fresh B arrival story twice on the final station pair (first passed; evidence/combined-rehearsal-1.json).
 - [ ] Verify the complete ambiguous-input clarification interaction against the live model/runtime.
 - [ ] Record the two-minute demo and prepare submission text.
 - [ ] Verify the exact inherited simulator revision before submission.
 - [x] Create the public GitHub repository, exclude simulator/secrets/data, and credit the simulator in README.
-- [ ] Verify the newly added GitHub Actions workflow after push.
+- [x] Verify the newly added GitHub Actions workflow after push (run 34704842164 passed).
 
 ## Current constraints and fixes
 - The camera is handheld by operator choice. Recalibrate after repositioning; camera movement is not automatically distinguished from object movement.

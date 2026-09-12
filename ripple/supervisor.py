@@ -10,8 +10,9 @@ from .guards import dispatch_rejection
 
 
 class Supervisor:
-    def __init__(self, adapter, store, clock=monotonic):
+    def __init__(self, adapter, store, clock=monotonic, *, camera_required=True):
         self.adapter, self.store, self.clock = adapter, store, clock
+        self.camera_required = camera_required
         self.facts, self.proposals = {}, {}
         self.mission_id, self.revision = str(uuid4()), 0
         self.goal_id = None
@@ -43,7 +44,7 @@ class Supervisor:
                 proposal.state = 'EXPIRED'
         self.revision += 1
         keys = [f'station.{target.station}.available']
-        if target.station == 'B':
+        if self.camera_required and target.station == 'B':
             keys.append('camera.B')
         if any(key not in self.facts for key in keys):
             raise ValueError('missing station evidence')
@@ -89,7 +90,7 @@ class Supervisor:
             available = self.facts.get(f'station.{target.station}.available')
             camera = self.facts.get('camera.B')
             if (available is None or available.value is not True or not available.fresh(now)
-                    or (target.station == 'B' and
+                    or (self.camera_required and target.station == 'B' and
                         (camera is None or camera.value != 'CLEAR' or not camera.fresh(now)))):
                 self.cancel('destination conditions invalidated')
 
@@ -102,7 +103,7 @@ class Supervisor:
                               changed=['destination pose'], target=asdict(current_target))
         reason = dispatch_rejection(proposal, mission_id=self.mission_id,
                                     revision=self.revision, target=current_target,
-                                    facts=self.facts, now=self.clock())
+                                    facts=self.facts, now=self.clock(), camera_required=self.camera_required)
         if reason is None and (self.reconciliation_required or self.goal_id is not None):
             reason = 'previous goal requires reconciliation or confirmed stop'
         if reason is None and (self.paused or self.interpreting):

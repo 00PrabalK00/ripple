@@ -78,6 +78,8 @@ def map_image():
 
 @app.get('/api/camera.jpg')
 def camera_image(request: Request):
+    if request.app.state.runtime.camera is None:
+        raise HTTPException(503, 'Physical camera disabled in simulator mode')
     try:
         return Response(request.app.state.runtime.camera.jpeg(), media_type='image/jpeg',
                         headers={'Cache-Control': 'no-store'})

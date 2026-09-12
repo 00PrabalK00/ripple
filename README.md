@@ -1,3 +1,34 @@
+# Ripple · always-on site engineer
+
+Current direction: **one robot, simulator-only**, with RosScope inspection and
+Ripple reasoning/policy. Physical camera prerequisites are disabled. See
+[the product plan](docs/PRODUCT_PLAN.md) for the new build sequence.
+
+The dashboard now consumes a read-only headless bridge built against
+[RosScope](https://github.com/00PrabalK00/RosScope) revision
+`583ae6743be802f9f8aed1f834d48ca0d7e172ee`. Clone it beside Ripple and build:
+
+```bash
+git clone https://github.com/00PrabalK00/RosScope.git ../RosScope
+# Qt6 Core development headers/libraries are required.
+ROSSCOPE_SOURCE=../RosScope bash scripts/build_rosscope_bridge.sh
+```
+
+The build applies `patches/rosscope-command-timeout.patch`, making the upstream
+command timeout configurable. The collector uses an eight-second command floor
+and a 150-second whole-collection limit; samples older than 90 seconds are stale.
+The bridge collects process, lifecycle and TF samples asynchronously. Collection
+age is shown; empty data is unknown, not healthy. Upstream TF warnings and action
+summaries are heuristic observations, not motion authorization. The existing owned
+Nav2 adapter remains authoritative for mission outcomes. Failed navigation opens
+a durable incident; autonomous recovery and verified map editing are still pending.
+No process command lines, environments or model keys are exported by the bridge.
+
+## Earlier mission-supervisor prototype (historical)
+
+The camera instructions and evidence below describe the previous prototype.
+They are retained for reproducibility and are not required for the current build.
+
 # Ripple for Robotics
 
 A local mission supervisor for one SMR300 simulated robot. Ripple tracks station
@@ -82,6 +113,8 @@ Verified live results:
 - GLM 5.3 passed both inspection-update wordings, irrelevant input and ambiguous input checks. GLM 5.3 Flash returned a live scene description.
 
 Machine-readable examples are in `evidence/`. The complete combined scenario still needs two rehearsals on the final station pair; no full demo/video success is claimed yet.
+The camera-expiry receipt was captured before B changed from B1 to EXIT BAY.
+The recording sequence and submission draft are in `docs/`.
 
 The original B1 route failed due to the independent rear-obstacle stop and was replaced with the verified EXIT BAY zone. The safety controller was not overridden. A local action acknowledgement timeout was increased from 20 ms to 1000 ms after observed failures. AMCL receives stationary update requests for real fresh laser-based localization.
 

@@ -24,7 +24,7 @@ def parse_safety_status(success: bool, message: str) -> bool:
 
 
 def dispatch_rejection(proposal: Proposal, *, mission_id: str, revision: int,
-                       target: Target, facts: dict[str, Fact], now: float) -> str | None:
+                       target: Target, facts: dict[str, Fact], now: float, camera_required: bool = True) -> str | None:
     if proposal.state != 'APPROVED':
         return 'approval is not unused and valid'
     if proposal.expires_at is None or now >= proposal.expires_at:
@@ -42,7 +42,7 @@ def dispatch_rejection(proposal: Proposal, *, mission_id: str, revision: int,
     requirements = {'robot.mode': 'zones', 'robot.safety_clear': True,
                     'robot.localized': True, 'robot.odom_fresh': True,
                     f'station.{target.station}.available': True}
-    if target.station == 'B':
+    if camera_required and target.station == 'B':
         requirements['camera.B'] = 'CLEAR'
     for key, expected in requirements.items():
         fact = facts.get(key)
@@ -52,7 +52,7 @@ def dispatch_rejection(proposal: Proposal, *, mission_id: str, revision: int,
             if fact.max_age is None:
                 return f'freshness limit missing: {key}'
     required_dependencies = {f'station.{target.station}.available'}
-    if target.station == 'B':
+    if camera_required and target.station == 'B':
         required_dependencies.add('camera.B')
     if not required_dependencies.issubset(proposal.dependencies):
         return 'proposal is missing required dependencies'

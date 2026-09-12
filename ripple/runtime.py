@@ -16,7 +16,7 @@ from .contracts import Target
 from .robot_adapter import Nav2Adapter
 from .store import Store
 from .supervisor import Supervisor
-from .camera import Camera
+from .rosscope import RosScopeObserver, snapshot as rosscope_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -55,8 +55,8 @@ class Runtime:
         self.adapter = Nav2Adapter(self.events)
         self.adapter.set_parameters([Parameter('use_sim_time', value=True)])
         self.store = Store(os.environ['DATABASE_URL'])
-        self.s = Supervisor(self.adapter, self.store)
-        self.message = 'Ready for a mission. Packing B requires live camera CLEAR.'
+        self.s = Supervisor(self.adapter, self.store, camera_required=False)
+        self.message = 'Monitoring SMR300 simulation. Ready for a site instruction.'
         self.instruction = ''
         self.conversation = []
         self.pending_model = None
@@ -71,8 +71,10 @@ class Runtime:
             previous = previous_facts.get(key)
             self.s.observe(key, previous['value'] if previous else True,
                            previous['source'] if previous else 'demo initial context')
-        self.s.observe('camera.B', 'UNKNOWN', 'camera not connected', 1)
-        self.camera = Camera(self.events)
+        self.camera = None
+        self.rosscope_observation = None
+        self.observer = RosScopeObserver(self.events, ROOT)
+        self.incidents = [r for r in self.store.receipts() if r["kind"] == "incident_opened"][-50:]
         self.ready.set()
         try:
             while not self.stopping.is_set():
@@ -102,7 +104,9 @@ class Runtime:
                             self.attempted.add(p.id)
                             self.s.dispatch(p.id, self.targets()[p.target.station])
         finally:
-            self.camera.close()
+            self.observer.close()
+            if self.camera:
+                self.camera.close()
             if self.s.goal_id:
                 self.s.cancel('service shutdown')
                 end = time.monotonic() + 5
@@ -114,7 +118,9 @@ class Runtime:
 
     def robot_event(self, event):
         d = event.data
-        if event.kind == 'camera':
+        if event.kind == 'rosscope':
+            self.rosscope_observation = d
+        elif event.kind == 'camera':
             old = self.s.facts['camera.B'].value
             self.s.observe('camera.B', d['state'], 'D435i fixed region depth', 1, d['received_at'])
             if (old != 'CLEAR' and d['state'] == 'CLEAR' and self.s.proposals
@@ -148,12 +154,26 @@ class Runtime:
             self.s.accepted(event.goal_id)
         elif event.kind == 'terminal':
             self.s.terminal(event.goal_id, d['outcome'], d['final_pose'])
+            if d['outcome'] == 'ABORTED':
+                self.open_incident(event.goal_id, 'Nav2 aborted navigation')
         elif event.kind == 'rejected':
             self.s.terminal(event.goal_id, 'REJECTED')
+            self.open_incident(event.goal_id, 'Nav2 rejected navigation')
         elif event.kind == 'uncertain':
             self.s.state = 'HELD'
             self.s.reconciliation_required = True
             self.store.append('adapter_uncertain', goal_id=event.goal_id, reason=d['reason'])
+
+    def open_incident(self, goal_id, symptom):
+        from uuid import uuid4
+        incident = dict(id=str(uuid4()), goal_id=goal_id, symptom=symptom,
+            state='NEEDS INVESTIGATION', pose=self.adapter.pose,
+            observation=rosscope_snapshot(self.rosscope_observation, time.monotonic()),
+            question='Navigation failed. Is there a physical obstruction or a new site restriction?',
+            recovery_attempts=0)
+        self.store.append('incident_opened', **incident)
+        self.incidents.append(incident)
+        self.message = incident['question']
 
     def snapshot(self):
         now = time.monotonic()
@@ -161,7 +181,10 @@ class Runtime:
             paused=self.s.paused, interpreting=self.s.interpreting,
             reconciliation_required=self.s.reconciliation_required,
             model_configured=bool(os.environ.get('OPENROUTER_API_KEY')),
-            camera=self.camera.status(),
+            camera={'state': 'DISABLED', 'fresh': False, 'calibrated': False},
+            operating_mode='simulation',
+            rosscope=rosscope_snapshot(self.rosscope_observation, now),
+            incidents=self.incidents[-50:],
             vision_description=self.vision_description,
             pose=self.adapter.pose, targets={k: asdict(v) for k, v in self.targets().items()},
             station_zones={k: v['zone'] for k, v in json.loads((ROOT / 'config/stations.json').read_text()).items()},
@@ -191,10 +214,14 @@ class Runtime:
             self.s.paused = True
             self.s.cancel('operator requested hold')
         elif name == 'calibrate':
+            if not self.camera:
+                raise ValueError('Physical camera is disabled in simulator mode')
             self.camera.calibrate(data['roi'])
             self.s.observe('camera.B', 'UNKNOWN', 'camera recalibration', 1)
             self.store.append('camera_calibrated', roi=data['roi'])
         elif name == 'describe':
+            if not self.camera:
+                raise ValueError('Physical camera is disabled in simulator mode')
             if self.pending_vision:
                 raise ValueError('Vision request already in progress')
             self.pending_vision = self.pool.submit(agent.describe_scene, self.camera.jpeg())
@@ -223,6 +250,7 @@ class Runtime:
         self.conversation.append({'role': 'automatic' if automatic else 'operator', 'text': text})
         snapshot = self.snapshot()
         context = {k: snapshot[k] for k in ('state', 'goal_id', 'targets', 'facts', 'proposals')}
+        context['camera_required'] = False
         context['recent_conversation'] = self.conversation[-8:]
         self.pending_versions = {k: f.version for k, f in self.s.facts.items()}
         self.pending_model = self.pool.submit(agent.interpret, text, context)
@@ -244,11 +272,7 @@ class Runtime:
             if result.destination:
                 target = self.targets()[result.destination]
                 available = self.s.facts[f'station.{target.station}.available']
-                camera = self.s.facts['camera.B']
-                sensor_changed = (target.station == 'B' and
-                                  camera.version != self.pending_versions.get('camera.B'))
-                if sensor_changed or not available.value or (target.station == 'B' and
-                    (camera.value != 'CLEAR' or not camera.fresh(time.monotonic()))):
+                if not available.value or not available.fresh(time.monotonic()):
                     self.message += ' Destination is no longer available; no proposal created.'
                 else:
                     self.s.propose(target, result.explanation)

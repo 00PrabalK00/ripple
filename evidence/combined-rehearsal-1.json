@@ -1,0 +1,444 @@
+[
+  {
+    "text": "Navigate to Packing A for a handoff.",
+    "sequence": 133,
+    "time": "2026-09-12 16:24:26.137172+00",
+    "kind": "operator_input"
+  },
+  {
+    "result": {
+      "kind": "mission",
+      "updates": [],
+      "destination": "A",
+      "explanation": "...",
+      "clarification": null
+    },
+    "sequence": 134,
+    "time": "2026-09-12 16:24:27.353272+00",
+    "kind": "interpretation"
+  },
+  {
+    "id": "18d08b43-0da5-4d77-b3d8-82618d6c39b5",
+    "state": "AWAITING APPROVAL",
+    "reason": "...",
+    "target": {
+      "x": 3.61,
+      "y": 0.47,
+      "yaw": 0,
+      "frame": "map",
+      "station": "A"
+    },
+    "operator": null,
+    "revision": 1,
+    "expires_at": null,
+    "mission_id": "dff2e1c7-ee53-48da-8b5c-cf42e873910e",
+    "dependencies": {
+      "station.A.available": 1
+    },
+    "sequence": 135,
+    "time": "2026-09-12 16:24:27.367536+00",
+    "kind": "proposal"
+  },
+  {
+    "enabled": false,
+    "sequence": 136,
+    "time": "2026-09-12 16:24:46.106924+00",
+    "kind": "dispatch_pause"
+  },
+  {
+    "id": "18d08b43-0da5-4d77-b3d8-82618d6c39b5",
+    "state": "APPROVED",
+    "reason": "...",
+    "target": {
+      "x": 3.61,
+      "y": 0.47,
+      "yaw": 0,
+      "frame": "map",
+      "station": "A"
+    },
+    "operator": "local operator",
+    "revision": 1,
+    "expires_at": 8608.152422643,
+    "mission_id": "dff2e1c7-ee53-48da-8b5c-cf42e873910e",
+    "dependencies": {
+      "station.A.available": 1
+    },
+    "sequence": 137,
+    "time": "2026-09-12 16:25:01.01977+00",
+    "kind": "approved"
+  },
+  {
+    "target": {
+      "x": 3.61,
+      "y": 0.47,
+      "yaw": 0,
+      "frame": "map",
+      "station": "A"
+    },
+    "goal_id": "b7982ccb-45de-4abd-9e3b-80596aedc427",
+    "proposal_id": "18d08b43-0da5-4d77-b3d8-82618d6c39b5",
+    "dependencies": {
+      "station.A.available": 1
+    },
+    "sequence": 138,
+    "time": "2026-09-12 16:25:01.045411+00",
+    "kind": "send_claimed"
+  },
+  {
+    "goal_id": "b7982ccb-45de-4abd-9e3b-80596aedc427",
+    "sequence": 139,
+    "time": "2026-09-12 16:25:01.048293+00",
+    "kind": "goal_accepted"
+  },
+  {
+    "enabled": true,
+    "sequence": 140,
+    "time": "2026-09-12 16:25:01.141708+00",
+    "kind": "dispatch_pause"
+  },
+  {
+    "text": "Packing A is being used for inspection now. Use another available handoff station.",
+    "sequence": 141,
+    "time": "2026-09-12 16:25:01.208998+00",
+    "kind": "operator_input"
+  },
+  {
+    "result": {
+      "kind": "update",
+      "updates": [
+        {
+          "station": "A",
+          "evidence": "Packing A is being used for inspection now.",
+          "available": false
+        }
+      ],
+      "destination": "B",
+      "explanation": "Packing A is under inspection, so it is unavailable for handoffs. Packing B is available and camera.B is fresh CLEAR, making it a valid destination.",
+      "clarification": null
+    },
+    "sequence": 142,
+    "time": "2026-09-12 16:25:01.868608+00",
+    "kind": "interpretation"
+  },
+  {
+    "key": "station.A.available",
+    "value": false,
+    "source": "operator: Packing A is being used for inspection now.",
+    "max_age": null,
+    "version": 2,
+    "observed_at": 8549.008183354,
+    "sequence": 143,
+    "time": "2026-09-12 16:25:01.87554+00",
+    "kind": "fact_changed"
+  },
+  {
+    "reason": "destination conditions invalidated",
+    "goal_id": "b7982ccb-45de-4abd-9e3b-80596aedc427",
+    "sequence": 144,
+    "time": "2026-09-12 16:25:01.87694+00",
+    "kind": "cancel_requested"
+  },
+  {
+    "id": "baa295dc-f550-45d7-80d9-06601dfac4c3",
+    "state": "AWAITING APPROVAL",
+    "reason": "Packing A is under inspection, so it is unavailable for handoffs. Packing B is available and camera.B is fresh CLEAR, making it a valid destination.",
+    "target": {
+      "x": 4.21,
+      "y": 2.18,
+      "yaw": 0,
+      "frame": "map",
+      "station": "B"
+    },
+    "operator": null,
+    "revision": 2,
+    "expires_at": null,
+    "mission_id": "dff2e1c7-ee53-48da-8b5c-cf42e873910e",
+    "dependencies": {
+      "camera.B": 6,
+      "station.B.available": 1
+    },
+    "sequence": 145,
+    "time": "2026-09-12 16:25:01.886165+00",
+    "kind": "proposal"
+  },
+  {
+    "goal_id": "b7982ccb-45de-4abd-9e3b-80596aedc427",
+    "outcome": "CANCELED",
+    "final_pose": {
+      "x": 4.3651092831323846,
+      "y": 2.1598155971228326,
+      "qw": 0.9829247978556415,
+      "qz": -0.18400772201308954,
+      "frame": "map"
+    },
+    "sequence": 146,
+    "time": "2026-09-12 16:25:01.909186+00",
+    "kind": "goal_terminal"
+  },
+  {
+    "goal_id": "b7982ccb-45de-4abd-9e3b-80596aedc427",
+    "sequence": 147,
+    "time": "2026-09-12 16:25:02.656502+00",
+    "kind": "stop_confirmed"
+  },
+  {
+    "id": "baa295dc-f550-45d7-80d9-06601dfac4c3",
+    "state": "APPROVED",
+    "reason": "Packing A is under inspection, so it is unavailable for handoffs. Packing B is available and camera.B is fresh CLEAR, making it a valid destination.",
+    "target": {
+      "x": 4.21,
+      "y": 2.18,
+      "yaw": 0,
+      "frame": "map",
+      "station": "B"
+    },
+    "operator": "local operator",
+    "revision": 2,
+    "expires_at": 8644.394069023,
+    "mission_id": "dff2e1c7-ee53-48da-8b5c-cf42e873910e",
+    "dependencies": {
+      "camera.B": 6,
+      "station.B.available": 1
+    },
+    "sequence": 148,
+    "time": "2026-09-12 16:25:37.261415+00",
+    "kind": "approved"
+  },
+  {
+    "key": "camera.B",
+    "value": "UNKNOWN",
+    "source": "D435i fixed region depth",
+    "max_age": 1,
+    "version": 7,
+    "observed_at": 8585.665405126,
+    "sequence": 149,
+    "time": "2026-09-12 16:25:38.545362+00",
+    "kind": "fact_changed"
+  },
+  {
+    "changed": [
+      "camera.B"
+    ],
+    "versions": {
+      "camera.B": 7,
+      "robot.mode": 1,
+      "robot.localized": 1,
+      "robot.odom_fresh": 1,
+      "robot.safety_clear": 1,
+      "station.A.available": 2,
+      "station.B.available": 1
+    },
+    "proposal_id": "baa295dc-f550-45d7-80d9-06601dfac4c3",
+    "sequence": 150,
+    "time": "2026-09-12 16:25:38.552779+00",
+    "kind": "approval_expired"
+  },
+  {
+    "key": "camera.B",
+    "value": "BLOCKED",
+    "source": "D435i fixed region depth",
+    "max_age": 1,
+    "version": 8,
+    "observed_at": 8586.932798775,
+    "sequence": 151,
+    "time": "2026-09-12 16:25:39.804587+00",
+    "kind": "fact_changed"
+  },
+  {
+    "enabled": false,
+    "sequence": 152,
+    "time": "2026-09-12 16:26:10.823066+00",
+    "kind": "dispatch_pause"
+  },
+  {
+    "reason": "approval is not unused and valid",
+    "versions": {
+      "camera.B": 8,
+      "robot.mode": 1,
+      "robot.localized": 1,
+      "robot.odom_fresh": 1,
+      "robot.safety_clear": 1,
+      "station.A.available": 2,
+      "station.B.available": 1
+    },
+    "proposal_id": "baa295dc-f550-45d7-80d9-06601dfac4c3",
+    "send_attempted": false,
+    "sequence": 153,
+    "time": "2026-09-12 16:26:10.850692+00",
+    "kind": "dispatch_rejected"
+  },
+  {
+    "key": "camera.B",
+    "value": "UNKNOWN",
+    "source": "D435i fixed region depth",
+    "max_age": 1,
+    "version": 9,
+    "observed_at": 8626.831284252,
+    "sequence": 154,
+    "time": "2026-09-12 16:26:19.703916+00",
+    "kind": "fact_changed"
+  },
+  {
+    "key": "camera.B",
+    "value": "BLOCKED",
+    "source": "D435i fixed region depth",
+    "max_age": 1,
+    "version": 10,
+    "observed_at": 8627.063729625,
+    "sequence": 155,
+    "time": "2026-09-12 16:26:19.943261+00",
+    "kind": "fact_changed"
+  },
+  {
+    "key": "camera.B",
+    "value": "UNKNOWN",
+    "source": "D435i fixed region depth",
+    "max_age": 1,
+    "version": 11,
+    "observed_at": 8627.228814475,
+    "sequence": 156,
+    "time": "2026-09-12 16:26:20.098676+00",
+    "kind": "fact_changed"
+  },
+  {
+    "key": "camera.B",
+    "value": "BLOCKED",
+    "source": "D435i fixed region depth",
+    "max_age": 1,
+    "version": 12,
+    "observed_at": 8627.629286358,
+    "sequence": 157,
+    "time": "2026-09-12 16:26:20.498524+00",
+    "kind": "fact_changed"
+  },
+  {
+    "key": "camera.B",
+    "value": "UNKNOWN",
+    "source": "D435i fixed region depth",
+    "max_age": 1,
+    "version": 13,
+    "observed_at": 8628.096907042,
+    "sequence": 158,
+    "time": "2026-09-12 16:26:20.984196+00",
+    "kind": "fact_changed"
+  },
+  {
+    "key": "camera.B",
+    "value": "CLEAR",
+    "source": "D435i fixed region depth",
+    "max_age": 1,
+    "version": 14,
+    "observed_at": 8628.496511903,
+    "sequence": 159,
+    "time": "2026-09-12 16:26:21.371743+00",
+    "kind": "fact_changed"
+  },
+  {
+    "text": "Reconsider a repair for the existing mission using current facts.",
+    "sequence": 160,
+    "time": "2026-09-12 16:26:21.378109+00",
+    "kind": "repair_reconsideration"
+  },
+  {
+    "result": {
+      "kind": "mission",
+      "updates": [],
+      "destination": "B",
+      "explanation": "Packing A is unavailable due to inspection. Packing B is available with fresh camera CLEAR, making it a valid handoff destination.",
+      "clarification": null
+    },
+    "sequence": 161,
+    "time": "2026-09-12 16:26:21.993094+00",
+    "kind": "interpretation"
+  },
+  {
+    "id": "db8ba2dd-6057-440f-9c86-502f4d326328",
+    "state": "AWAITING APPROVAL",
+    "reason": "Packing A is unavailable due to inspection. Packing B is available with fresh camera CLEAR, making it a valid handoff destination.",
+    "target": {
+      "x": 4.21,
+      "y": 2.18,
+      "yaw": 0,
+      "frame": "map",
+      "station": "B"
+    },
+    "operator": null,
+    "revision": 3,
+    "expires_at": null,
+    "mission_id": "dff2e1c7-ee53-48da-8b5c-cf42e873910e",
+    "dependencies": {
+      "camera.B": 14,
+      "station.B.available": 1
+    },
+    "sequence": 162,
+    "time": "2026-09-12 16:26:22.008266+00",
+    "kind": "proposal"
+  },
+  {
+    "id": "db8ba2dd-6057-440f-9c86-502f4d326328",
+    "state": "APPROVED",
+    "reason": "Packing A is unavailable due to inspection. Packing B is available with fresh camera CLEAR, making it a valid handoff destination.",
+    "target": {
+      "x": 4.21,
+      "y": 2.18,
+      "yaw": 0,
+      "frame": "map",
+      "station": "B"
+    },
+    "operator": "local operator",
+    "revision": 3,
+    "expires_at": 8694.55801216,
+    "mission_id": "dff2e1c7-ee53-48da-8b5c-cf42e873910e",
+    "dependencies": {
+      "camera.B": 14,
+      "station.B.available": 1
+    },
+    "sequence": 163,
+    "time": "2026-09-12 16:26:27.425368+00",
+    "kind": "approved"
+  },
+  {
+    "target": {
+      "x": 4.21,
+      "y": 2.18,
+      "yaw": 0,
+      "frame": "map",
+      "station": "B"
+    },
+    "goal_id": "9f00da1e-4123-4227-bf69-98e539454fa0",
+    "proposal_id": "db8ba2dd-6057-440f-9c86-502f4d326328",
+    "dependencies": {
+      "camera.B": 14,
+      "station.B.available": 1
+    },
+    "sequence": 164,
+    "time": "2026-09-12 16:26:27.454745+00",
+    "kind": "send_claimed"
+  },
+  {
+    "goal_id": "9f00da1e-4123-4227-bf69-98e539454fa0",
+    "sequence": 165,
+    "time": "2026-09-12 16:26:27.457999+00",
+    "kind": "goal_accepted"
+  },
+  {
+    "goal_id": "9f00da1e-4123-4227-bf69-98e539454fa0",
+    "outcome": "SUCCEEDED",
+    "final_pose": {
+      "x": 4.350765661249006,
+      "y": 2.1627893477212106,
+      "qw": 0.9764078682216066,
+      "qz": -0.2159344226262634,
+      "frame": "map"
+    },
+    "sequence": 166,
+    "time": "2026-09-12 16:26:28.577642+00",
+    "kind": "goal_terminal"
+  },
+  {
+    "goal_id": "9f00da1e-4123-4227-bf69-98e539454fa0",
+    "sequence": 167,
+    "time": "2026-09-12 16:26:29.197866+00",
+    "kind": "stop_confirmed"
+  }
+]

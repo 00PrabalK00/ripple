@@ -1,0 +1,12 @@
+diff --git a/src/services/command_runner.cpp b/src/services/command_runner.cpp
+index 1a112b7..f80f6e8 100644
+--- a/src/services/command_runner.cpp
++++ b/src/services/command_runner.cpp
+@@ -13,6 +13,7 @@ CommandResult CommandRunner::run(
+     const QStringList& args,
+     int timeoutMs,
+     const QMap<QString, QString>& extraEnv) {
++    timeoutMs = qMax(timeoutMs, qEnvironmentVariableIntValue("ROSSCOPE_COMMAND_TIMEOUT_MS"));
+     QProcess process;
+     QElapsedTimer elapsed;
+     elapsed.start();

@@ -12,3 +12,4 @@ smr300l_gazebo_ros2control/
 *.docx
 .agents/
 .codex/
+recordings/
