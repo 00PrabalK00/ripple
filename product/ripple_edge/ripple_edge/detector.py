@@ -34,8 +34,13 @@ class Detector:
 
     def snapshot(self):
         now=self.clock()
-        return {k:Observation(value=v,source=src,age_s=max(0,now-at),fresh=0<=now-at<=age)
+        facts={k:Observation(value=v,source=src,age_s=max(0,now-at),fresh=0<=now-at<=age)
                 for k,(v,src,at,age) in self.facts.items()}
+        lifecycle=facts.get('lifecycle')
+        if lifecycle and any(lifecycle.value.get(n) in (None,'unknown')
+                             for n in self.profile.navigation.lifecycle_nodes):
+            lifecycle.fresh=False
+        return facts
 
     def failure(self,goal_id):
         if goal_id not in self.failed_ids:

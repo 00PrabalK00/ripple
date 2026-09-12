@@ -80,3 +80,30 @@ simulator; the saved capture is already older than the 90-second freshness limit
 and is correctly marked stale. This proves collection and expiry, not complete
 Nav2 health or readiness to dispatch. The fast observer remains the source for
 short-lived safety and motion facts. Live stall acceptance is still pending.
+
+## Read-only MCP edge
+
+The edge uses the [official MCP Python SDK](https://py.sdk.modelcontextprotocol.io/v1/),
+pinned to 1.30.0. Install `product/requirements.txt` in an isolated Python environment
+with ROS system packages available. With ROS sourced and `product/ripple_edge` on
+`PYTHONPATH`, launch `python -m ripple_edge.mcp_server --profile product/profiles/smr300.yaml`.
+Use stdio transport from an MCP client on the robot host. The server owns its ROS
+observer; it does not serve a development snapshot file. This first transport is
+local stdio; remote authenticated transport remains to be implemented.
+
+Tools: `get_robot_health`, `get_pose`, `get_nav_status`, `get_diagnostics`,
+`get_recent_logs`, and `get_events`. Every tool requires a `request_id` and returns
+an explicit status, observations, source and age. Missing or stale facts produce
+`unknown`. A successful read is not a claim that the robot is healthy or that an
+action was verified. Motion and recovery verbs are absent at this stage.
+
+Clients can read and subscribe to `ripple://smr300_01/events`. An update notification
+means the client should read the bounded event history again. Protocol tests cover
+discovery, stale/missing facts, invalid arguments, absent motion tools, subscription,
+notification delivery, event reading and unsubscribe. `product/scripts/probe_edge.py`
+is the live stdio acceptance probe; it only reads the simulator.
+
+Live stdio evidence is in `evidence/observe-only-mcp-live.json`: all six tools were
+discovered, pose was fresh, and health correctly returned `unknown` because the
+lifecycle sample was incomplete. The observer and client both shut down cleanly.
+This does not establish a successful recovery or navigation mission through MCP.

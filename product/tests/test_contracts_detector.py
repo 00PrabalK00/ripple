@@ -55,6 +55,7 @@ class DetectorTests(unittest.TestCase):
         self.now=3;self.assertEqual(self.d.cause(self.d.snapshot()),'unknown')
     def test_partial_lifecycle_is_unknown_not_component_failure(self):
         self.observe();self.d.observe('lifecycle',{'/amcl':'active'},'partial sample',2)
+        self.assertFalse(self.d.snapshot()['lifecycle'].fresh)
         self.assertEqual(self.d.cause(self.d.snapshot()),'unknown')
 
     def test_idle_and_moving_robot_are_not_attributed_as_stalled(self):
