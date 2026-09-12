@@ -23,7 +23,7 @@ class Observer(Node):
         super().__init__('ripple_edge_observer')
         self.profile=profile;self.detector=Detector(profile,time.monotonic)
         self.events=deque(maxlen=200);self.findings=deque(maxlen=100)
-        self.active=set();self.terminal=set();self.requests=ReadRequests();self.node_states={}
+        self.active=set();self.terminal=set();self.requests=ReadRequests();self.node_states={};self.status_seen=False
         self.latched=QoSProfile(depth=1,reliability=ReliabilityPolicy.RELIABLE,durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(Odometry,profile.odometry.topic,self.odom,qos_profile_sensor_data)
         self.create_subscription(PoseWithCovarianceStamped,profile.localization.topic,self.pose,self.latched)
@@ -75,6 +75,7 @@ class Observer(Node):
         self.detector.observe('scan.'+name,{'minimum_m':min(values) if values else None,'valid_points':len(values)},cfg.topic,cfg.max_age_s)
 
     def status(self,msg):
+        self.status_seen=True
         self.active={bytes(s.goal_info.goal_id.uuid).hex() for s in msg.status_list if s.status in (1,2,3)}
         for s in msg.status_list:
             gid=bytes(s.goal_info.goal_id.uuid).hex()
@@ -126,6 +127,10 @@ class Observer(Node):
         self.detector.observe('lifecycle',states,'declared GetState services',2)
         if self.profile.mode is None:
             self.detector.observe('mode','autonomous','profile declares no manual mode',2)
+        # Nav2 publishes goal status only on change; while nothing is active, keep "no active goal"
+        # fresh from the last status seen instead of letting it expire into "unknown".
+        if self.status_seen and not self.active:
+            self.detector.observe('goal',{'active':False,'id':None},'Nav2 status',2)
         self.events.extend(self.detector.tick())
 
     def snapshot(self):

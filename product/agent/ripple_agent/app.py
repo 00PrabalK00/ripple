@@ -68,7 +68,7 @@ async def serve(args):
                     tool == 'workspace_task_create' and str(payload.get('assignee_id')) in operator_ids)
             orch.workspace = WorkspaceTools(AmbiguousCLI(root, amb_cfg['user_id'], amb_cfg['workspace_id']),
                                             ActionJournal(os.environ['DATABASE_URL'], root), authorize)
-    server = uvicorn.Server(uvicorn.Config(build_app(orch, edge, args.port), host='127.0.0.1', port=args.port,
+    server = uvicorn.Server(uvicorn.Config(build_app(orch, edge, args.port, args.test_api), host='127.0.0.1', port=args.port,
                                            log_level='warning', lifespan='off'))
     orch.note('system', f"Ripple is online for {profile.robot}: GLM {llm.model} is the control plane; "
                         f"{'Ambiguous connected' if 'ambiguous' in orch.channels else 'Ambiguous off'}; "
@@ -96,6 +96,7 @@ def main():
     parser.add_argument('--port', type=int, default=8060)
     parser.add_argument('--rosscope-binary', type=Path)
     parser.add_argument('--no-ambiguous', action='store_true')
+    parser.add_argument('--test-api', action='store_true', help='Enable localhost verification endpoints')
     asyncio.run(serve(parser.parse_args()))
 
 

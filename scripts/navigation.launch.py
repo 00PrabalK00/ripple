@@ -34,5 +34,7 @@ def generate_launch_description():
                         parameters=[{'use_sim_time': True}], output='screen'))
     actions.append(Node(package='nav2_lifecycle_manager', executable='lifecycle_manager',
         name='ripple_navigation_lifecycle', parameters=[{'use_sim_time': True,
-        'autostart': True, 'node_names': [name for _, name in nodes]}], output='screen'))
+        'autostart': True, 'node_names': [name for _, name in nodes],
+        # Bonds make the manager shut the whole stack down when one node is reset for recovery.
+        'bond_timeout': 0.0}], output='screen'))
     return LaunchDescription(actions)

@@ -13,7 +13,7 @@ from . import mapview
 STATIC = Path(__file__).resolve().parent / 'static'
 
 
-def build_app(orch, edge, port):
+def build_app(orch, edge, port, test_api=False):
     origins = {f'http://127.0.0.1:{port}', f'http://localhost:{port}'}
     cache = {'map': None, 'png': None, 'labeled': None, 'labeled_at': 0}
 
@@ -98,7 +98,27 @@ def build_app(orch, edge, port):
         body = await request.json()
         return JSONResponse(await orch.dashboard_reopen(str(body.get('id', ''))))
 
+    async def test_tool(request):
+        """Verification only (--test-api): call an edge tool as the local dashboard operator."""
+        if not test_api:
+            return Response('Test API disabled', status_code=404)
+        body = await request.json()
+        name, args = body.get('name'), dict(body.get('args') or {})
+        if (edge.tools.level(name) == 'command' or name in ('escape', 'lifecycle_reset')) and 'authorization_id' not in args:
+            args['authorization_id'] = edge.auths.record('dashboard', 'local-dashboard', body.get('text') or 'test: ' + str(name)).id
+        return JSONResponse(await edge.tools.call(name, args))
+
+    async def test_incident(request):
+        """Verification only (--test-api): open an edge incident as an event would."""
+        if not test_api:
+            return Response('Test API disabled', status_code=404)
+        body = await request.json()
+        iid = edge.tools.open_incident(body.get('kind', 'navigation_failed'), body.get('cause', 'unknown'),
+                                       goal=edge.navigator.public())
+        return JSONResponse({'incident_id': iid})
+
     routes = [Route('/', index), Route('/api/state', state), Route('/api/map.png', map_png),
+              Route('/api/test/tool', test_tool, methods=['POST']), Route('/api/test/incident', test_incident, methods=['POST']),
               Route('/api/map-labeled.png', labeled), Route('/api/ask', ask, methods=['POST']),
               Route('/api/stop', stop, methods=['POST']), Route('/api/draw', draw, methods=['POST']),
               Route('/api/keepouts/reopen', reopen, methods=['POST'])]

@@ -88,23 +88,32 @@ class EdgeRuntime:
 
     async def reconcile_keepouts(self):
         """After a restart, trust only what the layers file and live mask show."""
-        deadline = time.monotonic() + 30
-        while self.keepouts.mask is None and time.monotonic() < deadline:
-            await asyncio.sleep(.5)
         if not self.keepouts.enabled:
             return
+        needs_costmap = bool(self.profile.navigation.global_costmap_topic)
+        deadline = time.monotonic() + 60
+        while time.monotonic() < deadline and (self.keepouts.mask is None or (needs_costmap and self.keepouts.costmap is None)):
+            await asyncio.sleep(.5)
         try:
             present = {r.get('ripple_id') for r in self.keepouts._read().get('no_go_zones', [])}
         except Exception:
             present = set()
-        for record in list(self.site.active_keepouts()):
-            if record['id'] not in present:
-                state = 'REMOVED' if record['state'] == 'REMOVING' else 'UNVERIFIED'
-                record.update(state=state, verification='not in the site layers file after restart')
-            else:
-                ok, why = self.keepouts.check(record['polygon'], True)
-                record.update(state='APPLIED' if ok else 'UNVERIFIED', verification=why)
-            self.site.save_keepout(record)
+        pending = list(self.site.active_keepouts())
+        for attempt in range(6):  # the costmap filter can lag the mask right after startup
+            for record in list(pending):
+                if record['id'] not in present:
+                    state = 'REMOVED' if record['state'] == 'REMOVING' else 'UNVERIFIED'
+                    record.update(state=state, verification='not in the site layers file after restart')
+                    pending.remove(record)
+                else:
+                    ok, why = self.keepouts.check(record['polygon'], True)
+                    record.update(state='APPLIED' if ok else 'UNVERIFIED', verification=why)
+                    if ok:
+                        pending.remove(record)
+                self.site.save_keepout(record)
+            if not pending:
+                break
+            await asyncio.sleep(5)
 
     def geometry(self):
         return self.keepouts.geometry()
