@@ -6,7 +6,7 @@ from uuid import UUID
 from action_msgs.msg import GoalStatus, GoalStatusArray
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav2_msgs.action import NavigateToPose
-from nav_msgs.msg import Odometry
+from nav_msgs.msg import Odometry, OccupancyGrid
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
@@ -26,6 +26,8 @@ class Nav2Adapter(Node):
         self.handles = {}
         self.pose = None
         self.pose_at = None
+        self.keepout_mask = None
+        self.global_costmap = None
         self.safety_pending = None
         self.localization_pending = None
         self.create_subscription(Odometry, '/diff_cont/odom', self._odom, 10)
@@ -37,6 +39,10 @@ class Nav2Adapter(Node):
             lambda msg: self.emit('action_status', active=[
                 bytes(s.goal_info.goal_id.uuid).hex() for s in msg.status_list
                 if s.status in (1, 2, 3)]), amcl_qos)
+        self.create_subscription(OccupancyGrid, '/keepout_filter_mask',
+            lambda msg: setattr(self, 'keepout_mask', (msg, monotonic())), amcl_qos)
+        self.create_subscription(OccupancyGrid, '/global_costmap/costmap',
+            lambda msg: setattr(self, 'global_costmap', (msg, monotonic())), 1)
         self.safety = self.create_client(Trigger, '/safety/status')
         self.create_timer(0.25, self._poll_safety)
         self.localization_update = self.create_client(Empty, '/request_nomotion_update')

@@ -15,6 +15,9 @@ from . import agent
 from .contracts import Target
 from .robot_adapter import Nav2Adapter
 from .store import Store
+from .site import SiteMemory, rectangle, buffered_bounds
+from PIL import Image
+from io import BytesIO
 from .supervisor import Supervisor
 from .rosscope import RosScopeObserver, snapshot as rosscope_snapshot
 
@@ -71,6 +74,8 @@ class Runtime:
             previous = previous_facts.get(key)
             self.s.observe(key, previous['value'] if previous else True,
                            previous['source'] if previous else 'demo initial context')
+        self.site = SiteMemory(self.store, os.environ.get('RIPPLE_LAYERS_FILE', '/home/zuci/map_layers.json'))
+        self.pending_site = None
         self.camera = None
         self.rosscope_observation = None
         self.observer = RosScopeObserver(self.events, ROOT)
@@ -88,6 +93,16 @@ class Runtime:
                     except Exception as error:
                         future.set_exception(error)
                 self.s.tick()
+                if self.pending_site and self.pending_site.done():
+                    future, self.pending_site = self.pending_site, None
+                    try:
+                        result = future.result()
+                        self.message = result.clarification or result.explanation
+                        if result.bounds is not None and not result.clarification:
+                            self.site_preview(result.bounds, self.site_text, self.site_operator)
+                    except Exception as error:
+                        self.message = str(error)
+                        self.store.append('site_interpretation_failed', reason=str(error))
                 if self.pending_model and self.pending_model.done():
                     self.finish_interpretation()
                 if self.pending_vision and self.pending_vision.done():
@@ -98,7 +113,7 @@ class Runtime:
                         self.vision_description = str(error)
                     self.pending_vision = None
                 if (not self.s.paused and not self.s.interpreting and self.s.goal_id is None
-                        and not self.actions_active):
+                        and not self.actions_active and self.site_ready()):
                     for p in self.s.proposals.values():
                         if p.id not in self.attempted and p.state in ('APPROVED', 'EXPIRED') and p.operator:
                             self.attempted.add(p.id)
@@ -164,6 +179,38 @@ class Runtime:
             self.s.reconciliation_required = True
             self.store.append('adapter_uncertain', goal_id=event.goal_id, reason=d['reason'])
 
+    def site_preview(self, bounds, reason, operator):
+        meta = yaml.safe_load((ROOT / 'smr300l_gazebo_ros2control/maps/smr_map.yaml').read_text())
+        with Image.open(ROOT / 'smr300l_gazebo_ros2control/maps/smr_map.pgm') as im:
+            rectangle(bounds, im.width, im.height, meta['resolution'], meta['origin'])
+            # Circumscribed 0.40 x 0.25 m half-footprint plus one map cell.
+            bounds = buffered_bounds(bounds, im.width, im.height, meta['resolution'])
+            shape = rectangle(bounds, im.width, im.height, meta['resolution'], meta['origin'])
+        self.site.preview(shape, reason+' (Includes 0.55 m robot clearance.)', operator, bounds)
+        self.message = 'Review the highlighted region, then apply the exact keepout.'
+
+    def site_verification(self, zone):
+        if zone['state'] != 'APPLIED': return 'not applied'
+        shape = zone['shape']
+        for label, sample in [('mask', self.adapter.keepout_mask), ('costmap', self.adapter.global_costmap)]:
+            if not sample or time.monotonic()-sample[1] > 5: return label+' unavailable or stale'
+            msg = sample[0]; info = msg.info
+            if msg.header.frame_id != 'map' or info.resolution <= 0: return 'invalid '+label+' frame'
+            ox, oy = info.origin.position.x, info.origin.position.y
+            xmin = math.ceil((shape['x1']-ox)/info.resolution)
+            xmax = math.floor((shape['x2']-ox)/info.resolution)-1
+            ymin = math.ceil((shape['y1']-oy)/info.resolution)
+            ymax = math.floor((shape['y2']-oy)/info.resolution)-1
+            if xmin < 0 or ymin < 0 or xmax >= info.width or ymax >= info.height: return label+' geometry mismatch'
+            cells = [msg.data[y*info.width+x] for y in range(ymin,ymax+1) for x in range(xmin,xmax+1)]
+            if not cells or any(v != 100 for v in cells): return label+' does not contain restriction'
+        return 'MASK AND COSTMAP OBSERVED · planner verification pending'
+
+    def site_ready(self):
+        if any(z['state'] == 'UNCERTAIN' for z in self.site.zones.values()): return False
+        return all(self.site_verification(z).startswith('MASK AND COSTMAP OBSERVED')
+                   for z in self.site.zones.values() if z['state'] == 'APPLIED')
+
     def open_incident(self, goal_id, symptom):
         from uuid import uuid4
         incident = dict(id=str(uuid4()), goal_id=goal_id, symptom=symptom,
@@ -185,6 +232,8 @@ class Runtime:
             operating_mode='simulation',
             rosscope=rosscope_snapshot(self.rosscope_observation, now),
             incidents=self.incidents[-50:],
+            site_zones=[dict(z, verification=self.site_verification(z)) for z in self.site.zones.values()],
+            site_interpreting=bool(self.pending_site),
             vision_description=self.vision_description,
             pose=self.adapter.pose, targets={k: asdict(v) for k, v in self.targets().items()},
             station_zones={k: v['zone'] for k, v in json.loads((ROOT / 'config/stations.json').read_text()).items()},
@@ -197,7 +246,41 @@ class Runtime:
     def command(self, name, data):
         if name == 'state':
             return self.snapshot()
-        if name == 'instruction':
+        if name == 'site_preview':
+            if data.get('bounds'):
+                self.site_preview(data['bounds'], data['text'], data['operator'])
+            else:
+                if self.pending_site:
+                    raise ValueError('Map interpretation already running')
+                if not data['text'].strip(): raise ValueError('Describe a region or draw it on the map')
+                output = BytesIO()
+                with Image.open(ROOT / 'smr300l_gazebo_ros2control/maps/smr_map.pgm') as im:
+                    im.save(output, format='PNG')
+                self.site_text, self.site_operator = data['text'], data['operator']
+                self.pending_site = self.pool.submit(agent.identify_map_region, data['text'], output.getvalue())
+                self.message = 'Interpreting map region for review…'
+        elif name in ('site_apply', 'site_remove'):
+            now = time.monotonic()
+            odom = self.s.facts.get('robot.odom_fresh')
+            if (self.s.goal_id or self.actions_active != [] or not odom or not odom.fresh(now)
+                    or not self.stopped_since or now-self.stopped_since < 1):
+                raise ValueError('Hold the robot and wait for confirmed stop before changing site constraints')
+            if name == 'site_apply':
+                pose = self.adapter.pose
+                if not pose or not self.adapter.pose_at or now-self.adapter.pose_at > 5:
+                    raise ValueError('Fresh robot pose required for site changes')
+                shape = self.site.zones[data['zone_id']]['shape']
+                if (shape['x1']-.5 <= pose['x'] <= shape['x2']+.5
+                        and shape['y1']-.5 <= pose['y'] <= shape['y2']+.5):
+                    raise ValueError('Keepout overlaps the robot clearance region; select a different area')
+            self.s.paused = True
+            self.site.change(data['zone_id'], remove=name == 'site_remove')
+            for proposal in self.s.proposals.values():
+                if proposal.state in ('APPROVED','AWAITING APPROVAL'):
+                    proposal.state = 'EXPIRED'
+                    self.store.append('approval_expired', proposal_id=proposal.id, changed=['site constraints'])
+            self.message = 'Site file updated. Dispatch paused; inspect observed mask and planner behavior before resuming.'
+        elif name == 'instruction':
             if self.pending_model:
                 raise ValueError('An instruction is already being interpreted')
             if not data['text'].strip():

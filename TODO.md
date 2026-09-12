@@ -5,9 +5,12 @@
 - [x] Remove physical camera requirements from simulator missions and dashboard.
 - [x] Consume continuous observations without blocking mission execution.
 - [x] Open durable incidents on aborted/rejected navigation.
-- [ ] Verify live RosScope lifecycle/TF observations in the running simulator.
-- [ ] Natural-language map image interpretation and drawn-region previews.
-- [ ] Durable keepout/slow zones with observed costmap and planner verification.
+- [x] Verify live RosScope lifecycle observations: all eight observed Nav2 nodes active; TF health remains raw evidence.
+- [x] Natural-language map image interpretation and drawn-region previews.
+- [x] Durable rectangular keepouts with observed mask/costmap and blocked-destination/restored-path checks.
+- [x] Verify buffered planner detour: SUCCEEDED with at least 0.667 m sampled center clearance.
+- [ ] Verify moving navigation around restrictions.
+- [ ] Slow zones and scheduled expiry.
 - [ ] Autonomous evidence-based diagnosis with bounded recovery and escalation.
 - [ ] Human-assisted restriction, reroute and verified mission continuation.
 - [ ] Record the simulator hero demo.

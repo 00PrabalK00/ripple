@@ -21,7 +21,9 @@ The bridge collects process, lifecycle and TF samples asynchronously. Collection
 age is shown; empty data is unknown, not healthy. Upstream TF warnings and action
 summaries are heuristic observations, not motion authorization. The existing owned
 Nav2 adapter remains authoritative for mission outcomes. Failed navigation opens
-a durable incident; autonomous recovery and verified map editing are still pending.
+a durable incident; rectangular keepouts now support map/text previews and observed mask/costmap checks.
+See [site control](docs/SITE_CONTROL.md) for validation and current limits.
+Autonomous recovery remains pending.
 No process command lines, environments or model keys are exported by the bridge.
 
 ## Earlier mission-supervisor prototype (historical)

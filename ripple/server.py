@@ -37,7 +37,9 @@ async def local_mutations(request: Request, call_next):
 
 
 class Command(BaseModel):
-    action: Literal['instruction', 'approve', 'reject', 'pause', 'cancel', 'reconcile', 'calibrate', 'describe']
+    action: Literal['instruction', 'approve', 'reject', 'pause', 'cancel', 'reconcile', 'calibrate', 'describe', 'site_preview', 'site_apply', 'site_remove']
+    zone_id: str = ''
+    bounds: list[float] | None = Field(default=None, min_length=4, max_length=4)
     text: str = Field(default='', max_length=4000)
     proposal_id: str = ''
     operator: str = Field(default='local operator', min_length=1, max_length=100)
