@@ -50,13 +50,13 @@ velocity input. A simulated Nav2 stall still needs a separate live acceptance ru
 
 Ambiguous uses the CLI credential in this worktree's ignored `.ambi/` directory.
 No parallel Ambiguous MCP server is installed. Its Codex managed watcher is a
-session integration; autonomous event handling is not verified until two successive
-operator test DMs reach the session and receive replies.
+session integration; session event handling is verified: two successive operator DMs reached Codex
+automatically and received replies. This does not yet verify the product incident workflow.
 
 Read-only service requests expire, and late or superseded replies cannot refresh
 observations. Unit coverage includes a hung request followed by a successful retry.
 The first Ambiguous workspace event woke the Codex session and the first test DM
-received a reply; a second DM after that reply is still required for repeat-delivery verification.
+received a reply; the second DM arrived automatically and was answered on 2026-09-12.
 
 The post-timeout-change 20-second live run exited cleanly and received fresh
 safety, scan, odometry and localization samples. It reported `unknown` with an
@@ -107,3 +107,36 @@ Live stdio evidence is in `evidence/observe-only-mcp-live.json`: all six tools w
 discovered, pose was fresh, and health correctly returned `unknown` because the
 lifecycle sample was incomplete. The observer and client both shut down cleanly.
 This does not establish a successful recovery or navigation mission through MCP.
+
+## Policy and recovery execution (in progress)
+
+`RecoveryPolicy` enforces exclusive ownership, edge-registered incident IDs,
+fresh safety/localization/mode, declared targets, autonomy and human authorization
+for lifecycle resets. The caller cannot supply a budget. Local and global clears
+each consume their configured allowance, matching the ladder's local-then-global
+sequence. PostgreSQL/Drizzle atomically reserves attempts before ROS execution;
+duplicate requests never replay, and an interrupted claim remains spent. The real
+database concurrency/restart test is `scripts/test_action_journal.py`.
+
+The Level 2 executor has typed costmap-clear, declared lifecycle-reset and
+owned-goal cancellation paths. It checks facts again after the journal claim and
+verifies a postcondition. Costmap verification accepts full grids or incremental
+updates. It does not equate a clear acknowledgement with recovered navigation.
+These mutation paths are not yet exposed through MCP. Live lifecycle/cancellation
+acceptance and the full recovery ladder remain pending.
+
+The local lease rejects competing edge processes and ROS navigation clients.
+Nav2's declared internal self-client is accepted only when that node also hosts
+the configured action server and no configured goal-topic publisher is present.
+See [Nav2 Humble's internal client declaration](https://docs.ros.org/en/humble/p/nav2_bt_navigator/generated/program_listing_file_include_nav2_bt_navigator_navigators_navigate_to_pose.hpp.html).
+This is operational coordination on a trusted ROS graph, not DDS authentication.
+
+For these tests the demo backend was stopped. A stalled controller process was
+restarted as a development intervention; Nav2 reinitialized AMCL, so the stationary
+robot's last observed map pose was restored. This is not recorded as autonomous
+Ripple recovery. The simulator remains running and the demo backend remains off.
+
+`evidence/level2-costmap-live.json` records the passing real local-costmap clear:
+service acknowledgement plus a subsequent costmap update, followed by denial of
+a second request because the incident budget was spent. The incident was an
+explicit integration-test fixture, not a detected simulator stall.

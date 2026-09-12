@@ -1,0 +1,174 @@
+{
+  "scope": "Synthetic incident fixture; real ROS clear and post-clear publication. No stall or motion claim.",
+  "exclusive_owner": true,
+  "clear": {
+    "schema_version": 1,
+    "robot": "smr300_01",
+    "request_id": "112171a8-e5cb-458e-8723-408715e65035",
+    "status": "ok",
+    "reason": "ROS operation and postcondition observed; recovery progress must be assessed separately",
+    "observations": {
+      "lifecycle": {
+        "value": {
+          "/behavior_server": "active",
+          "/bt_navigator": "active",
+          "/controller_server": "active",
+          "/planner_server": "active",
+          "/amcl": "active"
+        },
+        "source": "declared GetState services",
+        "age_s": 0.15329778700015595,
+        "fresh": true
+      },
+      "odometry": {
+        "value": {
+          "linear": 1.213415918579074e-05,
+          "angular": -0.000548912798130503
+        },
+        "source": "/diff_cont/odom",
+        "age_s": 0.029645214000083797,
+        "fresh": true
+      },
+      "localization": {
+        "value": true,
+        "source": "/amcl_pose",
+        "age_s": 0.9890707129998191,
+        "fresh": true
+      },
+      "pose": {
+        "value": {
+          "frame": "map",
+          "x": 3.618328489240806,
+          "y": 0.5239260092789079
+        },
+        "source": "/amcl_pose",
+        "age_s": 0.9890261649998138,
+        "fresh": true
+      },
+      "scan.front": {
+        "value": {
+          "minimum_m": 0.5810847282409668,
+          "valid_points": 180
+        },
+        "source": "/scan",
+        "age_s": 0.07949773600012122,
+        "fresh": true
+      },
+      "scan.rear": {
+        "value": {
+          "minimum_m": 0.7290880084037781,
+          "valid_points": 168
+        },
+        "source": "/scan2",
+        "age_s": 0.07497161899937055,
+        "fresh": true
+      },
+      "safety": {
+        "value": {
+          "known": true,
+          "emergency": false,
+          "obstacle": false,
+          "localization": false,
+          "override": false,
+          "mode": "zones"
+        },
+        "source": "/safety/status",
+        "age_s": 0.12727060499946674,
+        "fresh": true
+      },
+      "mode": {
+        "value": "zones",
+        "source": "/safety/status",
+        "age_s": 0.12725164599942218,
+        "fresh": true
+      }
+    },
+    "event_ids": [],
+    "verified": true
+  },
+  "second_attempt": {
+    "schema_version": 1,
+    "robot": "smr300_01",
+    "request_id": "504a4e70-78fc-49b1-a78f-9f96320cf32f",
+    "status": "denied",
+    "reason": "incident_budget_exhausted",
+    "observations": {
+      "lifecycle": {
+        "value": {
+          "/behavior_server": "active",
+          "/bt_navigator": "active",
+          "/controller_server": "active",
+          "/planner_server": "active",
+          "/amcl": "active"
+        },
+        "source": "declared GetState services",
+        "age_s": 0.22347990300022502,
+        "fresh": true
+      },
+      "odometry": {
+        "value": {
+          "linear": 1.1385376805874633e-05,
+          "angular": -0.0005486038578434272
+        },
+        "source": "/diff_cont/odom",
+        "age_s": 0.0176630389996717,
+        "fresh": true
+      },
+      "localization": {
+        "value": true,
+        "source": "/amcl_pose",
+        "age_s": 1.0592528289998882,
+        "fresh": true
+      },
+      "pose": {
+        "value": {
+          "frame": "map",
+          "x": 3.618328489240806,
+          "y": 0.5239260092789079
+        },
+        "source": "/amcl_pose",
+        "age_s": 1.0592082809998828,
+        "fresh": true
+      },
+      "scan.front": {
+        "value": {
+          "minimum_m": 0.5810681581497192,
+          "valid_points": 180
+        },
+        "source": "/scan",
+        "age_s": 0.03729718399972626,
+        "fresh": true
+      },
+      "scan.rear": {
+        "value": {
+          "minimum_m": 0.729076087474823,
+          "valid_points": 168
+        },
+        "source": "/scan2",
+        "age_s": 0.03296811299969704,
+        "fresh": true
+      },
+      "safety": {
+        "value": {
+          "known": true,
+          "emergency": false,
+          "obstacle": false,
+          "localization": false,
+          "override": false,
+          "mode": "zones"
+        },
+        "source": "/safety/status",
+        "age_s": 0.1974527209995358,
+        "fresh": true
+      },
+      "mode": {
+        "value": "zones",
+        "source": "/safety/status",
+        "age_s": 0.19743376199949125,
+        "fresh": true
+      }
+    },
+    "event_ids": [],
+    "verified": false
+  }
+}

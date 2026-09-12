@@ -49,9 +49,11 @@ class Escape(ActionPolicy):
 
 class Navigation(Strict):
     navigate_action: str
+    internal_action_clients: list[str] = Field(default_factory=list)
+    goal_input_topics: list[str] = Field(default_factory=list)
     planner_action: str
     lifecycle_nodes: list[str]
-    clear_services: list[str]
+    clear_services: dict[Literal['local','global'],str]
     keepout_adapter: Literal['layers_file','none']
     keepout_path: str | None
     verify_mask: str | None
@@ -168,4 +170,11 @@ class EscapeRequest(Strict):
     amount: float = Field(gt=0)
     speed: float = Field(gt=0)
     incident_id: str = Field(min_length=1)
+    authorization_id: str | None = None
+
+class RecoveryRequest(Strict):
+    request_id: str = Field(min_length=1)
+    tool: Literal['clear_costmap','lifecycle_reset','cancel_goal']
+    incident_id: str = Field(min_length=1)
+    target: str = Field(min_length=1,description='local/global costmap, declared node, or owned goal ID')
     authorization_id: str | None = None

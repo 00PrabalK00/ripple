@@ -4,9 +4,13 @@ ros_distro: humble
 domain_id: 0
 navigation:
   navigate_action: /navigate_to_pose
+  internal_action_clients: [/bt_navigator]
+  goal_input_topics: [/goal_pose]
   planner_action: /compute_path_to_pose
   lifecycle_nodes: [/amcl, /planner_server, /controller_server, /bt_navigator, /behavior_server]
-  clear_services: [/global_costmap/clear_entirely_global_costmap, /local_costmap/clear_entirely_local_costmap]
+  clear_services:
+    global: /global_costmap/clear_entirely_global_costmap
+    local: /local_costmap/clear_entirely_local_costmap
   keepout_adapter: layers_file
   keepout_path: ~/map_layers.json
   verify_mask: /keepout_filter_mask

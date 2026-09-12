@@ -237,6 +237,20 @@
           "title": "Navigate Action",
           "type": "string"
         },
+        "internal_action_clients": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Internal Action Clients",
+          "type": "array"
+        },
+        "goal_input_topics": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Goal Input Topics",
+          "type": "array"
+        },
         "planner_action": {
           "title": "Planner Action",
           "type": "string"
@@ -249,11 +263,17 @@
           "type": "array"
         },
         "clear_services": {
-          "items": {
+          "additionalProperties": {
             "type": "string"
           },
+          "propertyNames": {
+            "enum": [
+              "local",
+              "global"
+            ]
+          },
           "title": "Clear Services",
-          "type": "array"
+          "type": "object"
         },
         "keepout_adapter": {
           "enum": [
