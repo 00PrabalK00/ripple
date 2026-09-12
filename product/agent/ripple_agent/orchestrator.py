@@ -57,6 +57,8 @@ Operator messages
   define_area with its image_bounds, unless a named area already matches.
 - If the operator has a region selected on the map, it is given as selection_image_bounds; use it for "this area".
 - Reply in 1-3 short plain sentences: what you did and what the robot is doing now.
+- For multi-stop requests (visit all stations, a patrol), call start_tour once with the destinations in a sensible
+  order; Ripple dispatches each leg after a verified arrival.
 - workspace_* tools write to the team's Ambiguous workspace: reports (docs), tasks, email and chat. Use them when
   someone asks for a report, task or email. Build reports from tool results; keep them short and factual.
 
@@ -94,6 +96,14 @@ AGENT_DEFS = {
                          description='What and where, e.g. "the aisle between Rack A3 and Rack A5"'),
     'search_incidents': _fn('search_incidents', 'Search past incidents for similar failures.', query='Words describing the failure or place'),
     'resolve_incident': _fn('resolve_incident', 'Close the incident when verified evidence or the engineer says it is resolved.', summary='One sentence'),
+    'start_tour': {'type': 'function', 'function': {
+        'name': 'start_tour',
+        'description': 'Visit several destinations in order (a tour or patrol). Each leg is dispatched after the previous '
+                       'arrival is verified; a failed leg stops the tour and opens an incident.',
+        'parameters': {'type': 'object', 'properties': {'destinations': {
+            'type': 'array', 'items': {'type': 'string'}, 'minItems': 1, 'maxItems': 20,
+            'description': 'Station or area names in visiting order'}},
+            'required': ['destinations'], 'additionalProperties': False}}},
 }
 
 
@@ -177,6 +187,7 @@ class Orchestrator:
         self.loop = None
         self.labeled_png = lambda: None
         self.workspace = None  # Ambiguous workspace tools (reports, tasks, email, chat)
+        self.tour = None  # {'current', 'stops', 'done', 'total', 'auth', 'origin'}
         edge.tool_listeners.append(self._on_tool)
         edge.navigator.listeners.append(self._on_nav_threadsafe)
 
@@ -318,10 +329,12 @@ class Orchestrator:
                 self.close(inc, 'RESOLVED', f'Recovered: the robot reached {label} and arrival was verified')
                 await self.notify(inc, f"Resolved — {self.robot} reached {label}. Incident closed after "
                                        f"{duration(time.time() - inc['detected_epoch'])}.")
-            elif not inc:
+            elif not inc and not self.tour:
                 origin = self.origins.get(record.get('authorization_id') or '')
                 if origin and origin['channel'] == 'ambiguous':
                     await self.reply(origin, f'Arrived at {label}.')
+            if self.tour and record['verified'] and record.get('destination') == self.tour['current']:
+                await self.next_leg()
             return
         if status == 'CANCELED':
             self.note('nav', f"Goal to {label} canceled — {record.get('outcome_reason') or 'stopped'}")
@@ -344,6 +357,27 @@ class Orchestrator:
             return
         cause = self.edge.node.detector.cause(self.edge.node.detector.snapshot())
         await self.open_incident('navigation_failed', cause, goal=record, detail='Nav2 ' + status.lower())
+
+    async def next_leg(self):
+        tour = self.tour
+        tour['done'].append(tour['current'])
+        if not tour['stops']:
+            self.tour = None
+            self.note('agent', f"Tour complete: {len(tour['done'])} stops, every arrival verified")
+            if tour['origin']:
+                await self.reply(tour['origin'], f"Tour complete — visited {', '.join(tour['done'])}, every arrival verified.")
+            return
+        key = tour['stops'].pop(0)
+        tour['current'] = key
+        dest = self.edge.site.resolve(key, self.edge.geometry())[1]
+        leg = len(tour['done']) + 1
+        # The tour's operator message already approved every leg; dispatch checks still run for each one.
+        out = await self.edge.navigator.dispatch(key, dest, tour['auth'], f"tour leg {leg}/{tour['total']}")
+        self.note('tool', ('✓ ' if out['status'] == 'ok' else '⨯ ') + f"Tour leg {leg}/{tour['total']}: {dest['label']} — {out['reason']}")
+        if out['status'] != 'ok':
+            self.tour = None
+            if tour['origin']:
+                await self.reply(tour['origin'], f"Tour stopped before {dest['label']}: {out['reason']}")
 
     # ----- robot events
     async def on_event(self, ev):
@@ -462,7 +496,7 @@ class Orchestrator:
     # ----- the GLM loop
     def context(self, mode, incident=None, msg=None, auth=None):
         if mode == 'operator':
-            tools, agent = OBSERVE + COMMAND + ['cancel_navigation', 'teleop'], ['tell_operator', 'locate_region', 'search_incidents']
+            tools, agent = OBSERVE + COMMAND + ['cancel_navigation', 'teleop'], ['tell_operator', 'locate_region', 'search_incidents', 'start_tour']
         elif mode == 'incident':
             tools, agent = OBSERVE + ['cancel_navigation'] + RECOVERY, ['ask_engineer', 'record_hypothesis', 'search_incidents']
             cause_now = self.edge.node.detector.cause(self.edge.node.detector.snapshot())
@@ -472,7 +506,8 @@ class Orchestrator:
                 tools = [t for t in tools if t not in RECOVERY]
         else:
             tools = OBSERVE + COMMAND + ['cancel_navigation'] + RECOVERY
-            agent = ['ask_engineer', 'record_hypothesis', 'locate_region', 'search_incidents', 'resolve_incident', 'tell_operator']
+            agent = ['ask_engineer', 'record_hypothesis', 'locate_region', 'search_incidents', 'resolve_incident', 'tell_operator',
+                     'start_tour']
         workspace = WORKSPACE if self.workspace and mode in ('operator', 'incident_human') else []
         return {'mode': mode, 'incident': incident, 'incident_id': incident and incident['id'], 'msg': msg,
                 'auth': auth, 'allowed': tools, 'agent_tools': agent, 'workspace': workspace, 'stop': False}
@@ -641,11 +676,34 @@ class Orchestrator:
             top = [{k: o.get(k) for k in ('id', 'detected_at', 'trigger', 'location', 'resolution', 'recovery_time_s')}
                    for _, o in sorted(scored, key=lambda s: -s[0])[:3]]
             return {'status': 'ok', 'reason': f'{len(top)} similar incidents', 'data': {'incidents': top}}
+        if name == 'start_tour':
+            auth = ctx.get('auth')
+            if not auth:
+                return {'status': 'denied', 'reason': 'a tour needs an operator message that asks for it'}
+            keys = []
+            for wanted in [str(d) for d in args.get('destinations') or []][:20]:
+                key, _ = self.edge.site.resolve(wanted, self.edge.geometry())
+                if not key:
+                    return {'status': 'denied', 'reason': f'unknown destination "{wanted}"'}
+                keys.append(key)
+            if not keys:
+                return {'status': 'denied', 'reason': 'no destinations given'}
+            self.tour = {'current': keys[0], 'stops': keys[1:], 'done': [], 'total': len(keys), 'auth': auth.id,
+                         'origin': ctx.get('msg')}
+            r = await self.run_tool('navigate_to', {'destination': keys[0], 'reason': f'tour leg 1/{len(keys)}'}, ctx)
+            if r['status'] != 'ok':
+                self.tour = None
+                return r
+            self.note('agent', 'Tour started: ' + ' → '.join(keys))
+            return {'status': 'ok', 'reason': f'tour of {len(keys)} stops started; each leg follows a verified arrival',
+                    'data': {'stops': keys}}
         if name == 'resolve_incident':
             if not inc:
                 return {'status': 'denied', 'reason': 'no incident'}
             if not (inc.get('verified_arrival') or inc['human_messages']):
                 return {'status': 'denied', 'reason': "no verified recovery yet; close only on evidence or the engineer's word"}
+            if not inc.get('verified_arrival') and self.edge.navigator.active():
+                return {'status': 'denied', 'reason': 'a recovery goal is still driving; Ripple resolves the incident when arrival is verified'}
             self.close(inc, 'RESOLVED' if inc.get('verified_arrival') else 'CLOSED', text or 'closed by the engineer')
             ctx['stop'] = True
             return {'status': 'ok', 'reason': 'incident closed'}
