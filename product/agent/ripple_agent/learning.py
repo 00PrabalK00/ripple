@@ -40,7 +40,9 @@ def step(action):
     if tool == 'navigate_via':
         points = ' → '.join(f"({p.get('x', 0):.1f},{p.get('y', 0):.1f})" for p in args.get('via') or [] if isinstance(p, dict))
         return f'navigate_via {points}'.strip()
-    detail = {'teleop': args.get('direction'), 'escape': args.get('primitive'), 'clear_costmap': args.get('costmap'),
+    if tool == 'teleop':  # the override is often what made it work, so the recipe must say so
+        return f"teleop {args.get('direction') or 'auto'}" + (' with override' if args.get('override_safety') else '')
+    detail = {'escape': args.get('primitive'), 'clear_costmap': args.get('costmap'),
               'lifecycle_reset': args.get('node'), 'navigate_to': args.get('destination'),
               'set_station_availability': args.get('destination')}.get(tool)
     return f'{tool} {detail}' if detail else tool
@@ -80,8 +82,12 @@ class SiteMemory:
         # When a person stepped in, what ran before their message did not resolve the incident; the recipe is
         # what followed it (CLIN-style cause and effect, not everything that happened to precede the arrival).
         helped_at = min((h['at'] for h in inc.get('human_messages') or [] if h.get('at')), default=None)
-        done, before_help = [], []
+        done, before_help, refused = [], [], []
         for a in inc.get('actions') or []:
+            if a.get('tool') in STEPS and a.get('status') == 'denied':  # a wasted step: skip it next time
+                label = step(a)
+                if label not in refused:
+                    refused.append(label)
             if a.get('tool') in STEPS and a.get('status') == 'ok':
                 label = step(a)
                 bucket = before_help if helped_at and a.get('at') and a['at'] < helped_at else done
@@ -111,6 +117,9 @@ class SiteMemory:
             lesson['situation']['destinations'] = (lesson['situation']['destinations'] + [dest])[-5:]
         for label in before_help:
             lesson['unhelpful'][label] = lesson['unhelpful'].get(label, 0) + 1
+        lesson.setdefault('refused', {})
+        for label in refused:
+            lesson['refused'][label] = lesson['refused'].get(label, 0) + 1
         if success:
             recipe = ' → '.join(done) or ('what the engineer said' if taught else 'retried as is')
             lesson['recipes'][recipe] = lesson['recipes'].get(recipe, 0) + 1
@@ -176,6 +185,9 @@ class SiteMemory:
         unhelpful = [f'{k} ({v}×)' for k, v in sorted(lesson['unhelpful'].items(), key=lambda u: -u[1])[:3]]
         if unhelpful:
             parts.append('Did not help: ' + ', '.join(unhelpful) + '.')
+        refused = [f'{k} ({v}×)' for k, v in sorted((lesson.get('refused') or {}).items(), key=lambda r: -r[1])[:3]]
+        if refused:
+            parts.append('Refused here (skip it): ' + ', '.join(refused) + '.')
         if lesson['taught']:
             t = lesson['taught'][-1]
             parts.append(f"{t['from'] or 'The engineer'} said: “{t['text']}”.")

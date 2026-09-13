@@ -18,8 +18,18 @@ from pathlib import Path
 
 API = 'http://127.0.0.1:8060'
 ROOT = Path(__file__).resolve().parents[2]
-TRIGGER = (-2.3, -0.2)   # the same point on the Home -> Staging Z3 route in every round
 TERMINAL = ('SUCCEEDED', 'ABORTED', 'CANCELED', 'REJECTED', 'UNCERTAIN')
+trigger = None  # picked from round 1's planned route, then reused so both rounds stop at the same place
+
+
+def route_point(s, fraction=0.4):
+    """A point `fraction` of the way along the planned path, in map metres (the map here is not rotated)."""
+    plan, m = s.get('plan') or [], s.get('map') or {}
+    if len(plan) < 5 or not m:
+        return None
+    u, v = plan[int(len(plan) * fraction)]
+    ox, oy = m['origin'][0], m['origin'][1]
+    return ox + u * m['width'] * m['resolution'], oy + (1 - v) * m['height'] * m['resolution']
 
 
 def get(path):
@@ -63,10 +73,16 @@ def round_(n):
     obstacle('remove block')
     go_home()
     before = {e['id'] for e in get('/api/state')['timeline']}
+    global trigger
     tool('navigate_to', destination='Z3', reason=f'learning check round {n}')
-    near = wait(lambda s: s['pose'] and math.dist((s['pose']['x'], s['pose']['y']), TRIGGER) < 0.5, 120)
+    if trigger is None:
+        planned = wait(lambda s: route_point(s) is not None, 30)
+        trigger = planned and route_point(planned)
+        if trigger is None:
+            return {'round': n, 'ok': False, 'detail': 'no planned route to pick the trigger point from'}
+    near = wait(lambda s: s['pose'] and math.dist((s['pose']['x'], s['pose']['y']), trigger) < 0.6, 120)
     if not near:
-        return {'round': n, 'ok': False, 'detail': 'the robot never reached the trigger point'}
+        return {'round': n, 'ok': False, 'detail': f'the robot never came within 0.6 m of {trigger}'}
     spawned = obstacle('spawn block --ahead 0.55')
     new = lambda s: [e for e in s['timeline'] if e['id'] not in before]
     opened = wait(lambda s: any(e['kind'] == 'incident' and e['text'].startswith('Incident opened') for e in new(s)), 60)
@@ -95,7 +111,18 @@ def round_(n):
 
 
 def main():
-    results = [round_(1), round_(2)]
+    # A block that Nav2 can route around causes no incident; such attempts are recorded and repeated,
+    # until two attempts produce incidents at the same place (at most five attempts).
+    attempts, results = [], []
+    while len(results) < 2 and len(attempts) < 5:
+        r = round_(len(attempts) + 1)
+        attempts.append(r)
+        if r.get('incident'):
+            results.append(r)
+        else:
+            print(f"  attempt {r['round']}: {r.get('detail')}", flush=True)
+    while len(results) < 2:
+        results.append({'round': None, 'ok': False, 'detail': 'no incident in five attempts'})
     lessons = get('/api/lessons')['lessons']
     incidents = {r.get('incident') for r in results}
     lesson = next((l for l in lessons if incidents <= set(l['evidence'])), None)

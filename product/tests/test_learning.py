@@ -93,6 +93,17 @@ class LearningTests(unittest.TestCase):
         self.assertTrue(restored.forget(lesson['id']))
         self.assertEqual(restored.lessons, {})
 
+    def test_refused_steps_and_the_override_are_part_of_the_lesson(self):
+        refused = {'tool': 'teleop', 'status': 'denied', 'args': {'direction': 'auto'}}
+        worked = {'tool': 'teleop', 'status': 'ok', 'args': {'direction': 'auto', 'override_safety': True}}
+        retry = {'tool': 'retry_navigation', 'status': 'ok', 'args': {}}
+        lesson = self.m.record(incident('inc-1', (-3.4, -0.1), actions=[refused, worked, retry]))
+        self.assertEqual(lesson['recipes'], {'teleop auto with override → retry_navigation': 1})
+        self.assertEqual(lesson['refused'], {'teleop auto': 1})
+        text = self.m.describe(lesson)
+        self.assertIn('Worked: teleop auto with override → retry_navigation', text)
+        self.assertIn('Refused here (skip it): teleop auto (1×)', text)
+
     def test_step_labels(self):
         self.assertEqual(step({'tool': 'retry_navigation'}), 'retry_navigation')
         self.assertEqual(step({'tool': 'escape', 'args': {'primitive': 'spin'}}), 'escape spin')

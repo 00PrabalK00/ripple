@@ -1,0 +1,64 @@
+{
+  "checks": [
+    {
+      "check": "round 1 recovered with a verified arrival",
+      "ok": false,
+      "detail": {
+        "round": 1,
+        "ok": false,
+        "detail": "no incident opened: Placed ripple_demo_block (0.40 \u00d7 1.20 \u00d7 1.00 m) at map (-1.98, -0.46); robot at (-2.68, -0.20), 0.55 m away."
+      }
+    },
+    {
+      "check": "round 1 left a lesson for the place",
+      "ok": false,
+      "detail": null
+    },
+    {
+      "check": "round 2 recovered with a verified arrival",
+      "ok": true,
+      "detail": {
+        "round": 2,
+        "ok": true,
+        "incident": "inc-95f67bbb87",
+        "state": "RESOLVED",
+        "recovery_s": 45,
+        "steps": [
+          "\u2713 Read logs \u2014 tf_extrapolation, planner_tolerance_failure, planner_no_path",
+          "\u2a2f teleop refused: safety controller holding (obstacle); pass override_safety if the profile allows it",
+          "\u2713 Teleop backward \u2014 teleop backward overriding the safety hold moved 0.31 m",
+          "\u2713 Route probe to Z3: path 2.43 m",
+          "\u2713 Retried the goal \u2014 route 2.46 m"
+        ],
+        "lesson": "Site memory updated \u2014 near (-3.4, -0.1): blocked by an obstacle 1 time on the way to Staging Z3. Worked: teleop auto \u2192 retry_navigation (1 of 1). Evidence: inc-95f67bbb87."
+      }
+    },
+    {
+      "check": "both incidents are one lesson for one place, upvoted twice",
+      "ok": false,
+      "detail": null
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "ok": false,
+      "detail": "no incident opened: Placed ripple_demo_block (0.40 \u00d7 1.20 \u00d7 1.00 m) at map (-1.98, -0.46); robot at (-2.68, -0.20), 0.55 m away."
+    },
+    {
+      "round": 2,
+      "ok": true,
+      "incident": "inc-95f67bbb87",
+      "state": "RESOLVED",
+      "recovery_s": 45,
+      "steps": [
+        "\u2713 Read logs \u2014 tf_extrapolation, planner_tolerance_failure, planner_no_path",
+        "\u2a2f teleop refused: safety controller holding (obstacle); pass override_safety if the profile allows it",
+        "\u2713 Teleop backward \u2014 teleop backward overriding the safety hold moved 0.31 m",
+        "\u2713 Route probe to Z3: path 2.43 m",
+        "\u2713 Retried the goal \u2014 route 2.46 m"
+      ],
+      "lesson": "Site memory updated \u2014 near (-3.4, -0.1): blocked by an obstacle 1 time on the way to Staging Z3. Worked: teleop auto \u2192 retry_navigation (1 of 1). Evidence: inc-95f67bbb87."
+    }
+  ]
+}
