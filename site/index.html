@@ -4,15 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ripple — an always-on site engineer for robots</title>
-<meta name="description" content="Ripple watches a deployed robot, diagnoses failures, recovers within limits and asks a person when software can't resolve a physical situation.">
+<meta name="description" content="Ripple watches a deployed Nav2 robot, diagnoses failures, recovers within limits, asks a person when software can't resolve a physical situation, and gets better at each place it works.">
 <style>
-:root{--ink:#111;--muted:#555;--line:#ddd;--bg:#fff;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
-@media (prefers-color-scheme:dark){:root{--ink:#eee;--muted:#aaa;--line:#333;--bg:#000}}
+:root{--ink:#111;--muted:#555;--line:#ddd;--bg:#fff;--soft:#f6f6f6;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+@media (prefers-color-scheme:dark){:root{--ink:#eee;--muted:#aaa;--line:#333;--bg:#000;--soft:#0c0c0c}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 var(--sans)}
-main{max-width:760px;margin:0 auto;padding:64px 22px 96px}
+main{max-width:780px;margin:0 auto;padding:64px 22px 96px}
 h1{font-size:40px;line-height:1.1;margin:0 0 12px;letter-spacing:-.02em}
-h2{font-size:14px;letter-spacing:.14em;text-transform:uppercase;margin:56px 0 14px;color:var(--muted);font-weight:600}
+h2{font-size:14px;letter-spacing:.14em;text-transform:uppercase;margin:60px 0 14px;color:var(--muted);font-weight:600}
+h3{font-size:18px;margin:32px 0 10px}
 p{margin:0 0 14px}
 .lede{font-size:20px;color:var(--muted);margin-bottom:28px}
 a{color:var(--ink)}
@@ -23,54 +24,174 @@ ol,ul{padding-left:20px;margin:0 0 14px}
 li{margin-bottom:6px}
 code,pre{font-family:var(--mono);font-size:14px}
 pre{border:1px solid var(--line);padding:14px 16px;overflow-x:auto;line-height:1.5}
-table{border-collapse:collapse;width:100%;font-size:15px}
+pre.mermaid{font-family:var(--sans);background:var(--soft);text-align:center;padding:18px 10px;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:15px;margin-bottom:14px}
 td,th{border-top:1px solid var(--line);padding:9px 8px 9px 0;text-align:left;vertical-align:top}
 th{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.note{font-size:15px;color:var(--muted)}
 footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
 </style>
 </head>
 <body>
 <main>
 <h1>Ripple</h1>
-<p class="lede">An always-on site engineer for deployed robots. It watches the robot, diagnoses failures, recovers within limits you set, and asks a person when software alone can't resolve what's happening on the floor.</p>
-<div class="links"><a href="https://github.com/00PrabalK00/ripple">Source on GitHub</a><a href="#how">How it works</a><a href="#start">Run it</a></div>
+<p class="lede">An always-on site engineer for Nav2 robots. It watches the robot, works out why it stopped, recovers within limits you set, asks a person when software can't fix what's happening on the floor, and gets better at each place it works.</p>
+<div class="links"><a href="https://github.com/00PrabalK00/ripple">Source on GitHub</a><a href="#how">How it works</a><a href="#learning">How it improves</a><a href="#start">Set it up</a></div>
 
 <video src="demo.mp4?v=20260913" controls playsinline preload="metadata" poster="poster.jpg?v=20260913"></video>
-<p class="caption">Two-minute demo: a warehouse SMR300 in Gazebo with ROS 2 Nav2. Ripple runs on GLM 5.3 and talks to the engineer through Ambiguous. Scenes 1–4 are one continuous live run and scene 5 is an earlier one; the footage is unedited and sped up, and the captions are Ripple's own timeline entries.</p>
+<p class="caption">Two-minute demo: a warehouse SMR300 in Gazebo with ROS 2 Nav2. Ripple runs on GLM 5.3 and talks to the engineer through Ambiguous. Scenes 1–4 are one continuous live run and scene 5 is an earlier one. The footage is unedited and sped up, and the captions are Ripple's own timeline entries.</p>
 
 <h2>What the demo shows</h2>
 <ol>
 <li><b>Site control.</b> A keepout drawn on the dashboard map is verified in the keepout mask and the global costmap. Nav2 plans around it, and Ripple verifies the arrival: stopped, within tolerance.</li>
 <li><b>Words become site state, then a failure.</b> The walkway is reopened from a sentence. A pallet then blocks the Home dock and the trip home fails. Without being asked, Ripple reads diagnostics and logs, clears both costmaps and probes the route, then asks the engineer one specific question on Ambiguous.</li>
-<li><b>Human context.</b> No one answered on Ambiguous in this run, so the reply was typed on the dashboard. Ripple locates the dock from the words, verifies a keepout over it (the dock becomes unavailable), reroutes to the Charger, and resolves the incident on a verified arrival.</li>
+<li><b>Human context.</b> No one answered on Ambiguous in this run, so the reply was typed on the dashboard. Ripple locates the dock from the words and verifies a keepout over it, which makes the dock unavailable. It reroutes to the Charger and resolves the incident on a verified arrival.</li>
 <li><b>The record.</b> Ripple files the incident report to the team's Ambiguous workspace.</li>
 <li><b>A real reply on Ambiguous.</b> In an earlier live run the engineer answers on Ambiguous: "check sensor data then use teleop". Ripple reads the scans, teleops 0.32 m toward the clear side, and probes and retries the route home.</li>
 </ol>
 
 <h2 id="how">How it works</h2>
-<p><b>Edge</b> — runs beside Nav2 on the robot. It observes safety, localization, lifecycle and motion, detects halts and names their cause, and owns every action: navigation with dispatch checks and a route probe, keepouts, costmap clears, lifecycle resets, bounded escape and teleop. Every action is policy-checked and journaled in PostgreSQL before it touches ROS.</p>
-<p><b>Agent</b> — GLM 5.3 on OpenRouter is the control plane. It reasons over typed tool results, never raw ROS, and runs the incident loop: detect, investigate, recover, escalate, take human context, verify.</p>
-<p><b>People</b> — engineers talk to Ripple on Ambiguous or the local dashboard. An operator's message is the approval for what it asks: "send the robot to B" just runs. Ripple writes reports, tasks and email back to the workspace.</p>
-<p><b>Profiles</b> — one YAML file describes a robot: its topics, safety controller, stations, triggers and recovery limits. A new robot is a new file, not new code.</p>
+<p>The model decides; the edge enforces. GLM 5.3 on OpenRouter only ever emits tool calls. Every call is validated and policy-checked by the edge, then journaled in PostgreSQL before it touches ROS. The robot's own safety controller stays above everything Ripple does.</p>
+<pre class="mermaid">
+flowchart TB
+  P["Engineer on Ambiguous · local dashboard"] <--> O["Orchestrator: the incident loop"]
+  O <--> G["GLM 5.3 via OpenRouter"]
+  O <--> M[("Site memory: lessons")]
+  O --> T["Edge: typed tools + policy"]
+  T --> N["Navigator: checks, route probe, via legs"]
+  T --> K["Keepouts: verified in mask and costmap"]
+  T --> R["Teleop, BackUp, Spin, lifecycle reset"]
+  T --> J[("Action journal: PostgreSQL")]
+  W["Observer: stall, holds, lifecycle"] --> O
+  N --> NV["Nav2"]
+  NV --> X["twist_mux → robot"]
+  R --> X
+  S["Safety controller"] --> X
+</pre>
+<p>Outcomes are verified, not assumed. A keepout counts once the published mask and the costmap show it. An arrival counts once odometry has settled and the pose is within tolerance. A recovery counts once odometry confirms the motion.</p>
+
+<h3>The incident loop</h3>
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> DETECTED
+  DETECTED --> INVESTIGATING
+  INVESTIGATING --> RECOVERING: a recovery step runs
+  INVESTIGATING --> ESCALATED: evidence says it is physical
+  RECOVERING --> RESOLVED: verified arrival
+  RECOVERING --> ESCALATED: retry failed or budget spent
+  ESCALATED --> HUMAN_CONTEXT: engineer replies
+  HUMAN_CONTEXT --> RECOVERING: keepouts, availability, new destination
+  RESOLVED --> [*]
+</pre>
+
+<h3>The recovery ladder</h3>
+<pre class="mermaid">
+flowchart TD
+  E["Incident opens"] --> I["Read state, logs and diagnostics; state a hypothesis"]
+  I --> H{"Safety controller holding?"}
+  H -- "e-stop or a person in control" --> Q["Ask the engineer"]
+  H -- "obstacle" --> TP["Teleop back out (override only in simulation)"]
+  H -- "no" --> CL["Clear the local costmap"]
+  TP --> PR["Clear the global costmap; probe the route"]
+  CL --> PR
+  PR -- "path" --> RT["Retry, or navigate_via points around the tight spot"]
+  PR -- "no path" --> Q
+  RT -- "verified arrival" --> OK["Resolved"]
+  RT -- "fails again" --> Q
+  Q -- "reply" --> C["The reply becomes site state"] --> RT
+</pre>
 
 <h2>Safety model</h2>
 <table>
-<tr><th>Level</th><th>Examples</th><th>Who</th></tr>
-<tr><td>Observe</td><td>Health, logs, diagnostics, route probes</td><td>Always</td></tr>
-<tr><td>Recover</td><td>Clear costmaps, retry, lifecycle reset, bounded escape/teleop</td><td>Automatic within per-incident budgets</td></tr>
-<tr><td>Command</td><td>Navigate, keepouts, station availability</td><td>An operator's message is the approval</td></tr>
+<tr><th>Level</th><th>Examples</th><th>Who decides</th></tr>
+<tr><td>Observe</td><td>Health, logs, diagnostics, route probes</td><td>Always allowed</td></tr>
+<tr><td>Recover</td><td>Clear costmaps, retry, navigate_via, lifecycle reset, bounded escape and teleop</td><td>Automatic within per-incident budgets</td></tr>
+<tr><td>Command</td><td>Navigate, keepouts, station availability</td><td>An allowlisted operator's message is the approval</td></tr>
 <tr><td>Never</td><td>Raw motor commands, shell, disabling collision checks</td><td>Not exposed</td></tr>
 </table>
-<p>Motion stays below the robot's own safety controller. The demo profile lets teleop override a safety hold because it is a simulation; the profile validator refuses that on real robots.</p>
+<p>The teleop safety override exists only on profiles that declare a simulation; the profile validator refuses it otherwise. Teleop never overrides an e-stop, and always stops inside its minimum clearance.</p>
 
-<h2 id="start">Run it</h2>
+<h2 id="learning">How it improves at one site</h2>
+<p>A robot works one site for months, and the same trouble comes back to the same corner. Ripple remembers what worked, without retraining a model. Every closed incident becomes a <b>lesson for that place</b>. A lesson holds:</p>
+<ul>
+<li>the steps that led to a verified arrival;</li>
+<li>the steps that did not help;</li>
+<li>the steps the safety layer refused;</li>
+<li>what the engineer taught.</li>
+</ul>
+<p>When trouble happens nearby, the best lessons go into the model's briefing, so it tries what worked there first. Repeated trouble becomes a suggestion for a person, such as a keepout or a slow zone. Ripple never applies those changes itself.</p>
+<pre class="mermaid">
+flowchart LR
+  C["Incident closes"] --> L["Lesson for that place: recipe, did not help, refused, taught, evidence"]
+  L --> DB[("Site memory")]
+  N["New incident nearby"] --> R["Recall: proximity, situation, recency, reliability"]
+  DB --> R --> B["Model briefing"]
+  B --> A["Recovery through the edge"] --> V{"Verified?"}
+  V -- "yes" --> U["Upvote the recipe"] --> L
+  V -- "no" --> D["Downvote; mark what did not help"] --> L
+  DB --> S["Site report: suggestions for a person"]
+</pre>
+<p class="note">The approach draws on ExpeL, ReasoningBank, CLIN, Agent Workflow Memory and Generative Agents. The guardrails come from the memory-poisoning literature:</p>
+<ul class="note">
+<li>lessons come only from outcomes the edge verified and from allowlisted people;</li>
+<li>each one lists its evidence;</li>
+<li>they are shown to the model as data, never as permissions;</li>
+<li>people can list them and forget them.</li>
+</ul>
+<p class="note">Live, three incidents at one spot became one lesson with three successes, and recovery went from 45 s to 32 s to 30 s. <a href="https://github.com/00PrabalK00/ripple/blob/main/product/docs/self_improvement.md">Design and sources</a>.</p>
+
+<h2 id="start">Set it up</h2>
 <pre>git clone https://github.com/00PrabalK00/ripple && cd ripple
-bash scripts/start_sim.sh          # SMR300 in Gazebo (ROS 2 Humble)
-bash scripts/start_navigation.sh   # Nav2, in another terminal
-bash scripts/start_ripple.sh       # Ripple on http://127.0.0.1:8050</pre>
-<p>Setup — the simulator checkout, Python environment, PostgreSQL and <code>OPENROUTER_API_KEY</code> in <code>.env</code> — and the full run steps are in the <a href="https://github.com/00PrabalK00/ripple#readme">README</a>.</p>
+bash product/scripts/install.sh --workspace ~/robot_ws   # install, then guided setup
+ripple doctor --site ~/robot_ws/ripple.json              # check the config against the robot
+ripple run --site ~/robot_ws/ripple.json                 # agent + dashboard, http://127.0.0.1:8060</pre>
+<p><code>ripple setup</code> is a terminal wizard.</p>
+<ol>
+<li>It checks your OpenRouter key and your Ambiguous token live.</li>
+<li>It asks where Ripple should ask for help, and who may command the robot.</li>
+<li>It crawls the robot's workspace and the live ROS graph. Every topic, action and service is matched by message type and by the node that publishes or serves it, so different names on another robot don't matter.</li>
+<li>It asks you only about the fields it's unsure of.</li>
+<li>It writes one validated <code>ripple.json</code> for the robot, with secrets in a private <code>.env</code>, and runs <code>ripple doctor</code>.</li>
+</ol>
+<pre class="mermaid">
+flowchart LR
+  K["Keys: OpenRouter, Ambiguous"] --> A["Escalation channel and operators"]
+  A --> C["Crawl the workspace and the live ROS graph"]
+  C --> Q["Confirm only the uncertain fields"]
+  Q --> W["Write ripple.json and a private .env"]
+  W --> D["ripple doctor: every topic, action, service"]
+</pre>
+<p class="note">Needs Ubuntu 22.04 and ROS 2 Humble. Node.js (for Ambiguous and the database bridge), Docker (for PostgreSQL) and Qt6Core (for RosScope) are optional. The simulator used is the external <a href="https://github.com/00PrabalK00/smr300l_gazebo_ros2control">SMR300L Gazebo ROS2 Control</a>, with two small patches from <code>patches/</code>.</p>
 
-<footer>Ripple · built on ROS 2 Humble, Nav2, RosScope, PostgreSQL, GLM 5.3 and Ambiguous · <a href="https://github.com/00PrabalK00/ripple">github.com/00PrabalK00/ripple</a></footer>
+<h2>Tested</h2>
+<table>
+<tr><th>Tier</th><th>What it covers</th></tr>
+<tr><td>Unit</td><td>121 offline tests: the edge tools and policy, navigator via legs, keepouts, teleop and escape, the observer, Ambiguous, the dashboard API, the GLM client, setup, doctor, site memory</td></tr>
+<tr><td>TUI</td><td>The setup dialogs, driven by keypresses in a pseudo-terminal</td></tr>
+<tr><td>Live</td><td>Against the simulator: recovery 13/13, second robot profile and memory 9/9, via routes and pending keepouts 7/7, site learning 4/4</td></tr>
+</table>
+
+<h2>Status and limits</h2>
+<ul>
+<li><b>Scope:</b> one robot, in simulation. A second, stock-Nav2 profile runs with no code changes. Ripple has not been run on physical hardware.</li>
+<li><b>Engineer replies:</b> the Ambiguous reply loop works live. In the recorded full rehearsal, nobody answered in time, so that step fell back to the dashboard.</li>
+<li><b>Localization:</b> AMCL can lose track while the robot spins in a tight dock. Recovering from that still needs a person to re-seed the pose.</li>
+</ul>
+
+<footer>Ripple · ROS 2 Humble, Nav2, PostgreSQL, GLM 5.3 and Ambiguous · <a href="https://github.com/00PrabalK00/ripple">Source</a> · <a href="https://github.com/00PrabalK00/ripple#readme">README</a> · <a href="https://github.com/00PrabalK00/ripple/tree/hackathon-version">Hackathon version</a></footer>
 </main>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+mermaid.initialize({
+  startOnLoad: true, theme: 'base', securityLevel: 'strict',
+  fontFamily: '-apple-system, "Segoe UI", Helvetica, Arial, sans-serif',
+  themeVariables: dark
+    ? {background: '#0c0c0c', primaryColor: '#000', primaryTextColor: '#eee', primaryBorderColor: '#ddd', lineColor: '#bbb',
+       secondaryColor: '#111', tertiaryColor: '#111', clusterBkg: '#0c0c0c', clusterBorder: '#555', edgeLabelBackground: '#0c0c0c'}
+    : {background: '#f6f6f6', primaryColor: '#fff', primaryTextColor: '#111', primaryBorderColor: '#111', lineColor: '#333',
+       secondaryColor: '#f4f4f4', tertiaryColor: '#fafafa', clusterBkg: '#fafafa', clusterBorder: '#bbb', edgeLabelBackground: '#f6f6f6'}
+});
+</script>
 </body>
 </html>

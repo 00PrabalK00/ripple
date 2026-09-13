@@ -1,141 +1,256 @@
-# Ripple · always-on site engineer
+# Ripple
 
-Current direction: **one robot, simulator-only**, with RosScope inspection and
-Ripple reasoning/policy. Physical camera prerequisites are disabled. See
-[the product plan](docs/PRODUCT_PLAN.md) for the new build sequence.
+**An always-on site engineer for Nav2 robots.** Ripple watches a deployed robot and notices when it
+stops or fails. It works out why from the robot's own evidence, then recovers within limits you set.
+When software can't fix what's happening on the floor, it asks a person on
+[Ambiguous](https://app.ambiguous.ai). It gets better at each place it works by remembering what fixed
+problems there.
 
-The dashboard now consumes a read-only headless bridge built against
-[RosScope](https://github.com/00PrabalK00/RosScope) revision
-`583ae6743be802f9f8aed1f834d48ca0d7e172ee`. Clone it beside Ripple and build:
+- Website and demo video: **[ripple.prabalkhare.com](https://ripple.prabalkhare.com)**
+- Guides: [setup](product/docs/setup.md) · [self-improvement](product/docs/self_improvement.md) ·
+  [related work](product/docs/literature.md) · [history](docs/HISTORY.md)
 
-```bash
-git clone https://github.com/00PrabalK00/RosScope.git ../RosScope
-# Qt6 Core development headers/libraries are required.
-ROSSCOPE_SOURCE=../RosScope bash scripts/build_rosscope_bridge.sh
+> The hackathon submission is tagged [`hackathon-version`](../../tree/hackathon-version). Everything
+> after that tag is post-hackathon work.
+
+## What Ripple does
+
+- **Commands in plain words.** "Send the robot to Packing B" just runs: the operator's message is the
+  approval. Keepouts come from words ("the aisle past Rack A3 is closed") or from drawing on the map.
+  They're verified in the keepout mask and the global costmap before Ripple reports them.
+- **Notices trouble on its own.** It spots a stall, a safety hold, a failed goal, lost localization or a
+  Nav2 node that went down, and opens an incident with the evidence.
+- **Recovers within a bounded ladder.** Clear costmaps, back out with a sensor-guided teleop,
+  collision-checked BackUp and Spin, reset a Nav2 node, retry, or re-route through points it chooses.
+  Each step has a per-incident budget.
+- **Asks a person when it has to.** One specific question on Ambiguous. The reply, in plain language,
+  becomes keepouts, station availability and a new destination. The incident closes only on a verified
+  arrival: stopped, within tolerance.
+- **Improves at its site.** Every closed incident becomes a lesson for that place. Next time, the model
+  is briefed with what worked there, what did not, and what the engineer said.
+- **Sets itself up.** `ripple setup` finds the robot's topics, actions and services from its workspace
+  and the live ROS graph, so a robot with different names still gets a correct configuration.
+
+## How it works
+
+```mermaid
+flowchart LR
+  subgraph People
+    A[Engineer on Ambiguous]
+    D[Local dashboard]
+  end
+  subgraph Agent["Agent (Python)"]
+    O[Orchestrator<br/>incident loop]
+    G[GLM 5.3 via OpenRouter<br/>control plane]
+    M[(Site memory<br/>lessons)]
+  end
+  subgraph Edge["Edge (ROS 2)"]
+    T[Typed tools<br/>+ policy]
+    N[Navigator<br/>checks · probe · via legs]
+    K[Keepouts<br/>mask + costmap verify]
+    R[Teleop · BackUp · Spin<br/>lifecycle reset]
+    W[Observer<br/>stall · holds · lifecycle]
+    J[(Action journal<br/>PostgreSQL)]
+  end
+  subgraph Robot["Robot (ROS 2 Humble)"]
+    NV[Nav2]
+    S[Safety controller]
+    X[twist_mux → base]
+  end
+  A <--> O
+  D <--> O
+  O <--> G
+  O <--> M
+  O --> T
+  T --> N & K & R
+  T --> J
+  W --> O
+  N --> NV
+  R --> X
+  NV --> X
+  S --> X
+  W -. reads .- NV & S
 ```
 
-The build applies `patches/rosscope-command-timeout.patch`, making the upstream
-command timeout configurable. The collector uses an eight-second command floor
-and a 150-second whole-collection limit; samples older than 90 seconds are stale.
-The bridge collects process, lifecycle and TF samples asynchronously. Collection
-age is shown; empty data is unknown, not healthy. Upstream TF warnings and action
-summaries are heuristic observations, not motion authorization. The existing owned
-Nav2 adapter remains authoritative for mission outcomes. Failed navigation opens
-a durable incident; rectangular keepouts now support map/text previews and observed mask/costmap checks.
-See [site control](docs/SITE_CONTROL.md) for validation and current limits.
-Autonomous recovery remains pending.
-No process command lines, environments or model keys are exported by the bridge.
+- **The model decides; the edge enforces.** GLM only ever emits tool calls. Every call is validated
+  and policy-checked by the edge, then journaled in PostgreSQL before it touches ROS. The robot's own
+  safety controller stays above everything Ripple does.
+- **Outcomes are verified, not assumed.** A keepout counts once the mask and the costmap show it. An
+  arrival counts once odometry has settled and the pose is within tolerance. A recovery counts once
+  odometry confirms the motion.
 
-## Earlier mission-supervisor prototype (historical)
+### The incident loop
 
-The camera instructions and evidence below describe the previous prototype.
-They are retained for reproducibility and are not required for the current build.
+```mermaid
+stateDiagram-v2
+  [*] --> DETECTED: stall, hold, failed goal, lost localization, node down
+  DETECTED --> INVESTIGATING
+  INVESTIGATING --> RECOVERING: a recovery step runs
+  INVESTIGATING --> ESCALATED: evidence says it is physical
+  RECOVERING --> RESOLVED: verified arrival
+  RECOVERING --> ESCALATED: retry failed / budget spent
+  ESCALATED --> HUMAN_CONTEXT_RECEIVED: engineer replies
+  HUMAN_CONTEXT_RECEIVED --> RECOVERING: keepouts, availability, new destination
+  RESOLVED --> [*]
+  ESCALATED --> CLOSED: engineer closes it
+  INVESTIGATING --> INTERRUPTED: Ripple restarted
+```
 
-# Ripple for Robotics
+### The recovery ladder
 
-A local mission supervisor for one SMR300 simulated robot. Ripple tracks station
-availability, proposes exact destinations, requires single-use approval, and
-rejects work when its evidence changes. Physical depth observations represent
-Packing B availability; robot motion remains in Gazebo.
+```mermaid
+flowchart TD
+  E[Incident opens] --> I[Read state, logs, diagnostics<br/>state a hypothesis]
+  I --> H{Safety controller holding?}
+  H -- e-stop / person in control --> Q[Ask the engineer]
+  H -- obstacle hold --> TP[Teleop back out<br/>override only on a declared simulation]
+  H -- no --> CL[Clear local costmap]
+  TP --> PR
+  CL --> PR[Clear global costmap · probe the route]
+  PR -- path --> RT[Retry the goal, or navigate_via<br/>points around the tight spot]
+  PR -- no path --> Q
+  RT -- verified arrival --> OK[Resolved]
+  RT -- fails again --> Q
+  Q -- reply --> C[Reply becomes site state] --> RT
+```
+
+Budgets are per incident, set in the robot profile: for example, one costmap clear each, two retries,
+one lifecycle reset. A step the edge refuses never runs. Ripple never repeats a failed or denied action.
+
+### Safety model
+
+| Level | Examples | Who decides |
+|---|---|---|
+| Observe | health, logs, diagnostics, route probes | always allowed |
+| Recover | clear costmaps, retry, `navigate_via`, lifecycle reset, bounded escape and teleop | automatic within per-incident budgets |
+| Command | navigate, keepouts, station availability | an allowlisted operator's message is the approval |
+| Never | raw motor commands, shell, disabling collision checks | not exposed |
+
+The teleop safety override exists only for profiles that declare a simulation; the profile validator
+refuses it otherwise. Teleop never overrides an e-stop, and always stops inside its minimum clearance.
+
+### Getting better at one site
+
+```mermaid
+flowchart LR
+  C[Incident closes] --> L[Lesson for that place<br/>recipe · did not help · refused · taught<br/>evidence: incident ids]
+  L --> DB[(Site memory)]
+  N[New incident nearby] --> R[Recall: proximity × situation<br/>× recency × reliability]
+  DB --> R --> B[Model briefing<br/>'Lessons from this place']
+  B --> A[Recovery through the edge] --> O{Verified?}
+  O -- yes --> U[Upvote recipe]
+  O -- no --> V[Downvote · mark what did not help]
+  U & V --> L
+  DB --> S[Site report: repeated trouble<br/>becomes a suggestion for a person]
+```
+
+Lessons follow ExpeL, ReasoningBank, CLIN, Agent Workflow Memory and Generative Agents. The guardrails
+come from the memory-poisoning literature:
+- lessons are built only from outcomes the edge verified and from allowlisted people;
+- each one lists its evidence;
+- they're shown to the model as data, never as permissions;
+- people can list them and forget them (`GET /api/lessons`, `POST /api/lessons/forget`).
+
+Details: [self_improvement.md](product/docs/self_improvement.md).
+
+## Quick start
+
+Needs Ubuntu 22.04 and ROS 2 Humble. Node.js (for the Ambiguous CLI and the database bridge), Docker
+(for PostgreSQL) and Qt6Core (for RosScope) are optional.
+
+```bash
+git clone https://github.com/00PrabalK00/ripple && cd ripple
+bash product/scripts/install.sh --workspace ~/robot_ws   # install, then guided setup
+ripple doctor --site ~/robot_ws/ripple.json              # check config against the live robot
+ripple run --site ~/robot_ws/ripple.json                 # agent + dashboard on http://127.0.0.1:8060
+```
+
+```mermaid
+sequenceDiagram
+  participant You
+  participant Setup as ripple setup
+  participant Robot as Robot workspace + ROS graph
+  You->>Setup: OpenRouter key, Ambiguous token
+  Setup->>Setup: check both live, create database settings
+  Setup->>Robot: crawl package.xml, launch files, Nav2/twist_mux params, live topics/actions/services
+  Robot-->>Setup: every role, with confidence and evidence
+  Setup->>You: only the uncertain fields, robot name, simulation?
+  Setup->>Setup: validate, write ripple.json (+ .env, mode 600)
+  Setup->>Robot: ripple doctor: every configured topic, action and service
+```
+
+| Command | What it does |
+|---|---|
+| `ripple setup` | Guided terminal setup. Add `--non-interactive` to take every answer from flags. |
+| `ripple crawl --live [--existing ripple.json]` | Shows what Ripple sees on the robot now, with confidence and evidence per field, and any drift from the file. |
+| `ripple doctor --site ripple.json` | Checks the schema, every topic, action and service, drift, and both keys. Exits non-zero on any failure. |
+| `ripple run --site ripple.json` | Starts the agent for this robot. |
+
+## Testing
+
+```bash
+product/scripts/test_all.sh unit   # 121 offline unit + integration tests, with coverage
+product/scripts/test_all.sh tui    # the setup dialogs, driven by keypresses in a pseudo-terminal
+product/scripts/test_all.sh live   # against the simulator: doctor, via, recovery, learning, second profile
+```
+
+Live evidence lives in `product/evidence/`:
+
+| Check | Result |
+|---|---|
+| Live recovery (`live-tests-*.json`) | 13/13 on the final code |
+| Second robot profile and memory across restarts (`second-profile-*.json`) | 9/9 |
+| Via routes and pending keepouts (`via-check-*.json`) | 7/7 |
+| Site learning (`learning-check-*.json`) | three incidents at one spot became one lesson (3 successes); recovery went 45 s → 32 s → 30 s |
+
+## Configuration and secrets
+
+- Secrets stay on the machine. `OPENROUTER_API_KEY`, `AMBI_API_TOKEN` and the database password live
+  in `.env`, which is gitignored and written with mode 600.
+- Each robot has one `ripple.json`: its profile plus the operators and channels allowed to command it.
+  It's validated on every start. You can edit it by hand; `ripple doctor` checks it against the robot.
+- `product/config/agent.example.json` and `communications.example.json` are templates. The real files
+  hold personal ids and addresses and are gitignored.
 
 ## Simulator used
 
-Ripple was developed against [SMR300L Gazebo ROS2 Control](https://github.com/00PrabalK00/smr300l_gazebo_ros2control), an existing ROS 2 Humble / Gazebo Classic / Nav2 simulator. It supplies the robot, warehouse, maps, zones, controllers and independent safety controller. It is an external dependency, **not Ripple's new contribution**, and its checkout is excluded from this repository.
+Ripple was developed against
+[SMR300L Gazebo ROS2 Control](https://github.com/00PrabalK00/smr300l_gazebo_ros2control), an existing
+ROS 2 Humble / Gazebo Classic / Nav2 simulator. It supplies the robot, warehouse, maps, zones,
+controllers and an independent safety controller. It's an external dependency, **not Ripple's
+contribution**, and isn't part of this repository.
 
-Place that simulator checkout at `smr300l_gazebo_ros2control/` beside this README. The supplied local snapshot's exact upstream revision has not yet been verified. The speed-unit correction is provided separately in `patches/smr300-speed-units.patch`; apply it from the simulator checkout with `patch -p1 < ../patches/smr300-speed-units.patch` if that correction is not already present.
+Two patches from `patches/` apply to its checkout with `patch -p1`:
+- `smr300-speed-units.patch` fixes the speed filter's units.
+- `smr300-keepout-publish-on-change.patch` stops the stock keepout publisher re-sending its costmap
+  filter info every second. That re-sending made Nav2 rebuild its filter subscriptions under the
+  costmap lock, and left `controller_server` and `planner_server` hung during long runs.
 
-## Setup
+## Status and limits
 
-Use Ubuntu 22.04 with ROS Humble and the simulator's dependencies installed. The local warehouse assets are currently expected at `/opt/ros/humble/share/bcr_bot/models`; adjust `scripts/start_sim.sh` for another installation.
+- **Scope:** one robot, in simulation (SMR300 in Gazebo). A second, stock-Nav2 profile runs with no
+  code changes. Ripple hasn't been run on physical hardware.
+- **Engineer replies:** the Ambiguous reply loop works live. An engineer's replies ("check sensor data
+  then use teleop", "force replan") led to teleop, a replan and a verified arrival. In the recorded full
+  rehearsal, nobody answered in time, so the reply was typed on the dashboard; that run was 6 of 7
+  steps.
+- **Localization:** AMCL can lose track while the robot spins in place in a tight dock.
+  `ripple doctor` and the timeline make this visible, but recovering from it still needs a person to
+  re-seed the pose.
+- **Site learning:** it's new. Lessons are matched and upvoted live. Its first measured effect is
+  modest: recovery got faster, but a refused step kept repeating. Lessons now record refused steps so
+  the next incident can skip them.
 
-```bash
-python3 -m venv --system-site-packages .venv
-.venv/bin/pip install -r requirements.txt
-npm ci
-cp .env.example .env
-# Set OPENROUTER_API_KEY and a matching local DB password/URL in .env.
-docker compose up -d --wait postgres
-npm run db:migrate
-source /opt/ros/humble/setup.bash
-colcon build --base-paths smr300l_gazebo_ros2control smr300l_gazebo_ros2control/src --symlink-install --cmake-args -DBUILD_TESTING=OFF
-```
+## Repository layout
 
-## Run
-
-ROS Humble and the inherited six packages are built in this workspace.
-
-```bash
-bash scripts/start_sim.sh
-# In another terminal:
-bash scripts/start_navigation.sh
-# In another terminal, after sourcing ROS and install/setup.bash:
-ros2 run next_ros2ws_core keepout_zone_publisher
-ros2 topic pub --once /control_mode std_msgs/msg/String '{data: zones}'
-# In another terminal:
-bash scripts/start_ripple.sh
-```
-
-Open http://127.0.0.1:8050. Do not start duplicate instances of these processes.
-The navigation launcher initializes AMCL at the simulator's initial (0,0) spawn;
-do not rerun it after moving without supplying a correct initial pose.
-
-Put `OPENROUTER_API_KEY` in `.env` locally. `.env.example` documents the settings.
-The configured agent is `z-ai/glm-5.3`; on-demand vision uses
-`z-ai/glm-5.3-flash`. Restart Ripple after changing credentials. Model calls are
-bounded, run outside the supervisor loop, and cannot approve or dispatch goals.
-Output is validated locally. A real GLM 5.3 request successfully returned a validated Packing A proposal using the configured key.
-[OpenRouter structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs)
-
-## Camera
-
-Connect a D435i and aim it down at a small tabletop region. A fixed support is preferable. Handheld testing is supported procedurally: brace your arms, hold still for the entire empty/box/empty sequence, and recalibrate after every repositioning. Returning to roughly the same view is not enough to preserve the baseline. Camera motion is not automatically detected by this prototype. In the
-panel, set the region as x,y,width,height in the 640x480 image, clear it, and
-click Calibrate empty region. Wait for ten valid clear frames. Adding a box
-at least 3 cm closer over 10% of the region for five frames reports BLOCKED.
-Invalid depth or a one-second stale stream yields UNKNOWN. Calibration is
-session-local and reconnecting requires recalibration. Vision descriptions are
-on demand and do not authorize movement.
-
-## Verification status
-
-```bash
-.venv/bin/python -m unittest discover -s tests -v
-source /opt/ros/humble/setup.bash
-python3 scripts/verify_nav2.py             # sends and cancels an actual simulated goal
-python3 scripts/verify_nav2.py --complete  # attempts arrival
-```
-
-Six ROS packages build. Twenty focused tests pass, including two against a separate local PostgreSQL test database (source ROS Humble to include the runtime regression test).
-
-Verified live results:
-- An owned goal moved, returned CANCELED, and produced fresh settled odometry.
-- Packing A=A1 (3.61,0.47) and Packing B=EXIT BAY (4.21,2.18) were reached with Nav2 SUCCEEDED. Both travel directions passed.
-- The handheld D435i observed CLEAR → BLOCKED → CLEAR around the right-hand physical B marker.
-- A human-approved B proposal expired when camera.B changed from version 2 to 3. Releasing dispatch yielded a rejection with `send_attempted=false`.
-- GLM 5.3 passed both inspection-update wordings, irrelevant input and ambiguous input checks. GLM 5.3 Flash returned a live scene description.
-
-Machine-readable examples are in `evidence/`. The complete combined scenario still needs two rehearsals on the final station pair; no full demo/video success is claimed yet.
-The camera-expiry receipt was captured before B changed from B1 to EXIT BAY.
-The recording sequence and submission draft are in `docs/`.
-
-The original B1 route failed due to the independent rear-obstacle stop and was replaced with the verified EXIT BAY zone. The safety controller was not overridden. A local action acknowledgement timeout was increased from 20 ms to 1000 ms after observed failures. AMCL receives stationary update requests for real fresh laser-based localization.
-
-Restart holds for operator reconciliation; old approvals never replay. Use Reconcile previous session only after the prior goal is resolved and the robot is stopped. One mission owner is required. Model descriptions do not prove motion or arrival; only adapter outcomes do.
-
-## PostgreSQL and Drizzle
-
-PostgreSQL 17 runs locally via Docker Compose on `127.0.0.1:5433`, with a named persistent volume. Drizzle's TypeScript schema and generated migrations live in `db/`. The Python supervisor communicates with a private Node subprocess over stdin/stdout; all production journal reads and writes use Drizzle. A database acknowledgement must precede any goal send. A failed/uncertain database connection blocks further dispatch until reconciliation.
-
-`npm run db:generate` generates schema migrations; `npm run db:migrate` applies them. Credentials stay in the ignored `.env`. `scripts/migrate_sqlite.py` performs a one-time transactional import of legacy receipts and leaves the old SQLite file unchanged; new writes use PostgreSQL only. The development machine imported 34 receipts.
-
-The normal unit suite uses an explicit in-memory test adapter. To run the two database integration tests, migrate a separate test database and set `RIPPLE_TEST_DATABASE_URL` to its URL before running unittest. They verify persistence across reconnection and zero goal sends after database disconnection.
-
-## Reuse and changes
-
-`smr300l_gazebo_ros2control/` is the supplied pre-existing robot environment.
-New supervisor code is in `ripple/` and local launch wrappers in `scripts/`.
-The only inherited source correction so far changes the speed filter info type
-from percentage (1) to absolute m/s (2), matching its existing conversion.
-Installed missing system package: `ros-humble-gazebo-ros2-control`.
-The exact inherited revision/local differences still need verification before
-submission. See [TODO.md](TODO.md) for remaining work.
+| Path | Contents |
+|---|---|
+| `product/ripple_edge/` | the ROS 2 edge: observer and detector, typed tools and policy, navigator, keepouts, teleop and escape, crawler |
+| `product/agent/` | the agent: orchestrator, GLM client, Ambiguous channel, site memory, dashboard, setup and doctor |
+| `product/profiles/` | robot profiles (SMR300 simulation, stock Nav2) |
+| `product/scripts/` | `ripple`, `install.sh`, simulator helpers, live checks, demo tooling |
+| `product/tests/` | unit and integration tests |
+| `product/docs/` | setup, self-improvement and related-work notes |
+| `site/` | the website ([ripple.prabalkhare.com](https://ripple.prabalkhare.com)) |
+| `db/` | Drizzle schema and migrations for PostgreSQL |
+| `ripple/`, `docs/`, `evidence/` | the earlier prototype (see [HISTORY](docs/HISTORY.md)) |
