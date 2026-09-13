@@ -36,14 +36,15 @@ footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-si
 <div class="links"><a href="https://github.com/00PrabalK00/ripple">Source on GitHub</a><a href="#how">How it works</a><a href="#start">Run it</a></div>
 
 <video src="demo.mp4" controls playsinline preload="metadata" poster="poster.jpg"></video>
-<p class="caption">Two-minute demo: a warehouse SMR300 in Gazebo with ROS 2 Nav2. Ripple runs on GLM 5.3 and talks to the engineer through Ambiguous. Every clip is unedited footage from live runs, sped up; the captions are Ripple's own timeline entries.</p>
+<p class="caption">Two-minute demo: a warehouse SMR300 in Gazebo with ROS 2 Nav2. Ripple runs on GLM 5.3 and talks to the engineer through Ambiguous. Scenes 1–4 are one continuous live run and scene 5 is an earlier one; the footage is unedited and sped up, and the captions are Ripple's own timeline entries.</p>
 
 <h2>What the demo shows</h2>
 <ol>
 <li><b>Site control.</b> A keepout drawn on the dashboard map is verified in the keepout mask and the global costmap. Nav2 plans around it, and Ripple verifies the arrival: stopped, within tolerance.</li>
-<li><b>An unexpected failure.</b> A pallet is placed on the Home dock and the trip home fails. Without being asked, Ripple reads diagnostics and logs, clears both costmaps, probes routes home and to the Charger, then asks the engineer one specific question on Ambiguous.</li>
-<li><b>Human context.</b> The reply, in plain language, is located on the map from words and becomes a verified keepout; the Home dock is marked unavailable.</li>
-<li><b>A second live run.</b> The engineer answers on Ambiguous: "check sensor data then use teleop". Ripple reads the scans, teleops 0.32 m toward the clear side, probes and retries the route home, and files the incident report to the Ambiguous workspace.</li>
+<li><b>Words become site state, then a failure.</b> The walkway is reopened from a sentence. A pallet then blocks the Home dock and the trip home fails. Without being asked, Ripple reads diagnostics and logs, clears both costmaps and probes the route, then asks the engineer one specific question on Ambiguous.</li>
+<li><b>Human context.</b> No one answered on Ambiguous in this run, so the reply was typed on the dashboard. Ripple locates the dock from the words, verifies a keepout over it (the dock becomes unavailable), reroutes to the Charger, and resolves the incident on a verified arrival.</li>
+<li><b>The record.</b> Ripple files the incident report to the team's Ambiguous workspace.</li>
+<li><b>A real reply on Ambiguous.</b> In an earlier live run the engineer answers on Ambiguous: "check sensor data then use teleop". Ripple reads the scans, teleops 0.32 m toward the clear side, and probes and retries the route home.</li>
 </ol>
 
 <h2 id="how">How it works</h2>
