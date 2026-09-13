@@ -1,0 +1,277 @@
+{
+  "results": [
+    {
+      "check": "cancel: owned goal canceled with confirmed stop",
+      "pass": false,
+      "goal": {
+        "id": "6f90915fbeac436f893ededccd7ffec3",
+        "destination": "CHARGE",
+        "label": "Charger",
+        "target": {
+          "frame": "map",
+          "x": 0.71,
+          "y": -8.82,
+          "yaw": -0.044
+        },
+        "authorization_id": "auth-15ff0c5b6b86",
+        "reason": "cancellation test",
+        "attempt": "command",
+        "started_at": "2026-09-13T06:20:08.436644+00:00",
+        "status": "SUCCEEDED",
+        "distance_remaining": 0.17,
+        "final_pose": null,
+        "verified": false,
+        "outcome_reason": null,
+        "route_length_m": 0.5,
+        "via": null,
+        "leg": 0,
+        "leg_ids": [
+          "6f90915fbeac436f893ededccd7ffec3"
+        ],
+        "handle": "6f90915fbeac436f893ededccd7ffec3",
+        "uv": [
+          0.55,
+          0.92458
+        ],
+        "via_uv": []
+      },
+      "stop": {
+        "tool": "cancel_navigation",
+        "request_id": "req-89e5f8acdddf",
+        "status": "ok",
+        "reason": "no active goal",
+        "verified": true,
+        "data": {}
+      }
+    },
+    {
+      "check": "refusal: safety hold observed",
+      "pass": false,
+      "holding": null
+    },
+    {
+      "check": "refusal: escape refused while the safety controller holds",
+      "pass": false,
+      "escape": {
+        "tool": "escape",
+        "request_id": "req-e51cfb00888b",
+        "status": "ok",
+        "reason": "behavior succeeded",
+        "verified": true,
+        "data": {
+          "primitive": "backup",
+          "requested": 0.2,
+          "moved": 0.214
+        }
+      }
+    },
+    {
+      "check": "refusal: teleop refused without an explicit override",
+      "pass": false,
+      "teleop": {
+        "tool": "teleop",
+        "request_id": "req-30f8c63d453f",
+        "status": "ok",
+        "reason": "teleop forward moved 0.208 m",
+        "verified": true,
+        "data": {
+          "direction": "forward",
+          "moved": 0.208,
+          "target": 0.2,
+          "overrode_safety": false,
+          "clearance_after": {
+            "forward": 0.591,
+            "backward": 0.635
+          }
+        }
+      }
+    },
+    {
+      "check": "refusal: dispatch refused while held",
+      "pass": false,
+      "navigate": {
+        "tool": "navigate_to",
+        "request_id": "req-ddae29c1f7fa",
+        "status": "ok",
+        "reason": "Nav2 accepted the goal",
+        "verified": false,
+        "data": {
+          "destination": "Z3",
+          "label": "Staging Z3",
+          "goal_id": "233a98895ca44bdb844395e33b16b70d",
+          "route_length_m": 12.75
+        }
+      }
+    },
+    {
+      "check": "refusal: simulation-only override moves the robot out",
+      "pass": true,
+      "teleop": {
+        "tool": "teleop",
+        "request_id": "req-bddafc369d37",
+        "status": "ok",
+        "reason": "teleop backward moved 0.257 m",
+        "verified": true,
+        "data": {
+          "direction": "backward",
+          "moved": 0.257,
+          "target": 0.25,
+          "overrode_safety": false,
+          "clearance_after": {
+            "forward": 0.848,
+            "backward": 0.418
+          }
+        }
+      }
+    },
+    {
+      "check": "escape: Spin moves and is verified by odometry",
+      "pass": true,
+      "spin": {
+        "tool": "escape",
+        "request_id": "req-9deadbb413c2",
+        "status": "ok",
+        "reason": "behavior succeeded",
+        "verified": true,
+        "data": {
+          "primitive": "spin",
+          "requested": 0.6,
+          "moved": 0.63
+        }
+      }
+    },
+    {
+      "check": "escape: BackUp moves and is verified by odometry (or is refused for rear clearance)",
+      "pass": true,
+      "backup": {
+        "tool": "escape",
+        "request_id": "req-bdbf8dfb69eb",
+        "status": "denied",
+        "reason": "rear_obstacle_too_close",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "escape: per-incident budget is enforced",
+      "pass": false,
+      "third": {
+        "tool": "escape",
+        "request_id": "req-bcc07a3c5d8d",
+        "status": "ok",
+        "reason": "behavior succeeded",
+        "verified": true,
+        "data": {
+          "primitive": "spin",
+          "requested": -0.6,
+          "moved": 0.693
+        }
+      }
+    },
+    {
+      "check": "lifecycle: declared node reset and verified active",
+      "pass": true,
+      "reset": {
+        "tool": "lifecycle_reset",
+        "request_id": "req-faeee5e82985",
+        "status": "ok",
+        "reason": "ROS operation and postcondition observed; recovery progress must be assessed separately",
+        "verified": true,
+        "data": {}
+      }
+    },
+    {
+      "check": "lifecycle: budget stops a second reset",
+      "pass": true,
+      "again": {
+        "tool": "lifecycle_reset",
+        "request_id": "req-195df7558f1f",
+        "status": "denied",
+        "reason": "incident_budget_exhausted",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "lifecycle: planner answers and Nav2 reports all nodes active after the reset",
+      "pass": true,
+      "probe": {
+        "tool": "probe_route",
+        "request_id": "req-de3d5e173eae",
+        "status": "ok",
+        "reason": "path_found",
+        "verified": false,
+        "data": {
+          "destination": "Z3",
+          "ok": true,
+          "reason": "path_found",
+          "points": 487,
+          "length_m": 12.28,
+          "min_clearance_m": 0.67,
+          "tight_spot": {
+            "x": 0.4,
+            "y": -8.33
+          },
+          "waypoints": [
+            {
+              "x": 0.41,
+              "y": -8.85
+            },
+            {
+              "x": 0.17,
+              "y": -7.34
+            },
+            {
+              "x": -0.21,
+              "y": -5.86
+            },
+            {
+              "x": -0.86,
+              "y": -4.5
+            },
+            {
+              "x": -1.74,
+              "y": -3.25
+            },
+            {
+              "x": -2.64,
+              "y": -2.02
+            },
+            {
+              "x": -3.57,
+              "y": -0.81
+            },
+            {
+              "x": -4.49,
+              "y": 0.39
+            },
+            {
+              "x": -5.74,
+              "y": 1.33
+            }
+          ]
+        }
+      },
+      "nav2": {
+        "key": "nav2",
+        "label": "Nav2",
+        "state": "ok",
+        "detail": "5/5 active"
+      }
+    },
+    {
+      "check": "stall: halted-while-commanded detected and an incident opened",
+      "pass": false,
+      "timeline": []
+    }
+  ],
+  "robot_pose": {
+    "uv": [
+      0.5399,
+      0.92155
+    ],
+    "x": 0.57,
+    "y": -8.76,
+    "heading": 0.17893384947778773
+  }
+}

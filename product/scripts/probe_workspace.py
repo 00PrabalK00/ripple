@@ -5,7 +5,7 @@ from dotenv import dotenv_values
 from ripple_edge.journal import ActionJournal
 from ripple_agent.workspace import AmbiguousCLI,WorkspaceTools
 root=Path(__file__).resolve().parents[2]
-cli=AmbiguousCLI(root,'6f6c1ff3-a179-4739-aea6-b5a49a309ec3','58b6db73-2c70-4161-9f0f-01974dbdd348')
+cli=AmbiguousCLI(root,'00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001')
 journal=ActionJournal(dotenv_values('/home/zuci/Ripple/.env')['DATABASE_URL'],root)
 tools=WorkspaceTools(cli,journal)
 results={}
@@ -24,6 +24,6 @@ try:
             {'A':'Live costmap clear','B':'Verified'}, {'A':'Full recovery demo','B':'Pending'}]},'rows')
     task=run('workspace_task_create',{'title':'Verify Ripple workspace tool integration',
         'description':'Integration-test task owned by Ripple Agent. Verify report, sheet, task and draft readback.'},'task')
-    draft=run('workspace_email_draft',{'to':['pk3391@nyu.edu'],'subject':'Ripple tools integration — engineering update',
+    draft=run('workspace_email_draft',{'to':['engineer@example.com'],'subject':'Ripple tools integration — engineering update',
         'body_markdown':'Hi Prabal,\n\nRipple now has typed tools for tasks, reports, spreadsheets, email drafts and communications. I am verifying the integrations against Ambiguous.\n\nThe robot edge has passed live costmap-clear and durable budget tests. The complete autonomous recovery demo remains unfinished.\n\nRipple Agent'},'draft')
 finally:journal.close()

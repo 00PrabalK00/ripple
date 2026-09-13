@@ -17,3 +17,8 @@ recordings/
 
 # Also ignore a development dependency symlink.
 node_modules
+product/.coverage
+
+# Real operator and channel ids stay on the machine; the *.example.json files are templates.
+product/config/agent.json
+product/config/communications.json

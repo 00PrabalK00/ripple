@@ -23,12 +23,13 @@ class Observer(Node):
         super().__init__('ripple_edge_observer')
         self.profile=profile;self.detector=Detector(profile,time.monotonic)
         self.events=deque(maxlen=200);self.findings=deque(maxlen=100)
-        self.active=set();self.terminal=set();self.requests=ReadRequests();self.node_states={}
+        self.active=set();self.terminal=set();self.requests=ReadRequests();self.node_states={};self.status_seen=False
         self.latched=QoSProfile(depth=1,reliability=ReliabilityPolicy.RELIABLE,durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(Odometry,profile.odometry.topic,self.odom,qos_profile_sensor_data)
         self.create_subscription(PoseWithCovarianceStamped,profile.localization.topic,self.pose,self.latched)
-        self.create_subscription(String,profile.mode.topic,
-            lambda m:self.detector.observe('mode',m.data,profile.mode.topic,profile.mode.max_age_s),10)
+        if profile.mode:
+            self.create_subscription(String,profile.mode.topic,
+                lambda m:self.detector.observe('mode',m.data,profile.mode.topic,profile.mode.max_age_s),10)
         for name,cfg in profile.motion_inputs.items():
             self.create_subscription(Twist,cfg.topic,lambda m,n=name,c=cfg:self.velocity(n,c,m),qos_profile_sensor_data)
         self.create_subscription(Twist,profile.motion_output.topic,
@@ -54,21 +55,27 @@ class Observer(Node):
         v=msg.twist.twist;values=[v.linear.x,v.linear.y,v.angular.z]
         if not all(math.isfinite(x) for x in values):return
         self.detector.observe('odometry',{'linear':math.hypot(*values[:2]),'angular':values[2]},self.profile.odometry.topic,self.profile.odometry.max_age_s)
+        p=msg.pose.pose;q=p.orientation
+        if all(math.isfinite(x) for x in (p.position.x,p.position.y,q.z,q.w)):
+            self.detector.observe('odometry_pose',{'x':p.position.x,'y':p.position.y,'yaw':2*math.atan2(q.z,q.w)},
+                self.profile.odometry.topic,self.profile.odometry.max_age_s)
 
     def pose(self,msg):
         cov=msg.pose.covariance;p=self.profile
         ok=(all(math.isfinite(v) for v in cov) and 0<=cov[0]<=p.covariance_xy_max
             and 0<=cov[7]<=p.covariance_xy_max and 0<=cov[35]<=p.covariance_yaw_max)
         self.detector.observe('localization',bool(ok),p.localization.topic,p.localization.max_age_s)
-        pos=msg.pose.pose.position
-        if math.isfinite(pos.x) and math.isfinite(pos.y):
-            self.detector.observe('pose',{'frame':msg.header.frame_id,'x':pos.x,'y':pos.y},p.localization.topic,p.localization.max_age_s)
+        pos=msg.pose.pose.position;q=msg.pose.pose.orientation
+        if all(math.isfinite(v) for v in (pos.x,pos.y,q.z,q.w)):
+            self.detector.observe('pose',{'frame':msg.header.frame_id,'x':pos.x,'y':pos.y,'yaw':2*math.atan2(q.z,q.w)},
+                p.localization.topic,p.localization.max_age_s)
 
     def scan(self,name,cfg,msg):
         values=[v for v in msg.ranges if math.isfinite(v) and msg.range_min<=v<=msg.range_max]
         self.detector.observe('scan.'+name,{'minimum_m':min(values) if values else None,'valid_points':len(values)},cfg.topic,cfg.max_age_s)
 
     def status(self,msg):
+        self.status_seen=True
         self.active={bytes(s.goal_info.goal_id.uuid).hex() for s in msg.status_list if s.status in (1,2,3)}
         for s in msg.status_list:
             gid=bytes(s.goal_info.goal_id.uuid).hex()
@@ -97,7 +104,8 @@ class Observer(Node):
             try:
                 r=f.result();value=parse_smr300(r.success,r.message)
                 self.detector.observe('safety',value,self.profile.safety.service,self.profile.safety.max_age_s)
-                if value.get('known'):self.detector.observe('mode',value['mode'],self.profile.safety.service,self.profile.mode.max_age_s)
+                if value.get('known'):self.detector.observe('mode',value['mode'],self.profile.safety.service,
+                    self.profile.mode.max_age_s if self.profile.mode else self.profile.safety.max_age_s)
             except Exception:pass # Old observations age out.
         f.add_done_callback(done)
 
@@ -117,6 +125,12 @@ class Observer(Node):
         now=time.monotonic()
         states={n:state for n,(state,at) in self.node_states.items() if now-at<5}
         self.detector.observe('lifecycle',states,'declared GetState services',2)
+        if self.profile.mode is None:
+            self.detector.observe('mode','autonomous','profile declares no manual mode',2)
+        # Nav2 publishes goal status only on change; while nothing is active, keep "no active goal"
+        # fresh from the last status seen instead of letting it expire into "unknown".
+        if self.status_seen and not self.active:
+            self.detector.observe('goal',{'active':False,'id':None},'Nav2 status',2)
         self.events.extend(self.detector.tick())
 
     def snapshot(self):

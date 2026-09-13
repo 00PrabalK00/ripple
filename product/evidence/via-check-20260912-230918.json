@@ -1,0 +1,44 @@
+[
+  {
+    "check": "a via point against a wall is refused with a nearest clear point",
+    "ok": true,
+    "detail": "via points rejected: point 1 only 0.0 m from an obstacle, wall or keepout; needs 0.4 m \u00b7 suggested {'x': -6.15, 'y': 1.0}",
+    "at": "23:07:20"
+  },
+  {
+    "check": "the via route is accepted after every leg plans",
+    "ok": true,
+    "detail": "Nav2 accepted leg 1 of 3 \u00b7 route 13.27 m",
+    "at": "23:07:21"
+  },
+  {
+    "check": "every leg is driven and only the final arrival is verified",
+    "ok": true,
+    "detail": "status SUCCEEDED \u00b7 verified True \u00b7 Nav2 goals 3 \u00b7 legs seen [0, 1, 2] \u00b7 arrived: settled odometry and pose within tolerance",
+    "at": "23:08:23"
+  },
+  {
+    "check": "the dashboard state carries the via markers while driving",
+    "ok": true,
+    "detail": "via_uv seen: True",
+    "at": "23:08:23"
+  },
+  {
+    "check": "a keepout over the robot is saved as pending instead of refused",
+    "ok": true,
+    "detail": "pending: the region overlaps the robot, so the edge applies it automatically once the robot has left it; move the robot away",
+    "at": "23:08:23"
+  },
+  {
+    "check": "the pending keepout is applied and verified once the robot has left",
+    "ok": true,
+    "detail": "navigate ok \u00b7 keepout APPLIED \u00b7 observed in the keepout mask and global costmap",
+    "at": "23:08:36"
+  },
+  {
+    "check": "the robot then reaches the Charger, verified",
+    "ok": true,
+    "detail": "arrived: settled odometry and pose within tolerance",
+    "at": "23:09:17"
+  }
+]

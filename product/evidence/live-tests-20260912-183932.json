@@ -1,0 +1,240 @@
+{
+  "results": [
+    {
+      "check": "cancel: owned goal canceled with confirmed stop",
+      "pass": true,
+      "goal": {
+        "id": "0ed5be21b8634e01b7dec3283725c4a8",
+        "destination": "CHARGE",
+        "label": "Charger",
+        "target": {
+          "frame": "map",
+          "x": 0.71,
+          "y": -8.82,
+          "yaw": -0.044
+        },
+        "authorization_id": "auth-d9f1e415a8d6",
+        "reason": "cancellation test",
+        "attempt": "command",
+        "started_at": "2026-09-12T22:39:33.590813+00:00",
+        "status": "CANCELED",
+        "distance_remaining": 7.99,
+        "final_pose": {
+          "frame": "map",
+          "x": 0.22424874531167535,
+          "y": -0.8159161695489807,
+          "yaw": -1.607077000580575
+        },
+        "verified": false,
+        "outcome_reason": "cancellation test",
+        "route_length_m": 8.87,
+        "stopped": true,
+        "uv": [
+          0.55,
+          0.92458
+        ]
+      },
+      "stop": {
+        "tool": "cancel_navigation",
+        "request_id": "req-cbe0862bfb72",
+        "status": "ok",
+        "reason": "goal canceled; robot stopped",
+        "verified": true,
+        "data": {}
+      }
+    },
+    {
+      "check": "refusal: safety hold observed",
+      "pass": true,
+      "holding": [
+        "obstacle"
+      ]
+    },
+    {
+      "check": "refusal: escape refused while the safety controller holds",
+      "pass": true,
+      "escape": {
+        "tool": "escape",
+        "request_id": "req-7779e31b64d6",
+        "status": "denied",
+        "reason": "safety_holding:obstacle",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "refusal: teleop refused without an explicit override",
+      "pass": true,
+      "teleop": {
+        "tool": "teleop",
+        "request_id": "req-5634937c9ad3",
+        "status": "denied",
+        "reason": "safety controller holding (obstacle); pass override_safety if the profile allows it",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "refusal: dispatch refused while held",
+      "pass": true,
+      "navigate": {
+        "tool": "navigate_to",
+        "request_id": "req-f159f53c3239",
+        "status": "denied",
+        "reason": "dispatch checks failed: safety_not_holding",
+        "verified": false,
+        "data": {
+          "destination": "Z3",
+          "label": "Staging Z3",
+          "failed_checks": [
+            "safety_not_holding"
+          ]
+        }
+      }
+    },
+    {
+      "check": "refusal: simulation-only override moves the robot out",
+      "pass": true,
+      "teleop": {
+        "tool": "teleop",
+        "request_id": "req-2602049fd694",
+        "status": "ok",
+        "reason": "teleop backward overriding the safety hold moved 0.265 m",
+        "verified": true,
+        "data": {
+          "direction": "backward",
+          "moved": 0.265,
+          "target": 0.25,
+          "overrode_safety": true,
+          "clearance_after": {
+            "forward": 0.451,
+            "backward": 1.818
+          }
+        }
+      }
+    },
+    {
+      "check": "escape: Spin moves and is verified by odometry",
+      "pass": true,
+      "spin": {
+        "tool": "escape",
+        "request_id": "req-a367cc51d3c4",
+        "status": "ok",
+        "reason": "behavior succeeded",
+        "verified": true,
+        "data": {
+          "primitive": "spin",
+          "requested": 0.6,
+          "moved": 0.713
+        }
+      }
+    },
+    {
+      "check": "escape: BackUp moves and is verified by odometry (or is refused for rear clearance)",
+      "pass": true,
+      "backup": {
+        "tool": "escape",
+        "request_id": "req-34a6b2143e20",
+        "status": "ok",
+        "reason": "behavior succeeded",
+        "verified": true,
+        "data": {
+          "primitive": "backup",
+          "requested": 0.2,
+          "moved": 0.207
+        }
+      }
+    },
+    {
+      "check": "escape: per-incident budget is enforced",
+      "pass": true,
+      "third": {
+        "tool": "escape",
+        "request_id": "req-d02e247d23cb",
+        "status": "denied",
+        "reason": "incident_budget_exhausted",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "lifecycle: declared node reset and verified active",
+      "pass": true,
+      "reset": {
+        "tool": "lifecycle_reset",
+        "request_id": "req-a4d4b446e13e",
+        "status": "ok",
+        "reason": "ROS operation and postcondition observed; recovery progress must be assessed separately",
+        "verified": true,
+        "data": {}
+      }
+    },
+    {
+      "check": "lifecycle: budget stops a second reset",
+      "pass": true,
+      "again": {
+        "tool": "lifecycle_reset",
+        "request_id": "req-50e859f2a248",
+        "status": "denied",
+        "reason": "incident_budget_exhausted",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "lifecycle: planner answers and Nav2 reports all nodes active after the reset",
+      "pass": true,
+      "probe": {
+        "tool": "probe_route",
+        "request_id": "req-164b4d804aa4",
+        "status": "ok",
+        "reason": "path_found",
+        "verified": false,
+        "data": {
+          "destination": "Z3",
+          "ok": true,
+          "reason": "path_found",
+          "points": 430,
+          "length_m": 11.05
+        }
+      },
+      "nav2": {
+        "key": "nav2",
+        "label": "Nav2",
+        "state": "ok",
+        "detail": "5/5 active"
+      }
+    },
+    {
+      "check": "stall: halted-while-commanded detected and an incident opened",
+      "pass": true,
+      "timeline": [
+        {
+          "id": "d1a5583579a4",
+          "t": "2026-09-12T22:40:54.172625+00:00",
+          "kind": "incident",
+          "text": "Incident opened \u2014 Robot stopped while commanded to move near (0.16, -1.99). Cause not yet known.",
+          "incident": "inc-417068aded",
+          "state": "DETECTED"
+        },
+        {
+          "id": "15ea4260d5c0",
+          "t": "2026-09-12T22:40:54.174344+00:00",
+          "kind": "incident",
+          "text": "Incident investigating",
+          "incident": "inc-417068aded",
+          "state": "INVESTIGATING"
+        }
+      ]
+    }
+  ],
+  "robot_pose": {
+    "uv": [
+      0.54741,
+      0.92096
+    ],
+    "x": 0.67,
+    "y": -8.74,
+    "heading": 0.331420509874697
+  }
+}

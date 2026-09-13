@@ -62,7 +62,7 @@ missions:
   dispatch_checks: [station_registered, facts_fresh, keepouts_verified, route_probe_ok, safety_not_holding, mode_not_manual, single_owner]
 recovery:
   clear_costmaps: {autonomy: auto, per_incident: 1}
-  retry_goal: {autonomy: auto, per_incident: 1}
+  retry_goal: {autonomy: auto, per_incident: 2}
   lifecycle_reset: {autonomy: ask, per_incident: 1}
   reset_nodes: [/controller_server, /planner_server]
   escape:
@@ -75,7 +75,18 @@ recovery:
     per_incident: 2
     requires: [safety_present, safety_not_holding, mode_not_manual, localization_fresh, no_active_goal, rear_scan_fresh]
 stations:
-  A: {frame: map, x: 3.61, y: 0.47, yaw: 0}
-  B: {frame: map, x: 4.21, y: 2.18, yaw: 0}
+  A: {frame: map, x: 3.61, y: 0.47, yaw: 0, label: Packing A, aliases: [A1, packing station a]}
+  B: {frame: map, x: 4.21, y: 2.18, yaw: 0, label: Packing B, aliases: [EXIT BAY, packing station b]}
+  HOME: {frame: map, x: -0.79, y: -0.67, yaw: 0, label: Home dock, aliases: [home, dock]}
+  CHARGE: {frame: map, x: 0.71, y: -8.82, yaw: -0.044, label: Charger, aliases: [charging dock, charging station]}
+  A3: {frame: map, x: 3.71, y: -3.42, yaw: 0, label: Rack A3}
+  A5: {frame: map, x: 3.51, y: -6.83, yaw: 0, label: Rack A5}
+  B3: {frame: map, x: 5.66, y: -2.83, yaw: 0, label: Rack B3}
+  B5: {frame: map, x: 5.61, y: -6.88, yaw: 0, label: Rack B5}
+  Z3: {frame: map, x: -5.74, y: 1.33, yaw: 0, label: Staging Z3, aliases: [staging]}
 escalation_channel: ambiguous
 reply_timeout_s: 120
+# Gazebo simulation. Teleop may override the safety hold here only; a real-robot profile must not.
+simulation: true
+teleop: {topic: /cmd_vel_joy, mode_topic: /control_mode, manual_mode: manual, restore_mode: zones,
+         max_speed_mps: 0.15, max_distance_m: 0.5, turn_rate: 0.4, min_clearance_m: 0.2, override_safety: true}

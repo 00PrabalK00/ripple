@@ -1,8 +1,8 @@
 {
   "identity": "Ripple Agent",
-  "user_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
-  "workspace_id": "58b6db73-2c70-4161-9f0f-01974dbdd348",
-  "channel_id": "961943a3-b560-42ad-8f69-2e7a9c45318e",
+  "user_id": "00000000-0000-4000-8000-000000000002",
+  "workspace_id": "00000000-0000-4000-8000-000000000001",
+  "channel_id": "00000000-0000-4000-8000-000000000003",
   "first_message": "c3011022-febd-4389-b20b-eac50973ee1e",
   "first_reply": "9e028917-1431-41c3-80a7-6e1fb23e256d",
   "second_message": "a653f2df-97b2-4100-bc02-65ac024c94b0",

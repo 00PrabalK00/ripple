@@ -1,0 +1,12 @@
+{
+  "ambiguous": {
+    "user_id": "00000000-0000-4000-8000-000000000001",
+    "workspace_id": "00000000-0000-4000-8000-000000000002",
+    "escalation_channel_id": "00000000-0000-4000-8000-000000000003"
+  },
+  "operators": [
+    {"id": "00000000-0000-4000-8000-000000000004", "name": "Site engineer", "via": "ambiguous"},
+    {"id": "local-dashboard", "name": "Local operator", "via": "dashboard"}
+  ],
+  "authorization_source": "Operators are site engineers named by the robot owner. Their messages are the approval for the actions they ask for (command-as-approval). `ripple setup` writes this into ripple.json; copy this file to agent.json only for the legacy --config flag."
+}

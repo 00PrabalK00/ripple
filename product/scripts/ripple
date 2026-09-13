@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Ripple command line.
+#   ripple setup  [--workspace ROBOT_WS]   guided setup: keys, robot discovery, ripple.json, checks
+#   ripple crawl  [--workspace ROBOT_WS] [--live] [--out ripple.json]   propose a robot profile
+#   ripple doctor --site ripple.json       check the config against the live robot and the keys
+#   ripple run    --site ripple.json       start the agent for this robot
+set -eo pipefail
+root="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../.." && pwd)"
+# ROS, plus the robot workspace's overlay when there is one, so its message types are known.
+source "/opt/ros/${ROS_DISTRO:-humble}/setup.bash" 2>/dev/null || true
+for overlay in "${RIPPLE_WORKSPACE:-$PWD}/install/setup.bash"; do [ -f "$overlay" ] && source "$overlay"; done
+node_bin="$(ls -d "$HOME"/.nvm/versions/node/*/bin 2>/dev/null | tail -1)"
+[ -n "$node_bin" ] && export PATH="$node_bin:$PATH"
+export PYTHONPATH="$root/product/agent:$root/product/ripple_edge:${PYTHONPATH:-}"
+py="$root/product/.venv/bin/python"
+[ -x "$py" ] || py=python3
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  setup)  exec "$py" -m ripple_agent.setup --root "$root" "$@" ;;
+  crawl)  exec "$py" -m ripple_edge.crawl "$@" ;;
+  doctor) exec "$py" -m ripple_agent.doctor --root "$root" "$@" ;;
+  run)    exec "$root/product/scripts/ripple_agent.sh" "$@" ;;
+  *)      sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+esac

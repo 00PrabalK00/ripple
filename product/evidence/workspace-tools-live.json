@@ -6,7 +6,7 @@
       "id": "6e0d8ba7-c502-4770-81b5-2081b72e5317",
       "type": "doc",
       "title": "Ripple engineering status \u2014 12 September 2026",
-      "owner_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+      "owner_id": "00000000-0000-4000-8000-000000000002",
       "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Ripple engineering status\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Verified: read-only MCP observations, RosScope diagnostics, PostgreSQL recovery budgets, a live local-costmap clear, and two-way Ambiguous session delivery.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Remaining: live stall and escape scenarios, the always-on recovery agent, full human-assisted recovery, goal/map control through the edge, and a second Nav2 profile.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"This is an integration report, not a claim that the full product is complete.\"}]}]}",
       "visibility": "restricted",
       "link_expires_at": null,
@@ -21,10 +21,10 @@
       "labels": [],
       "page_style": {},
       "owner": {
-        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "id": "00000000-0000-4000-8000-000000000002",
         "display_name": "Ripple Agent",
         "primary_email": null,
-        "workspace_email": "ripple.agent@ripple.ambi.cc",
+        "workspace_email": "agent@example.com",
         "username": "ripple.agent",
         "type": "agent"
       },
@@ -32,7 +32,7 @@
         "id": "6e0d8ba7-c502-4770-81b5-2081b72e5317",
         "type": "doc",
         "title": "Ripple engineering status \u2014 12 September 2026",
-        "owner_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "owner_id": "00000000-0000-4000-8000-000000000002",
         "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Ripple engineering status\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Verified: read-only MCP observations, RosScope diagnostics, PostgreSQL recovery budgets, a live local-costmap clear, and two-way Ambiguous session delivery.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Remaining: live stall and escape scenarios, the always-on recovery agent, full human-assisted recovery, goal/map control through the edge, and a second Nav2 profile.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"This is an integration report, not a claim that the full product is complete.\"}]}]}",
         "visibility": "restricted",
         "link_expires_at": null,
@@ -47,10 +47,10 @@
         "labels": [],
         "page_style": {},
         "owner": {
-          "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+          "id": "00000000-0000-4000-8000-000000000002",
           "display_name": "Ripple Agent",
           "primary_email": null,
-          "workspace_email": "ripple.agent@ripple.ambi.cc",
+          "workspace_email": "agent@example.com",
           "username": "ripple.agent",
           "type": "agent"
         }
@@ -204,7 +204,7 @@
           }
         ]
       },
-      "owner_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+      "owner_id": "00000000-0000-4000-8000-000000000002",
       "visibility": "restricted",
       "link_expires_at": null,
       "has_password": false,
@@ -214,7 +214,7 @@
       "starred_at": null,
       "starred": false,
       "owner": {
-        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "id": "00000000-0000-4000-8000-000000000002",
         "display_name": "Ripple Agent",
         "primary_email": ""
       }
@@ -379,7 +379,7 @@
           }
         ]
       },
-      "owner_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+      "owner_id": "00000000-0000-4000-8000-000000000002",
       "visibility": "restricted",
       "link_expires_at": null,
       "has_password": false,
@@ -389,7 +389,7 @@
       "starred_at": null,
       "starred": false,
       "owner": {
-        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "id": "00000000-0000-4000-8000-000000000002",
         "display_name": "Ripple Agent",
         "primary_email": ""
       }
@@ -406,8 +406,8 @@
         "description": "Integration-test task owned by Ripple Agent. Verify report, sheet, task and draft readback.",
         "status": "todo",
         "priority": "medium",
-        "assignee_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
-        "creator_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "assignee_id": "00000000-0000-4000-8000-000000000002",
+        "creator_id": "00000000-0000-4000-8000-000000000002",
         "due_date": "2026-09-26",
         "start_date": null,
         "parent_task_id": null,
@@ -432,13 +432,13 @@
         "created_at": "2026-09-12T18:10:19.670Z",
         "updated_at": "2026-09-12T18:10:19.670Z",
         "creator": {
-          "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+          "id": "00000000-0000-4000-8000-000000000002",
           "display_name": "Ripple Agent",
           "primary_email": null,
           "type": "agent"
         },
         "assignee": {
-          "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+          "id": "00000000-0000-4000-8000-000000000002",
           "display_name": "Ripple Agent",
           "primary_email": null,
           "type": "agent"
@@ -460,32 +460,32 @@
       "created_at": "2026-09-12T18:10:34.326Z",
       "subject": "Ripple tools integration \u2014 engineering update",
       "from": {
-        "email": "ripple.agent@ripple.ambi.cc",
+        "email": "agent@example.com",
         "name": "Ripple Agent",
-        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "id": "00000000-0000-4000-8000-000000000002",
         "display_name": "Ripple Agent",
-        "primary_email": "ripple.agent@ripple.ambi.cc",
+        "primary_email": "agent@example.com",
         "username": "ripple.agent",
-        "workspace_email": "ripple.agent@ripple.ambi.cc",
+        "workspace_email": "agent@example.com",
         "type": "agent"
       },
       "from_user": {
-        "email": "ripple.agent@ripple.ambi.cc",
+        "email": "agent@example.com",
         "name": "Ripple Agent",
-        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "id": "00000000-0000-4000-8000-000000000002",
         "display_name": "Ripple Agent",
-        "primary_email": "ripple.agent@ripple.ambi.cc",
+        "primary_email": "agent@example.com",
         "username": "ripple.agent",
-        "workspace_email": "ripple.agent@ripple.ambi.cc",
+        "workspace_email": "agent@example.com",
         "type": "agent"
       },
       "to": [
         {
-          "email": "pk3391@nyu.edu",
-          "name": "pk3391@nyu.edu",
-          "id": "pk3391@nyu.edu",
-          "display_name": "pk3391@nyu.edu",
-          "primary_email": "pk3391@nyu.edu",
+          "email": "engineer@example.com",
+          "name": "engineer@example.com",
+          "id": "engineer@example.com",
+          "display_name": "engineer@example.com",
+          "primary_email": "engineer@example.com",
           "username": null,
           "workspace_email": null,
           "type": null

@@ -11,8 +11,8 @@
       "description": "Integration-test task owned by Ripple Agent. Verify report, sheet, task and draft readback.",
       "status": "done",
       "priority": "medium",
-      "assignee_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
-      "creator_id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+      "assignee_id": "00000000-0000-4000-8000-000000000002",
+      "creator_id": "00000000-0000-4000-8000-000000000002",
       "due_date": "2026-09-26",
       "start_date": null,
       "parent_task_id": null,
@@ -37,13 +37,13 @@
       "created_at": "2026-09-12T18:10:19.670Z",
       "updated_at": "2026-09-12T18:12:38.925Z",
       "creator": {
-        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "id": "00000000-0000-4000-8000-000000000002",
         "display_name": "Ripple Agent",
         "primary_email": null,
         "type": "agent"
       },
       "assignee": {
-        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "id": "00000000-0000-4000-8000-000000000002",
         "display_name": "Ripple Agent",
         "primary_email": null,
         "type": "agent"
@@ -52,7 +52,7 @@
       "comment_count": 0,
       "subscriber_count": 1,
       "subscriber_ids": [
-        "6f6c1ff3-a179-4739-aea6-b5a49a309ec3"
+        "00000000-0000-4000-8000-000000000002"
       ],
       "labels": []
     }
@@ -66,24 +66,24 @@
       "read": true,
       "created_at": "2026-09-12T18:12:59.149Z",
       "from": {
-        "id": "6f6c1ff3-a179-4739-aea6-b5a49a309ec3",
+        "id": "00000000-0000-4000-8000-000000000002",
         "display_name": "Ripple Agent",
         "name": "Ripple Agent",
-        "email": "ripple.agent@ripple.ambi.cc"
+        "email": "agent@example.com"
       },
       "to": [
         {
-          "id": "a37c631f-b487-47a5-ada7-e0e5140681be",
+          "id": "00000000-0000-4000-8000-000000000004",
           "display_name": "Prabal Khare",
           "name": "Prabal Khare",
-          "email": "pk3391@nyu.edu"
+          "email": "engineer@example.com"
         }
       ],
       "cc": [],
       "bcc": [],
       "delivery_status": "pending_undo",
-      "message_id": "<10099d21-01d0-4a78-9931-33bc4ff1c367@ambi.cc>",
-      "thread_id": "<10099d21-01d0-4a78-9931-33bc4ff1c367@ambi.cc>",
+      "message_id": "<agent@example.com>",
+      "thread_id": "<agent@example.com>",
       "in_reply_to": null,
       "sent_at": "2026-09-12T18:12:59.142Z",
       "scheduled_at": null,
@@ -97,20 +97,20 @@
       "subject": "Ripple: workspace tools and engineering update",
       "to": [
         {
-          "email": "pk3391@nyu.edu",
+          "email": "engineer@example.com",
           "name": "Prabal Khare",
-          "id": "a37c631f-b487-47a5-ada7-e0e5140681be",
+          "id": "00000000-0000-4000-8000-000000000004",
           "display_name": "Prabal Khare",
-          "primary_email": "pk3391@nyu.edu",
+          "primary_email": "engineer@example.com",
           "username": "prabal.khare",
-          "workspace_email": "prabal.khare@ripple.ambi.cc",
+          "workspace_email": "agent@example.com",
           "type": "human"
         }
       ],
       "delivery_status": "sent",
       "folder": "sent",
       "sent_at": "2026-09-12T18:13:04.667Z",
-      "message_id": "<10099d21-01d0-4a78-9931-33bc4ff1c367@ambi.cc>"
+      "message_id": "<agent@example.com>"
     }
   },
   "delivery_scope": "Verified provider send status is not proof of inbox delivery."

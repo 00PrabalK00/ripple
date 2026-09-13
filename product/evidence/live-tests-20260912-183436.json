@@ -1,0 +1,60 @@
+{
+  "results": [
+    {
+      "check": "lifecycle: declared node reset and verified active",
+      "pass": true,
+      "reset": {
+        "tool": "lifecycle_reset",
+        "request_id": "req-94be7c010b97",
+        "status": "ok",
+        "reason": "ROS operation and postcondition observed; recovery progress must be assessed separately",
+        "verified": true,
+        "data": {}
+      }
+    },
+    {
+      "check": "lifecycle: budget stops a second reset",
+      "pass": true,
+      "again": {
+        "tool": "lifecycle_reset",
+        "request_id": "req-fab98493f6e9",
+        "status": "denied",
+        "reason": "incident_budget_exhausted",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "lifecycle: planner answers after the reset",
+      "pass": false,
+      "probe": {
+        "tool": "probe_route",
+        "request_id": "req-1b674d996097",
+        "status": "ok",
+        "reason": "path_found",
+        "verified": false,
+        "data": {
+          "destination": "Z3",
+          "ok": true,
+          "reason": "path_found",
+          "points": 448,
+          "length_m": 11.8
+        }
+      }
+    },
+    {
+      "check": "stall: halted-while-commanded detected and an incident opened",
+      "pass": false,
+      "timeline": []
+    }
+  ],
+  "robot_pose": {
+    "uv": [
+      0.51072,
+      0.54041
+    ],
+    "x": 0.16,
+    "y": -0.77,
+    "heading": 1.5818700161952868
+  }
+}

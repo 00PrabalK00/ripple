@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 from ripple_agent.workspace import WorkspaceTools,AmbiguousCLI
 from ripple_agent.communications import Contacts
-ID='6f6c1ff3-a179-4739-aea6-b5a49a309ec3'
+ID='00000000-0000-4000-8000-000000000002'
 class Journal:
     def __init__(self):self.rows={}
     def request(self,**r):
@@ -33,11 +33,11 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(sum(c==('tasks','create') for c,p in self.cli.calls),1)
     def test_delivery_requires_authorized_recipient(self):
         payload={'to':['other@example.com'],'subject':'Test','body_markdown':'Report'}
-        self.tools.authorize_delivery=Contacts(frozenset({'pk3391@nyu.edu'})).authorize
+        self.tools.authorize_delivery=Contacts(frozenset({'engineer@example.com'})).authorize
         result=self.tools.execute('workspace_email_send',payload,'request')
         self.assertEqual(result['status'],'needs_authorization')
         self.assertEqual(self.cli.calls,[])
-        self.assertTrue(Contacts(frozenset({'pk3391@nyu.edu'})).authorize('workspace_email_send',dict(payload,to=['pk3391@nyu.edu'])))
+        self.assertTrue(Contacts(frozenset({'engineer@example.com'})).authorize('workspace_email_send',dict(payload,to=['engineer@example.com'])))
     def test_identity_mismatch_and_extra_fields_block_writes(self):
         self.cli.identity=False
         with self.assertRaises(RuntimeError):self.tools.execute('workspace_task_create',{'title':'Test'},'x')
@@ -60,8 +60,8 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(self.tools.execute('workspace_task_create',{'title':'Test'},'uncertain')['status'],'not_repeated')
 
     def test_email_requires_verified_send_state_and_matching_recipient(self):
-        payload={'to':['pk3391@nyu.edu'],'subject':'Update','body_markdown':'Plain report'}
-        current=dict(id=ID,to=[{'email':'pk3391@nyu.edu'}],subject='Update',body_markdown='Plain report',delivery_status='suppressed')
+        payload={'to':['engineer@example.com'],'subject':'Update','body_markdown':'Plain report'}
+        current=dict(id=ID,to=[{'email':'engineer@example.com'}],subject='Update',body_markdown='Plain report',delivery_status='suppressed')
         self.cli.run=lambda command,payload=None:current
         self.assertFalse(self.tools.verify_write('workspace_email_send',payload,{'id':ID}))
         current['delivery_status']='sent'

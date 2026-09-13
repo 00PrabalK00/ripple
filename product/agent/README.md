@@ -30,7 +30,7 @@ Reports support paragraph text; rich Markdown that changes during server convers
 may require manual verification. Task writes handle the API's nested `task` envelope.
 
 The host loads `product/config/communications.json`; it is not a model tool input.
-Prabal explicitly authorized mail to `pk3391@nyu.edu`. Other recipients, arbitrary
+Prabal explicitly authorized mail to `engineer@example.com`. Other recipients, arbitrary
 chat channels, and assignments to other people require additional authorization.
 Email drafts do not send mail. A sent email is verified against the provider's
 `delivery_status`; that does not prove arrival in the recipient's inbox. No

@@ -1,0 +1,169 @@
+{
+  "results": [
+    {
+      "check": "stock profile: same code starts and observes the robot",
+      "pass": true,
+      "robot": "smr300_stock",
+      "health": [
+        {
+          "key": "nav2",
+          "label": "Nav2",
+          "state": "ok",
+          "detail": "5/5 active"
+        },
+        {
+          "key": "loc",
+          "label": "Localization",
+          "state": "ok"
+        },
+        {
+          "key": "safety",
+          "label": "Safety",
+          "state": "na",
+          "detail": ""
+        },
+        {
+          "key": "rosscope",
+          "label": "RosScope",
+          "state": "unknown",
+          "detail": "collecting"
+        },
+        {
+          "key": "ambiguous",
+          "label": "Ambiguous",
+          "state": "na"
+        },
+        {
+          "key": "glm",
+          "label": "GLM",
+          "state": "ok"
+        }
+      ]
+    },
+    {
+      "check": "stock profile: safety reported as not declared",
+      "pass": true
+    },
+    {
+      "check": "stock profile: escape disabled without a safety layer",
+      "pass": true,
+      "escape": {
+        "tool": "escape",
+        "request_id": "req-eae270290813",
+        "status": "denied",
+        "reason": "escape_disabled_no_safety_layer",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "stock profile: teleop safety override refused",
+      "pass": true,
+      "teleop": {
+        "tool": "teleop",
+        "request_id": "req-dec1fdc6eb9f",
+        "status": "denied",
+        "reason": "safety override is only allowed on a declared simulation",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "stock profile: keepouts refused when the profile declares no adapter",
+      "pass": true,
+      "keepout": {
+        "tool": "add_keepout",
+        "request_id": "req-8a225a98e21d",
+        "status": "denied",
+        "reason": "keepout_unsupported_by_profile",
+        "verified": false,
+        "data": {}
+      }
+    },
+    {
+      "check": "stock profile: command-as-approval navigation arrives verified",
+      "pass": true,
+      "navigate": {
+        "tool": "navigate_to",
+        "request_id": "req-637b013e943d",
+        "status": "ok",
+        "reason": "Nav2 accepted the goal",
+        "verified": false,
+        "data": {
+          "destination": "HOME",
+          "label": "Home dock",
+          "goal_id": "a0872df8a6df4bf4a4b4d64a5c9e7fb6",
+          "route_length_m": 8.23
+        }
+      },
+      "goal": {
+        "id": "a0872df8a6df4bf4a4b4d64a5c9e7fb6",
+        "destination": "HOME",
+        "label": "Home dock",
+        "target": {
+          "frame": "map",
+          "x": -0.79,
+          "y": -0.67,
+          "yaw": 0.0
+        },
+        "authorization_id": "auth-6935de7ccbfe",
+        "reason": "stock profile navigation check",
+        "attempt": "command",
+        "started_at": "2026-09-12T22:41:53.263470+00:00",
+        "status": "SUCCEEDED",
+        "distance_remaining": 0.09,
+        "final_pose": {
+          "frame": "map",
+          "x": -0.7420660568425079,
+          "y": -0.5406479834135574,
+          "yaw": 0.35700395855102135
+        },
+        "verified": true,
+        "outcome_reason": "arrived: settled odometry and pose within tolerance",
+        "route_length_m": 8.23,
+        "stopped": true,
+        "uv": [
+          0.44286,
+          0.53556
+        ]
+      }
+    },
+    {
+      "check": "memory: site areas restored from PostgreSQL",
+      "pass": true,
+      "before": {
+        "timeline": 160,
+        "areas": [
+          "Aisle 3"
+        ],
+        "keepouts": [
+          "ko-cd7a2107"
+        ]
+      },
+      "after": {
+        "timeline": 160,
+        "areas": [
+          "Aisle 3"
+        ],
+        "keepouts": [
+          "ko-cd7a2107"
+        ]
+      }
+    },
+    {
+      "check": "memory: active keepouts restored and re-verified",
+      "pass": true,
+      "states": [
+        [
+          "ko-cd7a2107",
+          "APPLIED",
+          "observed in the keepout mask and global costmap"
+        ]
+      ]
+    },
+    {
+      "check": "memory: timeline history restored",
+      "pass": true
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "api_url": "https://app.ambiguous.ai",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "workspace_id": "00000000-0000-4000-8000-000000000002",
+  "email_recipients": ["engineer@example.com"],
+  "chat_channels": [],
+  "authorization_source": "The robot owner lists who Ripple may email or message from the workspace tools. Copy to communications.json and fill in real addresses; that file is gitignored."
+}
