@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ripple — an always-on site engineer for robots</title>
+<meta name="description" content="Ripple watches a deployed robot, diagnoses failures, recovers within limits and asks a person when software can't resolve a physical situation.">
+<style>
+:root{--ink:#111;--muted:#555;--line:#ddd;--bg:#fff;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+@media (prefers-color-scheme:dark){:root{--ink:#eee;--muted:#aaa;--line:#333;--bg:#000}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 var(--sans)}
+main{max-width:760px;margin:0 auto;padding:64px 22px 96px}
+h1{font-size:40px;line-height:1.1;margin:0 0 12px;letter-spacing:-.02em}
+h2{font-size:14px;letter-spacing:.14em;text-transform:uppercase;margin:56px 0 14px;color:var(--muted);font-weight:600}
+p{margin:0 0 14px}
+.lede{font-size:20px;color:var(--muted);margin-bottom:28px}
+a{color:var(--ink)}
+.links{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 36px;font-weight:600}
+video{width:100%;border:1px solid var(--line);display:block;background:#000}
+.caption{font-size:14px;color:var(--muted);margin-top:8px}
+ol,ul{padding-left:20px;margin:0 0 14px}
+li{margin-bottom:6px}
+code,pre{font-family:var(--mono);font-size:14px}
+pre{border:1px solid var(--line);padding:14px 16px;overflow-x:auto;line-height:1.5}
+table{border-collapse:collapse;width:100%;font-size:15px}
+td,th{border-top:1px solid var(--line);padding:9px 8px 9px 0;text-align:left;vertical-align:top}
+th{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<h1>Ripple</h1>
+<p class="lede">An always-on site engineer for deployed robots. It watches the robot, diagnoses failures, recovers within limits you set, and asks a person when software alone can't resolve what's happening on the floor.</p>
+<div class="links"><a href="https://github.com/00PrabalK00/ripple">Source on GitHub</a><a href="#how">How it works</a><a href="#start">Run it</a></div>
+
+<video src="demo.mp4" controls playsinline preload="metadata" poster="poster.jpg"></video>
+<p class="caption">Two-minute demo: a warehouse SMR300 in Gazebo with ROS 2 Nav2. Ripple runs on GLM 5.3 and talks to the engineer through Ambiguous. Every clip is unedited footage from live runs, sped up; the captions are Ripple's own timeline entries.</p>
+
+<h2>What the demo shows</h2>
+<ol>
+<li><b>Site control.</b> A keepout drawn on the dashboard map is verified in the keepout mask and the global costmap. Nav2 plans around it, and Ripple verifies the arrival: stopped, within tolerance.</li>
+<li><b>An unexpected failure.</b> A pallet is placed on the Home dock and the trip home fails. Without being asked, Ripple reads diagnostics and logs, clears both costmaps, probes routes home and to the Charger, then asks the engineer one specific question on Ambiguous.</li>
+<li><b>Human context.</b> The reply, in plain language, is located on the map from words and becomes a verified keepout; the Home dock is marked unavailable.</li>
+<li><b>A second live run.</b> The engineer answers on Ambiguous: "check sensor data then use teleop". Ripple reads the scans, teleops 0.32 m toward the clear side, probes and retries the route home, and files the incident report to the Ambiguous workspace.</li>
+</ol>
+
+<h2 id="how">How it works</h2>
+<p><b>Edge</b> — runs beside Nav2 on the robot. It observes safety, localization, lifecycle and motion, detects halts and names their cause, and owns every action: navigation with dispatch checks and a route probe, keepouts, costmap clears, lifecycle resets, bounded escape and teleop. Every action is policy-checked and journaled in PostgreSQL before it touches ROS.</p>
+<p><b>Agent</b> — GLM 5.3 on OpenRouter is the control plane. It reasons over typed tool results, never raw ROS, and runs the incident loop: detect, investigate, recover, escalate, take human context, verify.</p>
+<p><b>People</b> — engineers talk to Ripple on Ambiguous or the local dashboard. An operator's message is the approval for what it asks: "send the robot to B" just runs. Ripple writes reports, tasks and email back to the workspace.</p>
+<p><b>Profiles</b> — one YAML file describes a robot: its topics, safety controller, stations, triggers and recovery limits. A new robot is a new file, not new code.</p>
+
+<h2>Safety model</h2>
+<table>
+<tr><th>Level</th><th>Examples</th><th>Who</th></tr>
+<tr><td>Observe</td><td>Health, logs, diagnostics, route probes</td><td>Always</td></tr>
+<tr><td>Recover</td><td>Clear costmaps, retry, lifecycle reset, bounded escape/teleop</td><td>Automatic within per-incident budgets</td></tr>
+<tr><td>Command</td><td>Navigate, keepouts, station availability</td><td>An operator's message is the approval</td></tr>
+<tr><td>Never</td><td>Raw motor commands, shell, disabling collision checks</td><td>Not exposed</td></tr>
+</table>
+<p>Motion stays below the robot's own safety controller. The demo profile lets teleop override a safety hold because it is a simulation; the profile validator refuses that on real robots.</p>
+
+<h2 id="start">Run it</h2>
+<pre>git clone https://github.com/00PrabalK00/ripple && cd ripple
+bash scripts/start_sim.sh          # SMR300 in Gazebo (ROS 2 Humble)
+bash scripts/start_navigation.sh   # Nav2, in another terminal
+bash scripts/start_ripple.sh       # Ripple on http://127.0.0.1:8050</pre>
+<p>Setup — the simulator checkout, Python environment, PostgreSQL and <code>OPENROUTER_API_KEY</code> in <code>.env</code> — and the full run steps are in the <a href="https://github.com/00PrabalK00/ripple#readme">README</a>.</p>
+
+<footer>Ripple · built on ROS 2 Humble, Nav2, RosScope, PostgreSQL, GLM 5.3 and Ambiguous · <a href="https://github.com/00PrabalK00/ripple">github.com/00PrabalK00/ripple</a></footer>
+</main>
+</body>
+</html>
