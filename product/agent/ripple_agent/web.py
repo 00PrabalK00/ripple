@@ -98,6 +98,17 @@ def build_app(orch, edge, port, test_api=False):
         body = await request.json()
         return JSONResponse(await orch.dashboard_reopen(str(body.get('id', ''))))
 
+    async def lessons(request):
+        return JSONResponse({'lessons': orch.memory.public(), 'suggestions': orch.memory.report()})
+
+    async def forget_lesson(request):
+        body = await request.json()
+        lesson_id = str(body.get('id', ''))
+        forgotten = orch.memory.forget(lesson_id)
+        if forgotten:
+            orch.note('operator', f'Forgot site lesson {lesson_id}', operator='Local operator', channel='dashboard')
+        return JSONResponse({'forgotten': forgotten})
+
     async def test_tool(request):
         """Verification only (--test-api): call an edge tool as the local dashboard operator."""
         if not test_api:
@@ -121,6 +132,7 @@ def build_app(orch, edge, port, test_api=False):
               Route('/api/test/tool', test_tool, methods=['POST']), Route('/api/test/incident', test_incident, methods=['POST']),
               Route('/api/map-labeled.png', labeled), Route('/api/ask', ask, methods=['POST']),
               Route('/api/stop', stop, methods=['POST']), Route('/api/draw', draw, methods=['POST']),
-              Route('/api/keepouts/reopen', reopen, methods=['POST'])]
+              Route('/api/keepouts/reopen', reopen, methods=['POST']),
+              Route('/api/lessons', lessons), Route('/api/lessons/forget', forget_lesson, methods=['POST'])]
     return Starlette(routes=routes, middleware=[
         Middleware(TrustedHostMiddleware, allowed_hosts=['localhost', '127.0.0.1']), Middleware(LocalOnly)])
