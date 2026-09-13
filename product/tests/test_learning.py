@@ -65,6 +65,15 @@ class LearningTests(unittest.TestCase):
         self.assertNotIn(lesson['id'], self.m.lessons)
         self.assertTrue(self.saved[-1][2]['forgotten'])
 
+    def test_when_a_person_steps_in_only_what_followed_is_the_recipe(self):
+        actions = [{**CLEAR, 'at': '2026-09-13T17:00:00'}, {**TELEOP, 'at': '2026-09-13T17:01:00'},
+                   {'tool': 'navigate_to', 'status': 'ok', 'args': {'destination': 'HOME'}, 'at': '2026-09-13T17:10:00'}]
+        human = [{'from': 'Local operator', 'text': 're-seeded AMCL and cleared the costmap', 'at': '2026-09-13T17:09:00'}]
+        lesson = self.m.record(incident('inc-1', (0.8, -9.9), actions=actions, human=human))
+        self.assertEqual(lesson['recipes'], {'navigate_to HOME': 1})
+        self.assertEqual(lesson['unhelpful'], {'clear_costmap local': 1, 'teleop backward': 1})
+        self.assertIn('re-seeded AMCL', self.m.describe(lesson))
+
     def test_nothing_is_learned_from_an_incident_without_place_or_outcome(self):
         self.assertIsNone(self.m.record(incident('inc-1', (0, 0), state='ESCALATED')))
         self.assertIsNone(self.m.record({**incident('inc-2', (0, 0)), 'location': None}))

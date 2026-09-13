@@ -77,16 +77,20 @@ class SiteMemory:
         trigger = inc.get('trigger') or {}
         fam = family(trigger.get('kind'), trigger.get('cause'))
         # Only what the edge reported as done counts: a step the model proposed but the edge denied never ran.
-        done = []
+        # When a person stepped in, what ran before their message did not resolve the incident; the recipe is
+        # what followed it (CLIN-style cause and effect, not everything that happened to precede the arrival).
+        helped_at = min((h['at'] for h in inc.get('human_messages') or [] if h.get('at')), default=None)
+        done, before_help = [], []
         for a in inc.get('actions') or []:
             if a.get('tool') in STEPS and a.get('status') == 'ok':
                 label = step(a)
-                if label not in done:
-                    done.append(label)
+                bucket = before_help if helped_at and a.get('at') and a['at'] < helped_at else done
+                if label not in bucket:
+                    bucket.append(label)
         taught = [{'from': h.get('from'), 'text': ' '.join(str(h.get('text', '')).split())[:200]}
                   for h in inc.get('human_messages') or [] if h.get('text')]
         success = inc.get('state') == 'RESOLVED' and bool(inc.get('verified_arrival'))
-        if not done and not taught and not success:
+        if not done and not before_help and not taught and not success:
             return None
         now = self.clock()
         x, y = float(loc[0]), float(loc[1])
@@ -105,8 +109,10 @@ class SiteMemory:
         dest = (inc.get('goal') or {}).get('label')
         if dest and dest not in lesson['situation']['destinations']:
             lesson['situation']['destinations'] = (lesson['situation']['destinations'] + [dest])[-5:]
+        for label in before_help:
+            lesson['unhelpful'][label] = lesson['unhelpful'].get(label, 0) + 1
         if success:
-            recipe = ' → '.join(done) or 'retried as is'
+            recipe = ' → '.join(done) or ('what the engineer said' if taught else 'retried as is')
             lesson['recipes'][recipe] = lesson['recipes'].get(recipe, 0) + 1
             lesson['successes'] += 1
             lesson['weight'] = min(MAX_WEIGHT, lesson['weight'] + 1)

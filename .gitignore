@@ -17,3 +17,4 @@ recordings/
 
 # Also ignore a development dependency symlink.
 node_modules
+product/.coverage
