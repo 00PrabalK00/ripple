@@ -1,0 +1,4 @@
+# Vercel serves only the static site; the robot code is not part of the web build.
+/*
+!/site
+!/vercel.json
