@@ -32,8 +32,15 @@ async def serve(args):
 
     root = args.root.resolve()
     load_env(args.env or root / '.env')
-    profile = load_profile(args.profile)
-    config = json.loads(args.config.read_text())
+    if args.site:
+        # One file per robot, written by `ripple setup`: the robot profile plus people and channels.
+        from ripple_edge.contracts import Profile
+        site = json.loads(args.site.read_text())
+        profile, config = Profile.model_validate(site['profile']), site.get('agent') or {}
+    else:
+        if not (args.profile and args.config):
+            raise SystemExit('Give --site ripple.json, or both --profile and --config')
+        profile, config = load_profile(args.profile), json.loads(args.config.read_text())
     operators = {op['id']: op['name'] for op in config.get('operators', [])}
     os.environ['ROS_DOMAIN_ID'] = str(profile.domain_id)
     rclpy.init()
@@ -90,8 +97,9 @@ async def serve(args):
 def main():
     parser = argparse.ArgumentParser(description='Ripple Agent')
     parser.add_argument('--root', type=Path, required=True, help='Ripple checkout (database bridge, Ambiguous credential)')
-    parser.add_argument('--profile', type=Path, required=True)
-    parser.add_argument('--config', type=Path, required=True, help='Host-owned operators and channels')
+    parser.add_argument('--site', type=Path, help='ripple.json from `ripple setup` (profile, operators and channels)')
+    parser.add_argument('--profile', type=Path)
+    parser.add_argument('--config', type=Path, help='Host-owned operators and channels')
     parser.add_argument('--env', type=Path)
     parser.add_argument('--port', type=int, default=8060)
     parser.add_argument('--rosscope-binary', type=Path)

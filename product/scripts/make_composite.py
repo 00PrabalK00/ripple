@@ -9,6 +9,7 @@ older takes recorded as a Playwright video are cut by an offset from the recordi
 """
 import datetime as dt
 import json
+import os
 import re
 import subprocess
 import sys
@@ -111,8 +112,10 @@ def events(folder, a, b):
 
 
 def encode(args, out, extra=()):
-    subprocess.run([FF, '-y', '-loglevel', 'error', *args, '-an', '-r', '30', '-c:v', 'libx264', '-preset', 'veryfast',
-                    '-crf', '26', '-pix_fmt', 'yuv420p', *extra, str(out)], check=True)
+    # Web defaults keep the site video small; RIPPLE_CRF=18 RIPPLE_PRESET=slow makes an upload-quality master.
+    subprocess.run([FF, '-y', '-loglevel', 'error', *args, '-an', '-r', '30', '-c:v', 'libx264',
+                    '-preset', os.environ.get('RIPPLE_PRESET', 'veryfast'), '-crf', os.environ.get('RIPPLE_CRF', '26'),
+                    '-pix_fmt', 'yuv420p', *extra, str(out)], check=True)
 
 
 def dashboard_input(folder, epoch_ms, a, b, speed, work, i):
