@@ -47,14 +47,14 @@ def entity(name):
     return name if name.startswith(PREFIX) else PREFIX + name
 
 
-def station_xy(station):
-    registry = json.loads((ROOT / 'config/stations.json').read_text())
-    zones = yaml.safe_load((ROOT / 'smr300l_gazebo_ros2control/zones.yaml').read_text())['zones']
-    key = station.upper()
-    if key not in registry:
-        raise SystemExit(f'Unknown station "{station}". Registered: {", ".join(registry)}')
-    p = zones[registry[key]['zone']]['position']
-    return p['x'], p['y']
+def station_xy(station, profile=ROOT / 'profiles/smr300.yaml'):
+    """Stations come from the robot profile Ripple itself uses (key, label or alias)."""
+    stations = yaml.safe_load(profile.read_text())['stations']
+    wanted = station.casefold()
+    for key, s in stations.items():
+        if wanted in {key.casefold(), str(s.get('label', '')).casefold(), *(a.casefold() for a in s.get('aliases', []))}:
+            return s['x'], s['y']
+    raise SystemExit(f'Unknown station "{station}". Registered: {", ".join(stations)}')
 
 
 def robot_pose(node, timeout=3.0):

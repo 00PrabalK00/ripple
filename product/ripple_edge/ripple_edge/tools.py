@@ -32,6 +32,21 @@ class Navigate(Destination):
     reason: str = Field(default='', max_length=300)
 
 
+class Point(Args):
+    x: float = Field(description='Map x, metres')
+    y: float = Field(description='Map y, metres')
+
+
+class NavigateVia(Args):
+    destination: str | None = Field(default=None, max_length=80,
+                                    description="Final station or area; in an incident, defaults to the incident's goal")
+    via: list[Point] = Field(min_length=1, max_length=5,
+                             description='Map points to pass through, in order, in open floor away from the tight spot')
+    authorization_id: str | None = Field(default=None, description='ID of the operator message (not needed in an incident)')
+    incident_id: str | None = None
+    reason: str = Field(default='', max_length=300)
+
+
 class Cancel(Args):
     reason: str = Field(min_length=1, max_length=300)
 
@@ -114,11 +129,13 @@ def inline(schema):
     """Resolve $ref/$defs and drop titles so every model provider accepts the schema."""
     defs = schema.pop('$defs', {})
 
-    def walk(node):
+    def walk(node, names=False):
         if isinstance(node, dict):
+            if names:  # a 'properties' map: keys are field names (a field may be called "title"), not keywords
+                return {k: walk(v) for k, v in node.items()}
             if '$ref' in node:
                 return walk(dict(defs[node['$ref'].split('/')[-1]]))
-            return {k: walk(v) for k, v in node.items() if k != 'title'}
+            return {k: walk(v, k == 'properties') for k, v in node.items() if k != 'title'}
         if isinstance(node, list):
             return [walk(v) for v in node]
         return node
@@ -163,6 +180,11 @@ class EdgeTools:
                 'is holding the robot, in manual mode, or beyond profile limits.'),
             'retry_navigation': (Retry, self.retry_navigation, 'recovery',
                 "Incident recovery: re-send the incident's commanded goal once, after a successful route probe."),
+            'navigate_via': (NavigateVia, self.navigate_via, 'command',
+                'Replan through exact map points you choose, e.g. around a tight spot where the robot keeps stopping '
+                '(probe_route reports tight_spot and min_clearance_m). Each point is checked for clearance and keepouts; '
+                'a rejected point comes back with nearest_clear_point. Every leg must plan before the robot moves, and '
+                'only the final arrival is verified. With incident_id it re-sends the incident goal on the retry budget.'),
             'teleop': (TeleopArgs, self.teleop, 'recovery',
                 'Sensor-guided manual drive to free a stuck robot: a short bounded move on the teleop input. '
                 'direction=auto picks the side with the most scan clearance. override_safety (simulation only) moves '
@@ -279,7 +301,7 @@ class EdgeTools:
                              for k, d in dests.items()],
             'areas': [a['name'] for a in self.rt.site.areas.values()],
             'keepouts': [{k: v for k, v in r.items() if k in ('id', 'name', 'reason', 'author', 'state', 'verification', 'created_at')}
-                         for r in self.rt.site.active_keepouts()],
+                         for r in self.rt.site.listed_keepouts()],
             'keepouts_supported': self.rt.keepouts.enabled,
             'map': geom.public() if geom else None}}
 
@@ -323,14 +345,21 @@ class EdgeTools:
         pose = self._val('pose')
         if pose is None:
             return {'status': 'denied', 'reason': 'robot pose unknown; cannot confirm the region is clear of the robot'}
-        if distance((pose['x'], pose['y']), polygon) < nav.footprint_radius_m:
-            return {'status': 'denied', 'reason': 'keepout_overlaps_robot: move the robot or choose a region away from it'}
+        # A keepout under the robot would leave Nav2 unable to plan out of it: it waits, and the edge applies it
+        # as soon as the robot has left the region.
+        overlaps = distance((pose['x'], pose['y']), polygon) < nav.footprint_radius_m
         record = dict(id='ko-' + uuid4().hex[:8], name=name, reason=a.reason, author=auth.operator,
                       authorization_id=auth.id, created_at=now_iso(), drawn=drawn.public(),
-                      buffered=buffered.public(), polygon=[list(p) for p in polygon], state='APPLYING',
-                      verification='writing site layers')
+                      buffered=buffered.public(), polygon=[list(p) for p in polygon],
+                      state='PENDING' if overlaps else 'APPLYING',
+                      verification='waiting for the robot to leave the region' if overlaps else 'writing site layers')
         self.rt.site.save_keepout(record)
         self.rt.auths.consume(auth.id, 'keepout')
+        if overlaps:
+            return {'status': 'ok', 'reason': 'pending: the region overlaps the robot, so the edge applies it '
+                    'automatically once the robot has left it; move the robot away',
+                    'data': {'keepout_id': record['id'], 'state': 'PENDING', 'name': name,
+                             'clearance_m': nav.keepout_clearance_m}}
         ok, why = await self.rt.keepouts.apply(record)
         record.update(state='APPLIED' if ok else 'UNVERIFIED', verification=why)
         self.rt.site.save_keepout(record)
@@ -345,7 +374,16 @@ class EdgeTools:
     async def remove_keepout(self, a, rid):
         auth = self._authorize(a.authorization_id, 'remove_keepout')
         record = self.rt.site.keepouts.get(a.keepout_id)
-        if record is None or record['state'] not in ('APPLIED', 'UNVERIFIED', 'APPLYING'):
+        if record is not None and record['state'] == 'PENDING':
+            # Never applied, so there is nothing in the site layers to undo.
+            record.update(state='REMOVED', removed_by=auth.operator, removed_at=now_iso(),
+                          verification='cancelled before it was applied')
+            self.rt.site.save_keepout(record)
+            self.rt.auths.consume(auth.id, 'remove_keepout')
+            return {'status': 'ok', 'reason': record['verification'], 'verified': True,
+                    'data': {'keepout_id': record['id'], 'state': 'REMOVED'}}
+        # REMOVING is retried: a removal whose verification failed must not strand the keepout.
+        if record is None or record['state'] not in ('APPLIED', 'UNVERIFIED', 'APPLYING', 'REMOVING'):
             return {'status': 'denied', 'reason': 'no active keepout with that ID'}
         record.update(state='REMOVING', removed_by=auth.operator)
         self.rt.site.save_keepout(record)
@@ -392,11 +430,16 @@ class EdgeTools:
 
     async def clear_costmap(self, a, rid):
         self._incident(a.incident_id)
+        if a.costmap == 'local' and self.rt.navigator.active():
+            # The local costmap lives inside the controller; clearing it mid-control has preceded controller hangs.
+            return {'status': 'denied', 'reason': 'cancel the active goal before clearing the local costmap'}
         return await self._level2(rid, 'clear_costmap', a.incident_id, a.costmap)
 
     async def lifecycle_reset(self, a, rid):
         self._incident(a.incident_id)
-        return await self._level2(rid, 'lifecycle_reset', a.incident_id, a.node, a.authorization_id)
+        # Profiles name nodes fully qualified; the model often drops the leading slash ("planner_server").
+        node = a.node if a.node.startswith('/') else '/' + a.node
+        return await self._level2(rid, 'lifecycle_reset', a.incident_id, node, a.authorization_id)
 
     async def escape(self, a, rid):
         self._incident(a.incident_id)
@@ -428,3 +471,46 @@ class EdgeTools:
                                 request=rid, status=out['status'], result=out)
         return {'status': out['status'], 'reason': out['reason'],
                 'data': {k: v for k, v in out.items() if k not in ('status', 'reason')}}
+
+    async def navigate_via(self, a, rid):
+        geom = self.rt.geometry()
+        incident = self._incident(a.incident_id) if a.incident_id else None
+        goal = (incident or {}).get('goal') or {}
+        wanted = a.destination or goal.get('destination')
+        if not wanted:
+            return {'status': 'denied', 'reason': 'give a destination, or an incident whose goal to reroute'}
+        key, dest = self.rt.site.resolve(wanted, geom)
+        if not key:
+            return {'status': 'denied', 'reason': 'unknown destination "' + wanted + '"; known: ' +
+                    ', '.join(self.rt.site.destinations(geom))}
+        points = [(p.x, p.y) for p in a.via]
+        problems = self.rt.navigator.check_via(points)
+        if problems:
+            return {'status': 'denied', 'data': {'problems': problems}, 'reason': 'via points rejected: ' +
+                    '; '.join(f"point {p['point']} {p['problem']}" for p in problems)}
+        if incident is not None:
+            # Recovery: the incident's commanded goal, rerouted; shares the bounded retry budget.
+            if not goal:
+                return {'status': 'denied', 'reason': 'this incident has no commanded goal to reroute'}
+            policy = self.rt.profile.recovery.retry_goal
+            if policy.autonomy != 'auto':
+                return {'status': 'denied', 'reason': 'autonomy_' + policy.autonomy}
+            fingerprint = hashlib.sha256(json.dumps([a.incident_id, key, points]).encode()).hexdigest()
+            claim = await asyncio.to_thread(self.rt.journal.request, op='claim', robot=self.rt.profile.robot,
+                                            request=rid, incident=a.incident_id, action='retry_goal',
+                                            fingerprint=fingerprint, limit=policy.per_incident)
+            if not claim['claimed']:
+                return {'status': 'denied', 'reason': claim['reason']}
+            out = await self.rt.navigator.dispatch(key, dest, goal.get('authorization_id'),
+                                                   'rerouted via chosen points for ' + a.incident_id,
+                                                   attempt='reroute', via=points)
+            await asyncio.to_thread(self.rt.journal.request, op='finish', robot=self.rt.profile.robot,
+                                    request=rid, status=out['status'], result=out)
+        else:
+            auth = self._authorize(a.authorization_id, 'navigate')
+            out = await self.rt.navigator.dispatch(key, dest, auth.id, a.reason or auth.text, via=points)
+            if out['status'] == 'ok':
+                self.rt.auths.consume(auth.id, 'navigate:' + key)
+        return {'status': out['status'], 'reason': out['reason'],
+                'data': {'destination': key, 'label': dest['label'],
+                         **{k: v for k, v in out.items() if k not in ('status', 'reason')}}}

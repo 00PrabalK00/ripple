@@ -36,14 +36,15 @@ footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-si
 <div class="links"><a href="https://github.com/00PrabalK00/ripple">Source on GitHub</a><a href="#how">How it works</a><a href="#start">Run it</a></div>
 
 <video src="demo.mp4" controls playsinline preload="metadata" poster="poster.jpg"></video>
-<p class="caption">Two-minute demo: a warehouse SMR300 in Gazebo with ROS 2 Nav2. Ripple runs on GLM 5.3 and talks to the engineer through Ambiguous.</p>
+<p class="caption">Two-minute demo: a warehouse SMR300 in Gazebo with ROS 2 Nav2. Ripple runs on GLM 5.3 and talks to the engineer through Ambiguous. Scenes 1–4 are one continuous live run and scene 5 is an earlier one; the footage is unedited and sped up, and the captions are Ripple's own timeline entries.</p>
 
 <h2>What the demo shows</h2>
 <ol>
-<li><b>Site control in words.</b> "Aisle 3 is closed for construction." Ripple turns the sentence into a keepout, verifies it in the published costmap, and the robot routes around it.</li>
-<li><b>An unexpected failure.</b> A pallet blocks the destination. Ripple notices on its own, reads the robot's state, logs and diagnostics, and runs a bounded recovery: clear costmaps, probe the route, retry.</li>
-<li><b>Human context.</b> When the evidence says it's physical, Ripple asks the engineer one question on Ambiguous. The reply, in plain language, becomes a keepout and a new destination.</li>
-<li><b>Verified recovery.</b> The incident closes only when the robot arrives, stopped and within tolerance. Ripple files the incident report to the team.</li>
+<li><b>Site control.</b> A keepout drawn on the dashboard map is verified in the keepout mask and the global costmap. Nav2 plans around it, and Ripple verifies the arrival: stopped, within tolerance.</li>
+<li><b>Words become site state, then a failure.</b> The walkway is reopened from a sentence. A pallet then blocks the Home dock and the trip home fails. Without being asked, Ripple reads diagnostics and logs, clears both costmaps and probes the route, then asks the engineer one specific question on Ambiguous.</li>
+<li><b>Human context.</b> No one answered on Ambiguous in this run, so the reply was typed on the dashboard. Ripple locates the dock from the words, verifies a keepout over it (the dock becomes unavailable), reroutes to the Charger, and resolves the incident on a verified arrival.</li>
+<li><b>The record.</b> Ripple files the incident report to the team's Ambiguous workspace.</li>
+<li><b>A real reply on Ambiguous.</b> In an earlier live run the engineer answers on Ambiguous: "check sensor data then use teleop". Ripple reads the scans, teleops 0.32 m toward the clear side, and probes and retries the route home.</li>
 </ol>
 
 <h2 id="how">How it works</h2>
@@ -64,9 +65,10 @@ footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-si
 
 <h2 id="start">Run it</h2>
 <pre>git clone https://github.com/00PrabalK00/ripple && cd ripple
-bash product/scripts/sim_up.sh          # SMR300 Gazebo + Nav2 (ROS 2 Humble)
-bash product/scripts/ripple_agent.sh    # agent + dashboard on http://127.0.0.1:8060</pre>
-<p>Set <code>OPENROUTER_API_KEY</code> and <code>DATABASE_URL</code> in <code>.env</code>. Operators and the Ambiguous workspace are configured in <code>product/config/agent.json</code>.</p>
+bash scripts/start_sim.sh          # SMR300 in Gazebo (ROS 2 Humble)
+bash scripts/start_navigation.sh   # Nav2, in another terminal
+bash scripts/start_ripple.sh       # Ripple on http://127.0.0.1:8050</pre>
+<p>Setup — the simulator checkout, Python environment, PostgreSQL and <code>OPENROUTER_API_KEY</code> in <code>.env</code> — and the full run steps are in the <a href="https://github.com/00PrabalK00/ripple#readme">README</a>.</p>
 
 <footer>Ripple · built on ROS 2 Humble, Nav2, RosScope, PostgreSQL, GLM 5.3 and Ambiguous · <a href="https://github.com/00PrabalK00/ripple">github.com/00PrabalK00/ripple</a></footer>
 </main>

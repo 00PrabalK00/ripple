@@ -1,0 +1,59 @@
+--- a/src/next_ros2ws_core/next_ros2ws_core/keepout_zone_publisher.py	2026-09-12 21:24:47.453188833 -0400
++++ b/src/next_ros2ws_core/next_ros2ws_core/keepout_zone_publisher.py	2026-09-12 21:24:47.465188993 -0400
+@@ -41,7 +41,10 @@
+         self.declare_parameter("layers_file", os.path.expanduser("~/map_layers.json"))
+         self.declare_parameter("enable_speed_filter", True)
+         self.declare_parameter("max_speed_mps", 0.30)   # used to convert % -> m/s
+-        self.declare_parameter("publish_rate_hz", 1.0)  # re-publish periodically for robustness
++        # How often the layers file is checked. Masks and filter info are latched and published only when the
++        # layers change: every CostmapFilterInfo makes each Nav2 filter drop and recreate its mask subscription
++        # under the costmap lock, and re-publishing it at 1 Hz left controller_server deadlocked under load.
++        self.declare_parameter("publish_rate_hz", 1.0)
+ 
+         layers_param = self.get_parameter("layers_file").value
+         self.layers_file = os.path.expanduser(layers_param or "~/map_layers.json")
+@@ -99,6 +102,7 @@
+         # -----------------------
+         self._layers = {"no_go_zones": [], "restricted": [], "slow_zones": []}
+         self._layers_mtime = None
++        self._published = False
+ 
+         # Periodic publish (helps even if Nav2 restarts later)
+         period = 1.0 / max(self.publish_rate_hz, 0.1)
+@@ -136,8 +140,9 @@
+             # Wait until Nav2 costmaps exist (avoids timing weirdness)
+             return
+ 
+-        self._reload_layers_if_changed()
+-        self._publish_all()
++        if self._reload_layers_if_changed() or not self._published:
++            self._publish_all()
++            self._published = True
+ 
+     # -----------------------
+     # Publish
+@@ -167,8 +172,7 @@
+         k.multiplier = 1.0
+         self.keepout_info_pub.publish(k)
+ 
+-        # Speed FilterInfo (type=1) => mask value is % of speed.
+-        # We convert percent -> m/s using multiplier.
++        # Mask percentages are converted to m/s, so advertise absolute units.
+         if self.enable_speed_filter:
+             s = CostmapFilterInfo()
+             s.header.stamp = now
+@@ -189,12 +193,13 @@
+             mtime = None
+ 
+         if mtime == self._layers_mtime:
+-            return
++            return False
+ 
+         self._layers_mtime = mtime
+         self._layers = self._load_layers()
+         total = sum(len(v) for v in self._layers.values())
+         self.get_logger().info(f"Loaded layers: {total} objects")
++        return True
+ 
+     def _load_layers(self):
+         if self.layers_file and os.path.exists(self.layers_file):

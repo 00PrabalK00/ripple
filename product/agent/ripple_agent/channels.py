@@ -6,10 +6,25 @@ Ambiguous protocol (from the workspace operating guide): stream events with
 """
 import asyncio
 import json
+import os
+import signal
 import time
+from pathlib import Path
 from .workspace import AmbiguousCLI
 
 VERSION = 'ambiguous@0.9.0'
+# One watcher per identity: a second makes the server drop connections (close code 4012), and events delivered
+# to a watcher left over from an earlier run (its agent killed, the npx child orphaned) are lost.
+PIDFILE = Path('/tmp/ripple-ambiguous-watch.pid')
+
+
+def stop_watcher(pid):
+    """Stop a watcher's whole process group (npm, sh, node), only if it really is a notifications watcher."""
+    try:
+        if b'notifications' in Path(f'/proc/{pid}/cmdline').read_bytes():
+            os.killpg(pid, signal.SIGTERM)
+    except (FileNotFoundError, ProcessLookupError, PermissionError):
+        pass
 
 
 class Ambiguous:
@@ -36,11 +51,17 @@ class Ambiguous:
 
     async def listen(self):
         while True:
+            proc = None
             try:
+                try:
+                    stop_watcher(int(PIDFILE.read_text()))
+                except (FileNotFoundError, ValueError):
+                    pass
                 with open('/tmp/ripple-ambiguous-watch.log', 'ab') as err:
                     proc = await asyncio.create_subprocess_exec(
                         'npx', '--yes', VERSION, 'notifications', 'watch', cwd=str(self.cli.cwd),
-                        env=self.cli.env, stdout=asyncio.subprocess.PIPE, stderr=err)
+                        env=self.cli.env, stdout=asyncio.subprocess.PIPE, stderr=err, start_new_session=True)
+                    PIDFILE.write_text(str(proc.pid))
                     self.connected = True
                     self.log('Listening for Ambiguous messages')
                     async for raw in proc.stdout:
@@ -54,6 +75,8 @@ class Ambiguous:
                             self.log('An Ambiguous event could not be handled: ' + str(exc))
                     await proc.wait()
             except asyncio.CancelledError:
+                if proc is not None:
+                    stop_watcher(proc.pid)
                 raise
             except Exception as exc:
                 self.errors += 1

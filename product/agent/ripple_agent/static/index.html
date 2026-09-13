@@ -164,10 +164,13 @@ async function post(url, body) {
 }
 let toastTimer = null;
 function toast(text) { const t = $('#toast'); t.textContent = text; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 5000); }
+// Every poll ends within 4 s and always schedules the next: one request that never completes must not freeze the page.
+window.lastPollAt = Date.now();
 async function poll() {
-  try { const r = await fetch('/api/state', {cache: 'no-store'}); if (!r.ok) throw 0; S = await r.json(); $('#conn').hidden = true; render(); }
+  const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 4000);
+  try { const r = await fetch('/api/state', {cache: 'no-store', signal: abort.signal}); if (!r.ok) throw 0; S = await r.json(); $('#conn').hidden = true; window.lastPollAt = Date.now(); render(); }
   catch (e) { $('#conn').hidden = false; }
-  setTimeout(poll, 500);
+  finally { clearTimeout(timer); setTimeout(poll, 500); }
 }
 poll();
 
@@ -219,13 +222,18 @@ function incident() {
   const clock = box.querySelector('[data-clock]');
   if (clock && i) clock.textContent = i.recovery_time_s != null ? 'Recovery time ' + fmt(i.recovery_time_s) : 'Open for ' + fmt(Date.now() / 1000 - i.detected_epoch);
 }
+// Follow the newest entry unless the reader has scrolled up to read history.
+let follow = true;
+$('#timeline').addEventListener('scroll', () => {
+  const list = $('#timeline');
+  follow = list.scrollHeight - list.scrollTop - list.clientHeight < 90;
+});
 function timeline() {
   const list = $('#timeline');
-  const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 90;
   let added = false;
   for (const e of S.timeline) { if (seen.has(e.id)) continue; seen.add(e.id); list.append(entry(e)); added = true; }
   while (list.children.length > 240) list.firstChild.remove();
-  if (added && nearBottom) list.scrollTop = list.scrollHeight;
+  if (added && follow) list.scrollTop = list.scrollHeight;
 }
 function entry(e) {
   const ok = e.kind === 'incident' && ['RESOLVED', 'CLOSED'].includes(e.state);
@@ -292,6 +300,14 @@ function draw() {
   if (S.plan && S.plan.length > 1) {
     ctx.beginPath(); S.plan.forEach((p, i) => { const q = P(p); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
     ctx.strokeStyle = 'rgba(111,177,246,.9)'; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.stroke();
+  }
+  if (S.goal && S.goal.via_uv && ACTIVE.includes(S.goal.status)) {
+    S.goal.via_uv.forEach((uv, i) => {
+      const [x, y] = P(uv), passed = i < (S.goal.leg || 0);
+      ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fillStyle = passed ? '#5f7483' : '#f0c77c'; ctx.fill();
+      ctx.strokeStyle = '#0c1319'; ctx.lineWidth = 1.5; ctx.stroke();
+      label('via ' + (i + 1), x + 9, y - 5, passed ? '#8a9eac' : '#f0c77c');
+    });
   }
   for (const st of S.stations) {
     const [x, y] = P(st.uv); ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fillStyle = st.available ? '#85ddc3' : '#5f7483'; ctx.fill();

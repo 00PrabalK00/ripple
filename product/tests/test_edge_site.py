@@ -104,6 +104,16 @@ class SiteTests(unittest.TestCase):
         self.site.set_available('A', True, 'inspection done', 'Prabal')
         self.assertTrue(self.site.destinations()['A']['available'])
 
+    def test_a_station_inside_an_active_keepout_is_unavailable(self):
+        home = self.profile.stations['HOME']
+        box = [(home.x - .5, home.y - .5), (home.x + .5, home.y - .5), (home.x + .5, home.y + .5), (home.x - .5, home.y + .5)]
+        self.site.save_keepout(dict(id='ko-1', name='Pallet', state='APPLIED', polygon=box))
+        self.assertEqual((self.site.destinations()['HOME']['available'], self.site.destinations()['HOME']['unavailable_reason']),
+                         (False, 'inside keepout Pallet'))
+        self.assertTrue(self.site.destinations()['A']['available'])
+        self.site.save_keepout(dict(id='ko-1', name='Pallet', state='REMOVED', polygon=box))
+        self.assertTrue(self.site.destinations()['HOME']['available'])
+
 
 class ToolSchemaTests(unittest.TestCase):
     def test_definitions_are_flat_json_schema(self):

@@ -85,6 +85,34 @@ class EdgeRuntime:
                     raise RuntimeError('Another navigation client owns this robot; stop it before starting Ripple')
                 await asyncio.sleep(1)
         asyncio.ensure_future(self.reconcile_keepouts())
+        asyncio.ensure_future(self.apply_pending_keepouts())
+
+    async def apply_pending_keepouts(self):
+        """Keepouts asked for while they overlapped the robot are applied once it has left the region."""
+        from .geometry import distance
+        radius = self.profile.navigation.footprint_radius_m
+        while True:
+            await asyncio.sleep(1.0)
+            waiting = [k for k in self.site.keepouts.values() if k['state'] == 'PENDING']
+            pose = self.node.detector.snapshot().get('pose')
+            if not waiting or not self.keepouts.enabled or pose is None or not pose.fresh:
+                continue
+            for record in waiting:
+                if distance((pose.value['x'], pose.value['y']), record['polygon']) < radius:
+                    continue
+                record.update(state='APPLYING', verification='the robot has left the region; writing site layers')
+                self.site.save_keepout(record)
+                try:
+                    ok, why = await self.keepouts.apply(record)
+                except Exception as exc:
+                    ok, why = False, 'apply failed: ' + str(exc)
+                record.update(state='APPLIED' if ok else 'UNVERIFIED', verification=why)
+                self.site.save_keepout(record)
+                self.record_tool({'tool': 'add_keepout', 'request_id': 'pending-' + record['id'],
+                                  'status': 'ok' if ok else 'unknown', 'verified': ok,
+                                  'reason': why + ' (applied once the robot left the region)',
+                                  'data': {'keepout_id': record['id'], 'state': record['state']}},
+                                 {'reason': record['reason']})
 
     async def reconcile_keepouts(self):
         """After a restart, trust only what the layers file and live mask show."""

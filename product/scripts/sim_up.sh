@@ -21,7 +21,8 @@ step() { local what=$1; shift; if "$@"; then echo "ready: $what"; else echo "tim
 docker compose up -d --wait postgres >/dev/null && echo "ready: postgres"
 running gzserver || start sim "bash scripts/start_sim.sh"
 step "odometry" wait_ros --topic /diff_cont/odom --type nav_msgs/msg/Odometry --timeout 120
-running bt_navigator || start navigation "bash scripts/start_navigation.sh"
+# Match the executable path, not any command line that merely mentions the node.
+running "[n]av2_bt_navigator/bt_navigator" || start navigation "bash scripts/start_navigation.sh"
 running keepout_zone_publisher || start keepout \
   "source /opt/ros/humble/setup.bash && source install/setup.bash && exec ros2 run next_ros2ws_core keepout_zone_publisher"
 step "Nav2 active" wait_ros --lifecycle /bt_navigator --timeout 180

@@ -42,7 +42,7 @@ Packing B availability; robot motion remains in Gazebo.
 
 Ripple was developed against [SMR300L Gazebo ROS2 Control](https://github.com/00PrabalK00/smr300l_gazebo_ros2control), an existing ROS 2 Humble / Gazebo Classic / Nav2 simulator. It supplies the robot, warehouse, maps, zones, controllers and independent safety controller. It is an external dependency, **not Ripple's new contribution**, and its checkout is excluded from this repository.
 
-Place that simulator checkout at `smr300l_gazebo_ros2control/` beside this README. The supplied local snapshot's exact upstream revision has not yet been verified. The speed-unit correction is provided separately in `patches/smr300-speed-units.patch`; apply it from the simulator checkout with `patch -p1 < ../patches/smr300-speed-units.patch` if that correction is not already present.
+Place that simulator checkout at `smr300l_gazebo_ros2control/` beside this README. The supplied local snapshot's exact upstream revision has not yet been verified. The speed-unit correction is provided separately in `patches/smr300-speed-units.patch`; apply it from the simulator checkout with `patch -p1 < ../patches/smr300-speed-units.patch` if that correction is not already present. Then apply `patches/smr300-keepout-publish-on-change.patch` the same way: the stock keepout publisher re-sends its costmap filter info every second, which makes Nav2 rebuild its filter subscriptions under the costmap lock and left `controller_server` and `planner_server` hung during long runs.
 
 ## Setup
 

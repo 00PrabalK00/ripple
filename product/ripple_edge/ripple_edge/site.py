@@ -5,7 +5,7 @@ from operators and are persisted through the edge's PostgreSQL memory.
 """
 import re
 from datetime import datetime, timezone
-from .geometry import Region, centroid
+from .geometry import Region, centroid, inside
 
 ACTIVE_KEEPOUT = ('APPLYING', 'APPLIED', 'UNVERIFIED', 'REMOVING')
 
@@ -52,10 +52,14 @@ class Site:
                 x, y = centroid(Region.load(area['region']).polygon(geom))
                 out.setdefault(area['name'], dict(kind='area', name=area['name'], label=area['name'], aliases=[],
                                                   frame=self.profile.navigation.global_frame, x=x, y=y, yaw=0.0))
+        # A destination inside an active keepout cannot be reached, whether or not anyone marked it unavailable.
+        zones = [k for k in self.active_keepouts() if k['state'] != 'REMOVING']
         for key, d in out.items():
             state = self.unavailable.get(norm(key))
-            d['available'] = state is None
-            d['unavailable_reason'] = state.get('reason') if state else None
+            zone = None if state else next((k for k in zones if inside((d['x'], d['y']), k['polygon'])), None)
+            d['available'] = state is None and zone is None
+            d['unavailable_reason'] = state.get('reason') if state else (
+                'inside keepout ' + (zone.get('name') or zone['id']) if zone else None)
         return out
 
     def resolve(self, name, geom=None):
@@ -97,3 +101,7 @@ class Site:
 
     def active_keepouts(self):
         return [k for k in self.keepouts.values() if k['state'] in ACTIVE_KEEPOUT]
+
+    def listed_keepouts(self):
+        """What people and the model see: active keepouts plus ones waiting for the robot to leave the region."""
+        return [k for k in self.keepouts.values() if k['state'] in ACTIVE_KEEPOUT or k['state'] == 'PENDING']

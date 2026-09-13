@@ -64,6 +64,8 @@ class Navigation(Strict):
     global_costmap_topic: str | None = '/global_costmap/costmap'
     keepout_clearance_m: float = Field(default=0.55, ge=0, le=2)
     footprint_radius_m: float = Field(default=0.5, gt=0, le=3)
+    # Room a via point needs around it, measured to the costmap's inscribed or lethal cells (keepouts included).
+    via_min_clearance_m: float = Field(default=0.4, ge=0, le=2)
 
 class Station(Strict):
     frame: str

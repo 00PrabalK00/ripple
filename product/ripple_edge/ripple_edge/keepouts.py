@@ -62,6 +62,10 @@ class Keepouts:
                 cells = [i for i in cells if not any(
                     inside(geom.grid_to_map(i % geom.width + .5, i // geom.width + .5), o) for o in others)]
             if not cells:
+                if not present and others:
+                    # Every cell is still restricted by another keepout: the mask cannot show this one's removal,
+                    # but its entry is gone from the site layers file.
+                    return True, 'removed from the site layers; the area is still covered by another keepout'
                 return False, 'region is smaller than the ' + label + ' resolution'
             restricted = sum(1 for i in cells if msg.data[i] >= 99) / len(cells)
             if present and restricted < .95:

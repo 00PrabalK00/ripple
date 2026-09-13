@@ -91,7 +91,7 @@ def make():
     edge = SimpleNamespace(profile=profile, tool_listeners=[], remember=lambda *a: None, recall=lambda *a: [],
                            geometry=lambda: None, rosscope_summary=lambda: {'status': 'not_configured'})
     edge.node = SimpleNamespace(detector=FakeDetector(), events=deque())
-    edge.navigator = SimpleNamespace(listeners=[], plan=None, public=lambda: None, active=lambda: False)
+    edge.navigator = SimpleNamespace(listeners=[], plan=None, goal=None, public=lambda: None, active=lambda: False)
     edge.auths = Authorizations({PRABAL: 'Prabal Khare', 'local-dashboard': 'Local operator'})
     edge.site = Site(profile)
     edge.keepouts = SimpleNamespace(enabled=True)

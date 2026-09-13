@@ -17,8 +17,8 @@ STOP = re.compile(r'^\s*(stop|halt|hold|freeze|e-?stop|cancel)(\s+(the\s+)?(robo
 NAV = re.compile(r'\b(?:go|send|drive|move|navigate|head)\b.*?\bto\s+(?:the\s+)?([\w\- ]{1,40}?)\s*[.!?]*$', re.I)
 SAFETY_CAUSES = {'safety_obstacle', 'emergency_stop', 'localization_stop', 'manual_control'}
 OBSERVE = ['robot_status', 'get_diagnostics', 'get_recent_logs', 'get_site', 'probe_route']
-COMMAND = ['navigate_to', 'add_keepout', 'remove_keepout', 'define_area', 'set_station_availability']
-RECOVERY = ['clear_costmap', 'escape', 'retry_navigation', 'lifecycle_reset', 'teleop']
+COMMAND = ['navigate_to', 'navigate_via', 'add_keepout', 'remove_keepout', 'define_area', 'set_station_availability']
+RECOVERY = ['clear_costmap', 'escape', 'retry_navigation', 'navigate_via', 'lifecycle_reset', 'teleop']
 NEEDS_AUTH = set(COMMAND) | {'escape', 'lifecycle_reset'}
 WORKSPACE = ['workspace_report_create', 'workspace_task_create', 'workspace_tasks_list',
              'workspace_email_send', 'workspace_email_draft', 'workspace_chat_send']
@@ -70,8 +70,11 @@ Incidents
 - Recovery ladder, in order, skipping steps the evidence rules out: clear the local costmap; if the robot is boxed in or
   stalled in a tight spot, teleop it clear with direction auto; clear the global costmap and probe_route to the goal;
   retry_navigation if the probe finds a path.
+- If the robot keeps stopping at the same place, or probe_route reports a small min_clearance_m at its tight_spot, do
+  not retry the same route: navigate_via 1-3 map points in open floor that route around the tight spot (about 1 m from
+  walls, shelves and keepouts). A rejected point comes back with nearest_clear_point; use that instead.
 - Stop when attempts don't improve anything. Never repeat a failed or denied action.
-- After navigate_to or retry_navigation is accepted, end your turn with a one-line summary. Do not poll
+- After navigate_to, navigate_via or retry_navigation is accepted, end your turn with a one-line summary. Do not poll
   robot_status while the robot drives; Ripple tells you the verified outcome.
 - ask_engineer: 2-4 short lines - what is wrong, what you checked, what you tried, and one specific question. The
   engineer provides information, not debugging.
@@ -149,6 +152,9 @@ def summarize(result, args):
         return f"✓ Dispatched to {data.get('label')} — route {data.get('route_length_m')} m"
     if tool == 'retry_navigation':
         return f"✓ Retried the goal — route {data.get('route_length_m')} m"
+    if tool == 'navigate_via':
+        points = ' → '.join(f"({p['x']:.1f}, {p['y']:.1f})" for p in data.get('via') or [])
+        return f"✓ Rerouted to {data.get('label')} via {points} — route {data.get('route_length_m')} m"
     if tool == 'cancel_navigation':
         return f"{mark} Stopped — {reason}"
     if tool == 'add_keepout':
@@ -333,6 +339,11 @@ class Orchestrator:
                 origin = self.origins.get(record.get('authorization_id') or '')
                 if origin and origin['channel'] == 'ambiguous':
                     await self.reply(origin, f'Arrived at {label}.')
+            if record['verified']:
+                # An incident whose recovery goal is gone (e.g. canceled by Ripple's own teleop) must not linger.
+                for other in self.open_incidents():
+                    if other is not inc and other['state'] == 'RECOVERING' and not self.edge.navigator.active():
+                        self.close(other, 'CLOSED', f'Superseded: a later mission reached {label} with a verified arrival')
             if self.tour and record['verified'] and record.get('destination') == self.tour['current']:
                 await self.next_leg()
             return
@@ -347,7 +358,7 @@ class Orchestrator:
         if inc:
             inc['observations'].append(f'Nav2 {status.lower()} the goal to {label}')
             self.save(inc)
-            if inc.get('retry_goal_id') == record.get('id'):
+            if inc.get('retry_goal_id') == record.get('id') and inc['state'] != 'ESCALATED':
                 await self.escalate(inc, None, retry_failed=True)  # never loop on a failed retry
             return
         if self.open_incidents():
@@ -387,6 +398,12 @@ class Orchestrator:
         goal = self.edge.navigator.public() if self.edge.navigator.active() else None
         existing = self.incident_for_goal(goal['id']) if goal else None
         text = f"{TRIGGER.get(ev.kind, ev.kind)} — {CAUSE.get(ev.cause, ev.cause)}"
+        # Events queue while a turn runs; a stall seen on a goal that has since been replaced is history, not a fault.
+        seen = ev.evidence.get('goal')
+        seen_id = seen.value.get('id') if seen is not None and isinstance(seen.value, dict) else None
+        legs = {goal['id'], *(goal.get('leg_ids') or [])} if goal else set()  # a via goal has one Nav2 goal per leg
+        if ev.kind in ('halted_while_commanded', 'no_progress') and seen_id and seen_id not in legs:
+            return
         if existing:
             existing['observations'].append(text)
             self.save(existing)
@@ -442,8 +459,10 @@ class Orchestrator:
         """The ladder's backstop: an incident never ends a turn unattended."""
         if inc['state'] in ('RESOLVED', 'CLOSED', 'ESCALATED'):
             return
-        if inc['state'] == 'RECOVERING' and self.edge.navigator.active():
-            return  # waiting for the retry's verified outcome
+        goal = self.edge.navigator.goal
+        settling = goal is not None and goal['status'] in ('SUCCEEDED', 'ABORTED', 'CANCELED') and 'stopped' not in goal
+        if inc['state'] == 'RECOVERING' and (self.edge.navigator.active() or settling):
+            return  # waiting for the retry's verified outcome: the Nav2 result, then the settled-arrival check
         if ctx['mode'] == 'incident_human':
             self.set_state(inc, 'ESCALATED')  # the reply already went to the engineer
             return
@@ -527,7 +546,7 @@ class Orchestrator:
         lines = [f'Time {now_iso()} · robot {self.robot}', 'Robot now: ' + json.dumps(robot),
                  'Destinations: ' + ', '.join(f"{k} ({d['label']})" + ('' if d['available'] else f" UNAVAILABLE: {d['unavailable_reason']}") for k, d in dests.items()),
                  'Named areas: ' + (', '.join(a['name'] for a in self.edge.site.areas.values()) or 'none'),
-                 'Active keepouts: ' + (', '.join(f"{k['id']} ({k.get('name') or k['reason']}, {k['state']})" for k in self.edge.site.active_keepouts()) or 'none'),
+                 'Active keepouts: ' + (', '.join(f"{k['id']} ({k.get('name') or k['reason']}, {k['state']})" for k in self.edge.site.listed_keepouts()) or 'none'),
                  'Recent timeline:\n' + '\n'.join(f"  {e['t'][11:19]} {e['kind']}: {e['text'][:160]}" for e in list(self.timeline)[-10:])]
         inc = ctx.get('incident')
         if inc:
@@ -620,9 +639,13 @@ class Orchestrator:
         if name in NEEDS_AUTH and ctx.get('auth') and not args.get('authorization_id'):
             args['authorization_id'] = ctx['auth'].id
         result = await self.tools.call(name, args)
+        if not inc and name in ('navigate_to', 'navigate_via') and result['status'] == 'ok':
+            for other in self.open_incidents():
+                if other['state'] == 'RECOVERING':
+                    self.close(other, 'CLOSED', 'Superseded: the operator sent the robot on a new mission')
         if inc:
             inc['actions'].append({'tool': name, 'status': result['status'], 'reason': result['reason'][:160], 'at': now_iso()})
-            if name in ('navigate_to', 'retry_navigation') and result['status'] == 'ok':
+            if name in ('navigate_to', 'retry_navigation', 'navigate_via') and result['status'] == 'ok':
                 inc['retry_goal_id'] = result['data'].get('goal_id')
                 self.set_state(inc, 'RECOVERING')
             elif name in RECOVERY and result['status'] == 'ok' and inc['state'] == 'INVESTIGATING':
@@ -804,7 +827,8 @@ class Orchestrator:
         ]
         goal = edge.navigator.public()
         if goal and geom:
-            goal = dict(goal, uv=uv(goal['target']['x'], goal['target']['y']))
+            goal = dict(goal, uv=uv(goal['target']['x'], goal['target']['y']),
+                        via_uv=[uv(p['x'], p['y']) for p in goal.get('via') or []])
         plan = None
         if geom and edge.navigator.plan and edge.navigator.active() and time.monotonic() - edge.navigator.plan[1] < 5:
             plan = [uv(x, y) for x, y in edge.navigator.plan[0]]
@@ -828,7 +852,7 @@ class Orchestrator:
                       for a in edge.site.areas.values()] if geom else [],
             'keepouts': [{'id': k['id'], 'name': k.get('name'), 'reason': k['reason'], 'state': k['state'],
                           'verification': k.get('verification'), 'author': k.get('author'), 'poly': [uv(*p) for p in k['polygon']]}
-                         for k in edge.site.active_keepouts()] if geom else [],
+                         for k in edge.site.listed_keepouts()] if geom else [],
             'incident': inc and {k: inc.get(k) for k in ('id', 'state', 'states', 'trigger', 'location', 'hypotheses', 'question',
                                                          'detected_at', 'detected_epoch', 'resolution', 'recovery_time_s', 'escalations')},
             'timeline': list(self.timeline)[-160:],
