@@ -4,32 +4,38 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ripple — an always-on site engineer for robots</title>
+<link rel="icon" href="data:,">
 <meta name="description" content="Ripple watches a deployed Nav2 robot, diagnoses failures, recovers within limits, asks a person when software can't resolve a physical situation, and gets better at each place it works.">
 <style>
 :root{--ink:#111;--muted:#555;--line:#ddd;--bg:#fff;--soft:#f6f6f6;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
 @media (prefers-color-scheme:dark){:root{--ink:#eee;--muted:#aaa;--line:#333;--bg:#000;--soft:#0c0c0c}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 var(--sans)}
-main{max-width:780px;margin:0 auto;padding:64px 22px 96px}
-h1{font-size:40px;line-height:1.1;margin:0 0 12px;letter-spacing:-.02em}
-h2{font-size:14px;letter-spacing:.14em;text-transform:uppercase;margin:60px 0 14px;color:var(--muted);font-weight:600}
-h3{font-size:18px;margin:32px 0 10px}
-p{margin:0 0 14px}
-.lede{font-size:20px;color:var(--muted);margin-bottom:28px}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--sans)}
+main{max-width:1200px;margin:0 auto;padding:28px 24px 40px}
+h1{font-size:36px;line-height:1.1;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin:34px 0 10px;color:var(--muted);font-weight:600}
+h3{font-size:17px;margin:0 0 8px}
+p{margin:0 0 10px}
+.lede{font-size:19px;color:var(--muted);margin-bottom:14px;max-width:980px}
 a{color:var(--ink)}
-.links{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 36px;font-weight:600}
+.links{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 18px;font-weight:600}
 video{width:100%;border:1px solid var(--line);display:block;background:#000}
-.caption{font-size:14px;color:var(--muted);margin-top:8px}
-ol,ul{padding-left:20px;margin:0 0 14px}
-li{margin-bottom:6px}
+.caption{font-size:14px;color:var(--muted);margin-top:6px}
+ol,ul{padding-left:20px;margin:0 0 10px}
+li{margin-bottom:4px}
 code,pre{font-family:var(--mono);font-size:14px}
-pre{border:1px solid var(--line);padding:14px 16px;overflow-x:auto;line-height:1.5}
-pre.mermaid{font-family:var(--sans);background:var(--soft);text-align:center;padding:18px 10px;margin:0 0 18px}
-table{border-collapse:collapse;width:100%;font-size:15px;margin-bottom:14px}
-td,th{border-top:1px solid var(--line);padding:9px 8px 9px 0;text-align:left;vertical-align:top}
+pre{border:1px solid var(--line);padding:12px 14px;overflow-x:auto;line-height:1.5;margin:0 0 10px}
+pre.mermaid{font-family:var(--sans);background:var(--soft);text-align:center;padding:12px 8px;margin:0 0 10px}
+table{border-collapse:collapse;width:100%;font-size:15px;margin-bottom:10px}
+td,th{border-top:1px solid var(--line);padding:7px 8px 7px 0;text-align:left;vertical-align:top}
 th{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .note{font-size:15px;color:var(--muted)}
-footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.cols.demo{grid-template-columns:3fr 2fr}
+.cols > *{min-width:0}
+.cols > * > h2:first-child{margin-top:0}
+@media (max-width:860px){.cols,.cols.demo{grid-template-columns:1fr;gap:12px}}
+footer{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -38,20 +44,31 @@ footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-si
 <p class="lede">An always-on site engineer for Nav2 robots. It watches the robot, works out why it stopped, recovers within limits you set, asks a person when software can't fix what's happening on the floor, and gets better at each place it works.</p>
 <div class="links"><a href="https://github.com/00PrabalK00/ripple">Source on GitHub</a><a href="#how">How it works</a><a href="#learning">How it improves</a><a href="#start">Set it up</a></div>
 
+<div class="cols demo">
+<div>
 <video src="demo.mp4?v=20260913" controls playsinline preload="metadata" poster="poster.jpg?v=20260913"></video>
 <p class="caption">Two-minute demo: a warehouse SMR300 in Gazebo with ROS 2 Nav2. Ripple runs on GLM 5.3 and talks to the engineer through Ambiguous. Scenes 1–4 are one continuous live run and scene 5 is an earlier one. The footage is unedited and sped up, and the captions are Ripple's own timeline entries.</p>
-
+</div>
+<div>
 <h2>What the demo shows</h2>
 <ol>
-<li><b>Site control.</b> A keepout drawn on the dashboard map is verified in the keepout mask and the global costmap. Nav2 plans around it, and Ripple verifies the arrival: stopped, within tolerance.</li>
-<li><b>Words become site state, then a failure.</b> The walkway is reopened from a sentence. A pallet then blocks the Home dock and the trip home fails. Without being asked, Ripple reads diagnostics and logs, clears both costmaps and probes the route, then asks the engineer one specific question on Ambiguous.</li>
-<li><b>Human context.</b> No one answered on Ambiguous in this run, so the reply was typed on the dashboard. Ripple locates the dock from the words and verifies a keepout over it, which makes the dock unavailable. It reroutes to the Charger and resolves the incident on a verified arrival.</li>
+<li><b>Site control.</b> A keepout drawn on the map is verified in the keepout mask and the global costmap. Nav2 plans around it, and Ripple verifies the arrival: stopped, within tolerance.</li>
+<li><b>Words become site state, then a failure.</b> The walkway is reopened from a sentence. A pallet blocks the Home dock. Ripple reads diagnostics and logs, clears both costmaps, probes the route, then asks the engineer one question on Ambiguous.</li>
+<li><b>Human context.</b> No one answered on Ambiguous in this run, so the reply was typed on the dashboard. Ripple locates the dock from the words, verifies a keepout over it, reroutes to the Charger and resolves on a verified arrival.</li>
 <li><b>The record.</b> Ripple files the incident report to the team's Ambiguous workspace.</li>
-<li><b>A real reply on Ambiguous.</b> In an earlier live run the engineer answers on Ambiguous: "check sensor data then use teleop". Ripple reads the scans, teleops 0.32 m toward the clear side, and probes and retries the route home.</li>
+<li><b>A real reply on Ambiguous.</b> In an earlier live run the engineer answers "check sensor data then use teleop". Ripple reads the scans, teleops 0.32 m clear, and retries the route home.</li>
 </ol>
+</div>
+</div>
 
 <h2 id="how">How it works</h2>
-<p>The model decides; the edge enforces. GLM 5.3 on OpenRouter only ever emits tool calls. Every call is validated and policy-checked by the edge, then journaled in PostgreSQL before it touches ROS. The robot's own safety controller stays above everything Ripple does.</p>
+<div class="cols">
+<div>
+<p><b>The model decides; the edge enforces.</b> GLM 5.3 on OpenRouter only ever emits tool calls. Every call is validated and policy-checked by the edge, then journaled in PostgreSQL before it touches ROS. The robot's own safety controller stays above everything Ripple does.</p>
+<p><b>Outcomes are verified, not assumed.</b> A keepout counts once the published mask and the costmap show it. An arrival counts once odometry has settled and the pose is within tolerance. A recovery counts once odometry confirms the motion.</p>
+<p><b>People are a channel, not a dashboard.</b> Engineers talk to Ripple on Ambiguous, or on the local dashboard. An operator's message is the approval for what it asks: "send the robot to B" just runs.</p>
+<p><b>One file per robot.</b> <code>ripple.json</code> holds the robot's topics, safety controller, stations and recovery limits. A new robot is a new file, not new code.</p>
+</div>
 <pre class="mermaid">
 flowchart TB
   P["Engineer on Ambiguous · local dashboard"] <--> O["Orchestrator: the incident loop"]
@@ -68,8 +85,10 @@ flowchart TB
   R --> X
   S["Safety controller"] --> X
 </pre>
-<p>Outcomes are verified, not assumed. A keepout counts once the published mask and the costmap show it. An arrival counts once odometry has settled and the pose is within tolerance. A recovery counts once odometry confirms the motion.</p>
+</div>
 
+<div class="cols">
+<div>
 <h3>The incident loop</h3>
 <pre class="mermaid">
 stateDiagram-v2
@@ -83,23 +102,26 @@ stateDiagram-v2
   HUMAN_CONTEXT --> RECOVERING: keepouts, availability, new destination
   RESOLVED --> [*]
 </pre>
-
+</div>
+<div>
 <h3>The recovery ladder</h3>
 <pre class="mermaid">
 flowchart TD
-  E["Incident opens"] --> I["Read state, logs and diagnostics; state a hypothesis"]
+  E["Incident opens"] --> I["Read state, logs, diagnostics; hypothesis"]
   I --> H{"Safety controller holding?"}
   H -- "e-stop or a person in control" --> Q["Ask the engineer"]
   H -- "obstacle" --> TP["Teleop back out (override only in simulation)"]
   H -- "no" --> CL["Clear the local costmap"]
   TP --> PR["Clear the global costmap; probe the route"]
   CL --> PR
-  PR -- "path" --> RT["Retry, or navigate_via points around the tight spot"]
+  PR -- "path" --> RT["Retry, or navigate_via around the tight spot"]
   PR -- "no path" --> Q
   RT -- "verified arrival" --> OK["Resolved"]
   RT -- "fails again" --> Q
   Q -- "reply" --> C["The reply becomes site state"] --> RT
 </pre>
+</div>
+</div>
 
 <h2>Safety model</h2>
 <table>
@@ -109,9 +131,11 @@ flowchart TD
 <tr><td>Command</td><td>Navigate, keepouts, station availability</td><td>An allowlisted operator's message is the approval</td></tr>
 <tr><td>Never</td><td>Raw motor commands, shell, disabling collision checks</td><td>Not exposed</td></tr>
 </table>
-<p>The teleop safety override exists only on profiles that declare a simulation; the profile validator refuses it otherwise. Teleop never overrides an e-stop, and always stops inside its minimum clearance.</p>
+<p class="note">The teleop safety override exists only on profiles that declare a simulation; the profile validator refuses it otherwise. Teleop never overrides an e-stop, and always stops inside its minimum clearance.</p>
 
 <h2 id="learning">How it improves at one site</h2>
+<div class="cols">
+<div>
 <p>A robot works one site for months, and the same trouble comes back to the same corner. Ripple remembers what worked, without retraining a model. Every closed incident becomes a <b>lesson for that place</b>. A lesson holds:</p>
 <ul>
 <li>the steps that led to a verified arrival;</li>
@@ -120,8 +144,17 @@ flowchart TD
 <li>what the engineer taught.</li>
 </ul>
 <p>When trouble happens nearby, the best lessons go into the model's briefing, so it tries what worked there first. Repeated trouble becomes a suggestion for a person, such as a keepout or a slow zone. Ripple never applies those changes itself.</p>
+<p class="note">The approach draws on ExpeL, ReasoningBank, CLIN, Agent Workflow Memory and Generative Agents. The guardrails come from the memory-poisoning literature:</p>
+<ul class="note">
+<li>lessons come only from outcomes the edge verified and from allowlisted people;</li>
+<li>each one lists its evidence;</li>
+<li>they are shown to the model as data, never as permissions;</li>
+<li>people can list them and forget them.</li>
+</ul>
+<p class="note">Live, three incidents at one spot became one lesson with three successes, and recovery went from 45 s to 32 s to 30 s. <a href="https://github.com/00PrabalK00/ripple/blob/main/product/docs/self_improvement.md">Design and sources</a>.</p>
+</div>
 <pre class="mermaid">
-flowchart LR
+flowchart TB
   C["Incident closes"] --> L["Lesson for that place: recipe, did not help, refused, taught, evidence"]
   L --> DB[("Site memory")]
   N["New incident nearby"] --> R["Recall: proximity, situation, recency, reliability"]
@@ -131,52 +164,54 @@ flowchart LR
   V -- "no" --> D["Downvote; mark what did not help"] --> L
   DB --> S["Site report: suggestions for a person"]
 </pre>
-<p class="note">The approach draws on ExpeL, ReasoningBank, CLIN, Agent Workflow Memory and Generative Agents. The guardrails come from the memory-poisoning literature:</p>
-<ul class="note">
-<li>lessons come only from outcomes the edge verified and from allowlisted people;</li>
-<li>each one lists its evidence;</li>
-<li>they are shown to the model as data, never as permissions;</li>
-<li>people can list them and forget them.</li>
-</ul>
-<p class="note">Live, three incidents at one spot became one lesson with three successes, and recovery went from 45 s to 32 s to 30 s. <a href="https://github.com/00PrabalK00/ripple/blob/main/product/docs/self_improvement.md">Design and sources</a>.</p>
+</div>
 
 <h2 id="start">Set it up</h2>
+<div class="cols">
+<div>
 <pre>git clone https://github.com/00PrabalK00/ripple && cd ripple
-bash product/scripts/install.sh --workspace ~/robot_ws   # install, then guided setup
-ripple doctor --site ~/robot_ws/ripple.json              # check the config against the robot
-ripple run --site ~/robot_ws/ripple.json                 # agent + dashboard, http://127.0.0.1:8060</pre>
+bash product/scripts/install.sh --workspace ~/robot_ws
+ripple doctor --site ~/robot_ws/ripple.json
+ripple run --site ~/robot_ws/ripple.json   # http://127.0.0.1:8060</pre>
 <p><code>ripple setup</code> is a terminal wizard.</p>
 <ol>
 <li>It checks your OpenRouter key and your Ambiguous token live.</li>
 <li>It asks where Ripple should ask for help, and who may command the robot.</li>
 <li>It crawls the robot's workspace and the live ROS graph. Every topic, action and service is matched by message type and by the node that publishes or serves it, so different names on another robot don't matter.</li>
 <li>It asks you only about the fields it's unsure of.</li>
-<li>It writes one validated <code>ripple.json</code> for the robot, with secrets in a private <code>.env</code>, and runs <code>ripple doctor</code>.</li>
+<li>It writes one validated <code>ripple.json</code>, with secrets in a private <code>.env</code>, and runs <code>ripple doctor</code>.</li>
 </ol>
+<p class="note">Needs Ubuntu 22.04 and ROS 2 Humble. Node.js (for Ambiguous and the database bridge), Docker (for PostgreSQL) and Qt6Core (for RosScope) are optional. The simulator used is the external <a href="https://github.com/00PrabalK00/smr300l_gazebo_ros2control">SMR300L Gazebo ROS2 Control</a>, with two small patches from <code>patches/</code>.</p>
+</div>
 <pre class="mermaid">
-flowchart LR
+flowchart TB
   K["Keys: OpenRouter, Ambiguous"] --> A["Escalation channel and operators"]
   A --> C["Crawl the workspace and the live ROS graph"]
   C --> Q["Confirm only the uncertain fields"]
   Q --> W["Write ripple.json and a private .env"]
   W --> D["ripple doctor: every topic, action, service"]
 </pre>
-<p class="note">Needs Ubuntu 22.04 and ROS 2 Humble. Node.js (for Ambiguous and the database bridge), Docker (for PostgreSQL) and Qt6Core (for RosScope) are optional. The simulator used is the external <a href="https://github.com/00PrabalK00/smr300l_gazebo_ros2control">SMR300L Gazebo ROS2 Control</a>, with two small patches from <code>patches/</code>.</p>
+</div>
 
+<div class="cols">
+<div>
 <h2>Tested</h2>
 <table>
 <tr><th>Tier</th><th>What it covers</th></tr>
-<tr><td>Unit</td><td>121 offline tests: the edge tools and policy, navigator via legs, keepouts, teleop and escape, the observer, Ambiguous, the dashboard API, the GLM client, setup, doctor, site memory</td></tr>
+<tr><td>Unit</td><td>121 offline tests: edge tools and policy, navigator via legs, keepouts, teleop and escape, the observer, Ambiguous, the dashboard API, the GLM client, setup, doctor, site memory</td></tr>
 <tr><td>TUI</td><td>The setup dialogs, driven by keypresses in a pseudo-terminal</td></tr>
 <tr><td>Live</td><td>Against the simulator: recovery 13/13, second robot profile and memory 9/9, via routes and pending keepouts 7/7, site learning 4/4</td></tr>
 </table>
-
+</div>
+<div>
 <h2>Status and limits</h2>
 <ul>
 <li><b>Scope:</b> one robot, in simulation. A second, stock-Nav2 profile runs with no code changes. Ripple has not been run on physical hardware.</li>
 <li><b>Engineer replies:</b> the Ambiguous reply loop works live. In the recorded full rehearsal, nobody answered in time, so that step fell back to the dashboard.</li>
 <li><b>Localization:</b> AMCL can lose track while the robot spins in a tight dock. Recovering from that still needs a person to re-seed the pose.</li>
 </ul>
+</div>
+</div>
 
 <footer>Ripple · ROS 2 Humble, Nav2, PostgreSQL, GLM 5.3 and Ambiguous · <a href="https://github.com/00PrabalK00/ripple">Source</a> · <a href="https://github.com/00PrabalK00/ripple#readme">README</a> · <a href="https://github.com/00PrabalK00/ripple/tree/hackathon-version">Hackathon version</a></footer>
 </main>
