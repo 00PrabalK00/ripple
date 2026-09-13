@@ -32,10 +32,36 @@ class Dialogs:
         self.s = shortcuts
 
     def info(self, title, text):
-        self.s.message_dialog(title=title, text=text).run()
+        if text.count('\n') < 18:
+            self.s.message_dialog(title=title, text=text).run()
+            return
+        # Long text (the crawler's report) scrolls instead of running off the screen:
+        # arrows and PgUp/PgDn scroll, Enter or Esc continues, the mouse wheel works too.
+        from prompt_toolkit.application import Application
+        from prompt_toolkit.application.current import get_app
+        from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
+        from prompt_toolkit.key_binding.defaults import load_key_bindings
+        from prompt_toolkit.layout import Layout
+        from prompt_toolkit.layout.dimension import Dimension
+        from prompt_toolkit.widgets import Button, Dialog, TextArea
+        area = TextArea(text=text, read_only=True, scrollbar=True, height=Dimension(preferred=24))
+        dialog = Dialog(title=f'{title}  (↑↓ PgUp/PgDn scroll · Enter continues)', body=area,
+                        buttons=[Button(text='Ok', handler=lambda: get_app().exit())], with_background=True)
+        keys = KeyBindings()
+        for key in ('enter', 'escape'):
+            keys.add(key)(lambda event: event.app.exit())
+        Application(layout=Layout(dialog, focused_element=area), key_bindings=merge_key_bindings([load_key_bindings(), keys]),
+                    mouse_support=True, full_screen=True).run()
 
     def ask(self, title, text, default='', password=False):
-        return self.s.input_dialog(title=title, text=text, default=default, password=password).run()
+        try:
+            app = self.s.input_dialog(title=title, text=text, default=default, password=password)
+        except TypeError:  # prompt_toolkit before 3.0.37 has no default: pre-fill the focused text field
+            app = self.s.input_dialog(title=title, text=text, password=password)
+            if default and app.layout.current_buffer is not None:
+                app.layout.current_buffer.text = default
+                app.layout.current_buffer.cursor_position = len(default)
+        return app.run()
 
     def confirm(self, title, text, default=True):
         return self.s.yes_no_dialog(title=title, text=text).run()
