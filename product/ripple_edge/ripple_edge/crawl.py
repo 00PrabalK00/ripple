@@ -479,13 +479,17 @@ def propose(static=None, live=None, existing=None):
 
 
 def _get(profile, path):
+    """A proposal field's value in a profile. Some fields are stored in a different shape there."""
     alias = {'safety.service': 'safety.service', 'motion_output': 'motion_output.topic', 'odometry': 'odometry.topic',
-             'localization': 'localization.topic', 'mode': 'mode.topic'}
+             'localization': 'localization.topic', 'mode': 'mode.topic',
+             'recovery.backup_action': 'recovery.escape.backup_action', 'recovery.spin_action': 'recovery.escape.spin_action'}
     node = profile
     for key in alias.get(path, path).split('.'):
         if not isinstance(node, dict) or key not in node:
             return None
         node = node[key]
+    if path == 'scans' and isinstance(node, dict):  # profile: {name: {topic, max_age_s}}; proposal: {name: topic}
+        return {k: v.get('topic') if isinstance(v, dict) else v for k, v in node.items()}
     return node
 
 

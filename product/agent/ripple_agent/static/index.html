@@ -54,6 +54,12 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .legend{display:flex;gap:14px;flex-wrap:wrap;padding:8px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{width:14px;height:10px;border-radius:2px;display:inline-block}
+.memory{border-top:1px solid var(--line);padding:8px 14px 10px;max-height:200px;overflow:auto}
+.memory h2{margin:0 0 6px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.memory ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.lesson{font-size:12.5px;color:var(--muted);border-left:2px solid var(--mint);padding-left:8px}
+.lesson b{color:var(--mint);font-weight:600;margin-right:6px}
+.lesson.suggest{border-left-color:var(--warn)} .lesson.suggest b{color:var(--warn)}
 .kolist{display:flex;gap:8px;flex-wrap:wrap;padding:8px 14px 0}
 .kolist:empty{display:none}
 .ko{display:inline-flex;align-items:center;gap:8px;background:#2a1a17;border:1px solid #5a2e25;border-radius:6px;padding:4px 6px 4px 10px;font-size:12px}
@@ -136,6 +142,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
       <span><i class="sw" style="border:2px dashed #b7a2f4"></i>Named area</span>
       <span><i class="sw" style="border:2px dashed #f0c77c"></i>Region Ripple read from words</span>
     </div>
+    <div id="memory" class="memory" hidden><h2>Site memory · lessons learned here</h2><ol id="lessons"></ol></div>
   </section>
   <section class="card" aria-label="Agent timeline">
     <div class="cardhead"><h2>Agent timeline</h2><span id="thinking" class="thinking" hidden><i></i>GLM is reasoning</span></div>
@@ -173,8 +180,28 @@ async function poll() {
   finally { clearTimeout(timer); setTimeout(poll, 500); }
 }
 poll();
+// What Ripple has learned at this site from closed incidents (verified outcomes only), refreshed every few seconds.
+let lessonKey = '';
+async function lessons() {
+  const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 4000);
+  try {
+    const r = await fetch('/api/lessons', {cache: 'no-store', signal: abort.signal}); if (!r.ok) throw 0;
+    const d = await r.json(), key = JSON.stringify(d);
+    if (key !== lessonKey) {
+      lessonKey = key; const list = $('#lessons'); list.replaceChildren();
+      for (const l of (d.lessons || []).slice(0, 3)) {
+        const li = el('li', 'lesson'); li.append(el('b', null, `${l.successes} fixed · ${l.failures} not fixed`), l.summary); list.append(li);
+      }
+      for (const s of (d.suggestions || []).slice(0, 1)) {
+        const li = el('li', 'lesson suggest'); li.append(el('b', null, 'Suggestion for a person'), s.suggestion); list.append(li);
+      }
+      $('#memory').hidden = !list.children.length;
+    }
+  } catch (e) {} finally { clearTimeout(timer); setTimeout(lessons, 3000); }
+}
+lessons();
 
-const STATUS = {READY: 'Ready', NAVIGATING: 'Navigating', INCIDENT: 'Incident', HELD: 'Held by safety'};
+const STATUS ={READY: 'Ready', NAVIGATING: 'Navigating', INCIDENT: 'Incident', HELD: 'Held by safety'};
 const ACTIVE = ['SENDING', 'EXECUTING', 'CANCELLING'];
 function render() {
   $('#robot').textContent = S.robot;

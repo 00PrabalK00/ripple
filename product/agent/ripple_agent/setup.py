@@ -281,7 +281,8 @@ def main():
     ap.add_argument('--non-interactive', action='store_true')
     ap.add_argument('--openrouter-key')
     ap.add_argument('--ambiguous-token')
-    ap.add_argument('--escalation-channel')
+    ap.add_argument('--escalation-channel', default=os.environ.get('RIPPLE_ESCALATION_CHANNEL'),
+                    help='Ambiguous channel id for escalations (or RIPPLE_ESCALATION_CHANNEL)')
     ap.add_argument('--skip-ambiguous', action='store_true')
     ap.add_argument('--robot-name')
     live = ap.add_mutually_exclusive_group()

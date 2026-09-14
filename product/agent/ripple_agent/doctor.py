@@ -33,8 +33,8 @@ def openrouter_ok(key):
         except Exception as exc:
             return False, f'OpenRouter unreachable: {exc}'
         if r.status_code == 200:
-            label = (r.json().get('data') or {}).get('label') or 'key'
-            return True, f'OpenRouter accepted the {label}'
+            # OpenRouter's label for a key is a masked preview of the key itself: never print it.
+            return True, 'OpenRouter accepted the key'
         if r.status_code in (401, 403):
             return False, 'OpenRouter rejected the key'
     return False, f'OpenRouter answered {r.status_code}'
@@ -52,8 +52,13 @@ def ambiguous_whoami(root, token=None):
         data = json.loads(out.stdout)
     except Exception as exc:
         return None, f'Ambiguous CLI failed: {exc}'
-    return (data if data.get('authenticated') else None), ('authenticated as ' + str((data.get('user') or {}).get('name') or data.get('email'))
-                                                           if data.get('authenticated') else 'not authenticated')
+    if not data.get('authenticated'):
+        return None, 'not authenticated'
+    # `user` is a display name (older CLIs sent an object). Never print an email address: this line ends up in
+    # terminals, logs and screen recordings.
+    user = data.get('user')
+    name = str((user.get('name') if isinstance(user, dict) else user) or '')
+    return data, 'authenticated as ' + (name if name and '@' not in name else 'the configured Ambiguous identity')
 
 
 def role_checks(profile):

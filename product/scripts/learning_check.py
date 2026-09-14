@@ -9,6 +9,7 @@ are reported. Needs the simulator and an agent started with --test-api.
 Writes product/evidence/learning-check-<time>.json.
   python3 product/scripts/learning_check.py
 """
+import argparse
 import json
 import math
 import subprocess
@@ -83,7 +84,8 @@ def round_(n):
     near = wait(lambda s: s['pose'] and math.dist((s['pose']['x'], s['pose']['y']), trigger) < 0.6, 120)
     if not near:
         return {'round': n, 'ok': False, 'detail': f'the robot never came within 0.6 m of {trigger}'}
-    spawned = obstacle('spawn block --ahead 0.55')
+    # Wide enough (2.4 m) that Nav2 cannot swing around it: the safety controller stops the robot every time.
+    spawned = obstacle('spawn block --ahead 0.55 --size 0.4 2.4 1.0')
     new = lambda s: [e for e in s['timeline'] if e['id'] not in before]
     opened = wait(lambda s: any(e['kind'] == 'incident' and e['text'].startswith('Incident opened') for e in new(s)), 60)
     if not opened:
@@ -111,28 +113,33 @@ def round_(n):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--rounds', type=int, default=2, help='incidents at the same place to learn from')
+    ap.add_argument('--fresh', action='store_true', help='forget earlier lessons first, so round 1 starts from nothing')
+    a = ap.parse_args()
+    if a.fresh:
+        for lesson in get('/api/lessons')['lessons']:
+            post('/api/lessons/forget', {'id': lesson['id']})
     # A block that Nav2 can route around causes no incident; such attempts are recorded and repeated,
-    # until two attempts produce incidents at the same place (at most five attempts).
+    # until enough attempts produce incidents at the same place (at most three extra attempts).
     attempts, results = [], []
-    while len(results) < 2 and len(attempts) < 5:
+    while len(results) < a.rounds and len(attempts) < a.rounds + 3:
         r = round_(len(attempts) + 1)
         attempts.append(r)
         if r.get('incident'):
             results.append(r)
         else:
             print(f"  attempt {r['round']}: {r.get('detail')}", flush=True)
-    while len(results) < 2:
-        results.append({'round': None, 'ok': False, 'detail': 'no incident in five attempts'})
+    while len(results) < a.rounds:
+        results.append({'round': None, 'ok': False, 'detail': 'no incident in the attempts allowed'})
     lessons = get('/api/lessons')['lessons']
     incidents = {r.get('incident') for r in results}
     lesson = next((l for l in lessons if incidents <= set(l['evidence'])), None)
-    checks = [
-        ('round 1 recovered with a verified arrival', results[0]['ok'], results[0]),
-        ('round 1 left a lesson for the place', bool(results[0].get('lesson')), results[0].get('lesson')),
-        ('round 2 recovered with a verified arrival', results[1]['ok'], results[1]),
-        ('both incidents are one lesson for one place, upvoted twice', bool(lesson and lesson['successes'] >= 2),
-         lesson and lesson['summary']),
-    ]
+    checks = [('round 1 recovered with a verified arrival', results[0]['ok'], results[0]),
+              ('round 1 left a lesson for the place', bool(results[0].get('lesson')), results[0].get('lesson'))]
+    checks += [(f'incident {k} recovered with a verified arrival', r['ok'], r) for k, r in enumerate(results[1:], 2)]
+    checks.append((f'all {a.rounds} incidents are one lesson for one place, upvoted {a.rounds} times',
+                   bool(lesson and lesson['successes'] >= a.rounds), lesson and lesson['summary']))
     for name, ok, detail in checks:
         print(('PASS ' if ok else 'FAIL ') + name)
     for r in results:

@@ -607,6 +607,7 @@ class Orchestrator:
             from ripple_edge.tools import inline
             defs += [dict(d, function=dict(d['function'], parameters=inline(dict(d['function']['parameters']))))
                      for d in self.workspace.definitions() if d['function']['name'] in ctx['workspace']]
+        refused = {}  # (tool, arguments) -> reason: an identical call that was refused is never run again this turn
         for _ in range(STEPS[ctx['mode']]):
             message, finish = await self.llm.chat(messages, defs)
             calls = message.get('tool_calls') or []
@@ -620,7 +621,15 @@ class Orchestrator:
                 fn = call.get('function') or {}
                 try:
                     args = json.loads(fn.get('arguments') or '{}')
-                    result = await self.run_tool(fn.get('name'), args if isinstance(args, dict) else {}, ctx)
+                    args = args if isinstance(args, dict) else {}
+                    key = (fn.get('name'), json.dumps(args, sort_keys=True))
+                    if key in refused:
+                        result = {'status': 'denied', 'reason': f'this exact call was already refused ({refused[key]}); '
+                                  'do not repeat it: change the arguments or stop'}
+                    else:
+                        result = await self.run_tool(fn.get('name'), args, ctx)
+                        if isinstance(result, dict) and result.get('status') in ('denied', 'failed'):
+                            refused[key] = str(result.get('reason'))[:200]
                 except ValueError:
                     result = {'status': 'denied', 'reason': 'arguments were not valid JSON'}
                 messages.append({'role': 'tool', 'tool_call_id': call.get('id'), 'content': compact(result)})
