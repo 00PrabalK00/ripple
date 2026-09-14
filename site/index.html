@@ -30,6 +30,9 @@ table{border-collapse:collapse;width:100%;font-size:15px;margin-bottom:10px}
 td,th{border-top:1px solid var(--line);padding:7px 8px 7px 0;text-align:left;vertical-align:top}
 th{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .note{font-size:15px;color:var(--muted)}
+.clip{margin:0 0 12px}
+.clip video{width:100%;border:1px solid var(--line);display:block;background:#000}
+.clip figcaption{font-size:13px;color:var(--muted);margin-top:4px}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
 .cols.demo{grid-template-columns:3fr 2fr}
 .cols > *{min-width:0}
@@ -46,17 +49,18 @@ footer{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);font-si
 
 <div class="cols demo">
 <div>
-<video src="demo.mp4?v=20260913" controls playsinline preload="metadata" poster="poster.jpg?v=20260913"></video>
-<p class="caption">Two-minute demo: a warehouse SMR300 in Gazebo with ROS 2 Nav2. Ripple runs on GLM 5.3 and talks to the engineer through Ambiguous. Scenes 1–4 are one continuous live run and scene 5 is an earlier one. The footage is unedited and sped up, and the captions are Ripple's own timeline entries.</p>
+<video src="film.mp4?v=20260914" controls playsinline preload="metadata" poster="poster.jpg?v=20260914"></video>
+<p class="caption">About four minutes of real runs on a simulated SMR300 in Gazebo with ROS 2 Nav2, sped up. Ripple runs on GLM 5.3; the engineer's reply on Ambiguous is real, typed during the run. Captions are Ripple's own timeline entries.</p>
 </div>
 <div>
-<h2>What the demo shows</h2>
+<h2>What the film shows</h2>
 <ol>
-<li><b>Site control.</b> A keepout drawn on the map is verified in the keepout mask and the global costmap. Nav2 plans around it, and Ripple verifies the arrival: stopped, within tolerance.</li>
-<li><b>Words become site state, then a failure.</b> The walkway is reopened from a sentence. A pallet blocks the Home dock. Ripple reads diagnostics and logs, clears both costmaps, probes the route, then asks the engineer one question on Ambiguous.</li>
-<li><b>Human context.</b> No one answered on Ambiguous in this run, so the reply was typed on the dashboard. Ripple locates the dock from the words, verifies a keepout over it, reroutes to the Charger and resolves on a verified arrival.</li>
-<li><b>The record.</b> Ripple files the incident report to the team's Ambiguous workspace.</li>
-<li><b>A real reply on Ambiguous.</b> In an earlier live run the engineer answers "check sensor data then use teleop". Ripple reads the scans, teleops 0.32 m clear, and retries the route home.</li>
+<li><b>Set it up.</b> The real <code>ripple setup</code>: keys stay masked, the crawler reads the workspace and the live ROS graph, and doctor checks every entry against the robot.</li>
+<li><b>Site control.</b> A walkway is closed on the map. The keepout is verified in Nav2's mask and costmap, the robot plans around it, and one sentence reopens it.</li>
+<li><b>Something software can't fix.</b> A pallet blocks the dock. Ripple opens an incident, reads diagnostics and logs, clears the costmap and retries. When Nav2 aborts again, it stops and asks the engineer on Ambiguous.</li>
+<li><b>The reply on Ambiguous.</b> The engineer answers in plain words. Ripple applies a keepout over the dock once the robot has left it, marks the dock unavailable, drives to the Charger, closes on a verified arrival, and files the report in Ambiguous.</li>
+<li><b>Re-routing.</b> Asked to avoid a tight spot, Ripple picks its own waypoints. The edge refuses one that is too close to a rack, and plans every leg before the robot moves.</li>
+<li><b>Learning the place.</b> The same block stops the robot three times at one spot. The first incident leaves a lesson; the next two skip the step the safety layer refused and go straight to what worked.</li>
 </ol>
 </div>
 </div>
@@ -68,6 +72,8 @@ footer{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);font-si
 <p><b>Outcomes are verified, not assumed.</b> A keepout counts once the published mask and the costmap show it. An arrival counts once odometry has settled and the pose is within tolerance. A recovery counts once odometry confirms the motion.</p>
 <p><b>People are a channel, not a dashboard.</b> Engineers talk to Ripple on Ambiguous, or on the local dashboard. An operator's message is the approval for what it asks: "send the robot to B" just runs.</p>
 <p><b>One file per robot.</b> <code>ripple.json</code> holds the robot's topics, safety controller, stations and recovery limits. A new robot is a new file, not new code.</p>
+<figure class="clip"><video class="loop" src="clips/03_site_control.mp4" muted loop playsinline preload="none"></video>
+<figcaption>Site control: a keepout drawn on the map is verified in the mask and costmap, then the robot plans around it.</figcaption></figure>
 </div>
 <pre class="mermaid">
 flowchart TB
@@ -87,6 +93,12 @@ flowchart TB
 </pre>
 </div>
 
+<div class="cols">
+<figure class="clip"><video class="loop" src="clips/04_failure.mp4" muted loop playsinline preload="none"></video>
+<figcaption>A pallet blocks the dock: Ripple opens an incident, investigates, and asks the engineer on Ambiguous.</figcaption></figure>
+<figure class="clip"><video class="loop" src="clips/05_human_reply.mp4" muted loop playsinline preload="none"></video>
+<figcaption>The engineer's reply becomes a verified keepout and a new destination; the incident closes on a verified arrival.</figcaption></figure>
+</div>
 <div class="cols">
 <div>
 <h3>The incident loop</h3>
@@ -123,6 +135,15 @@ flowchart TD
 </div>
 </div>
 
+<div class="cols">
+<figure class="clip"><video class="loop" src="clips/06_reroute.mp4" muted loop playsinline preload="none"></video>
+<figcaption>Asked to avoid the direct route, Ripple picks its own waypoints; the edge refuses a point too close to an obstacle, and every leg is planned before the robot moves.</figcaption></figure>
+<div>
+<h3>Re-routing through its own waypoints</h3>
+<p><code>navigate_via</code> lets the model choose one to three points on open floor, either for a command or to get around a tight spot during recovery. The edge refuses any point too close to a wall, obstacle or keepout and suggests a clear one nearby, plans every leg before the robot moves, drives them in order, and verifies only the final arrival.</p>
+</div>
+</div>
+
 <h2>Safety model</h2>
 <table>
 <tr><th>Level</th><th>Examples</th><th>Who decides</th></tr>
@@ -136,6 +157,8 @@ flowchart TD
 <h2 id="learning">How it improves at one site</h2>
 <div class="cols">
 <div>
+<figure class="clip"><video class="loop" src="clips/07_self_improvement.mp4" muted loop playsinline preload="none"></video>
+<figcaption>The same trouble at the same spot: the first incident leaves a lesson for that place, and later ones are briefed with it.</figcaption></figure>
 <p>A robot works one site for months, and the same trouble comes back to the same corner. Ripple remembers what worked, without retraining a model. Every closed incident becomes a <b>lesson for that place</b>. A lesson holds:</p>
 <ul>
 <li>the steps that led to a verified arrival;</li>
@@ -151,7 +174,7 @@ flowchart TD
 <li>they are shown to the model as data, never as permissions;</li>
 <li>people can list them and forget them.</li>
 </ul>
-<p class="note">Live, three incidents at one spot became one lesson with three successes, and recovery went from 45 s to 32 s to 30 s. <a href="https://github.com/00PrabalK00/ripple/blob/main/product/docs/self_improvement.md">Design and sources</a>.</p>
+<p class="note">In the recorded run, three incidents at one spot became one lesson with three successes. The second and third skipped the step the safety layer had refused the first time: one step fewer, though each still took 27–29 s. An earlier run went from 45 s to 32 s to 30 s. <a href="https://github.com/00PrabalK00/ripple/blob/main/product/docs/self_improvement.md">Design and sources</a>.</p>
 </div>
 <pre class="mermaid">
 flowchart TB
@@ -169,6 +192,8 @@ flowchart TB
 <h2 id="start">Set it up</h2>
 <div class="cols">
 <div>
+<figure class="clip"><video class="loop" src="clips/02_setup.mp4" muted loop playsinline preload="none"></video>
+<figcaption>The real <code>ripple setup</code> on the simulated robot: keys kept masked, the live ROS graph crawled, doctor checks every entry.</figcaption></figure>
 <pre>git clone https://github.com/00PrabalK00/ripple && cd ripple
 bash product/scripts/install.sh --workspace ~/robot_ws
 ripple doctor --site ~/robot_ws/ripple.json
@@ -200,21 +225,29 @@ flowchart TB
 <tr><th>Tier</th><th>What it covers</th></tr>
 <tr><td>Unit</td><td>121 offline tests: edge tools and policy, navigator via legs, keepouts, teleop and escape, the observer, Ambiguous, the dashboard API, the GLM client, setup, doctor, site memory</td></tr>
 <tr><td>TUI</td><td>The setup dialogs, driven by keypresses in a pseudo-terminal</td></tr>
-<tr><td>Live</td><td>Against the simulator: recovery 13/13, second robot profile and memory 9/9, via routes and pending keepouts 7/7, site learning 4/4</td></tr>
+<tr><td>Live</td><td>Against the simulator: recovery 13/13, second robot profile and memory 9/9, via routes and pending keepouts 7/7, the full demo 7/7 with a real reply on Ambiguous, site learning 5/5</td></tr>
 </table>
 </div>
 <div>
 <h2>Status and limits</h2>
 <ul>
 <li><b>Scope:</b> one robot, in simulation. A second, stock-Nav2 profile runs with no code changes. Ripple has not been run on physical hardware.</li>
-<li><b>Engineer replies:</b> the Ambiguous reply loop works live. In the recorded full rehearsal, nobody answered in time, so that step fell back to the dashboard.</li>
-<li><b>Localization:</b> AMCL can lose track while the robot spins in a tight dock. Recovering from that still needs a person to re-seed the pose.</li>
+<li><b>Engineer replies:</b> the Ambiguous reply loop works live. In the recorded full run, the engineer's reply on Ambiguous became the keepout, the new destination and the report (7 of 7 steps).</li>
+<li><b>Localization:</b> AMCL can lose track while the robot spins in a tight dock. Recovering needs a person to re-seed the pose, and a costmap clear for the obstacle marks laid down while it was lost.</li>
 </ul>
 </div>
 </div>
 
 <footer>Ripple · ROS 2 Humble, Nav2, PostgreSQL, GLM 5.3 and Ambiguous · <a href="https://github.com/00PrabalK00/ripple">Source</a> · <a href="https://github.com/00PrabalK00/ripple#readme">README</a> · <a href="https://github.com/00PrabalK00/ripple/tree/hackathon-version">Hackathon version</a></footer>
 </main>
+<script>
+// Section clips play only while they are on screen.
+const clips = new IntersectionObserver(entries => entries.forEach(e => {
+  const v = e.target;
+  if (e.isIntersecting) { if (v.preload === 'none') v.preload = 'auto'; v.play().catch(() => {}); } else v.pause();
+}), {threshold: 0.35});
+document.querySelectorAll('video.loop').forEach(v => clips.observe(v));
+</script>
 <script type="module">
 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs';
 const dark = matchMedia('(prefers-color-scheme: dark)').matches;
