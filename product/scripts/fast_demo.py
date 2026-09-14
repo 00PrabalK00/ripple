@@ -9,6 +9,7 @@ incident resolved -> report filed to the workspace.
 """
 import argparse
 import json
+import os
 import re
 import signal
 import subprocess
@@ -87,8 +88,9 @@ def log(msg):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--reply-timeout', type=float, default=120)
+    p.add_argument('--no-record', action='store_true', help='record_take.py records this take')
     a = p.parse_args()
-    out = ROOT / 'recordings' / time.strftime('take-%Y%m%d-%H%M%S')
+    out = Path(os.environ['RIPPLE_TAKE_DIR']) if a.no_record else ROOT / 'recordings' / time.strftime('take-%Y%m%d-%H%M%S')
     out.mkdir(parents=True, exist_ok=True)
     # Clean start: no pallet, no keepouts, robot idle near spawn.
     obstacle('remove pallet')
@@ -110,14 +112,16 @@ def main():
                 break
         else:
             raise SystemExit('Robot did not reach the Home dock before recording')
-    subprocess.run(['bash', '-c', 'source /opt/ros/humble/setup.bash && timeout 5 gz camera -c gzclient_camera -f my_bot'],
-                   capture_output=True)
-    tree = subprocess.run(['xwininfo', '-root', '-tree'], capture_output=True, text=True).stdout
-    xid = next((m.group(1) for m in re.finditer(r'(0x[0-9a-f]+) "Gazebo": \("gazebo" "gazebo"\)\s+(\d+)x', tree)
-                if int(m.group(2)) > 800), None)
-    # Recorders run at low CPU and I/O priority: at normal priority their encoding starved Nav2's controller.
-    low = ['nice', '-n', '15', 'ionice', '-c3']
-    procs = [subprocess.Popen([*low, 'node', str(ROOT / 'product/scripts/record_dashboard.mjs'), str(out)], cwd=ROOT)]
+    procs, xid = [], None
+    if not a.no_record:
+        subprocess.run(['bash', '-c', 'source /opt/ros/humble/setup.bash && timeout 5 gz camera -c gzclient_camera -f my_bot'],
+                       capture_output=True)
+        tree = subprocess.run(['xwininfo', '-root', '-tree'], capture_output=True, text=True).stdout
+        xid = next((m.group(1) for m in re.finditer(r'(0x[0-9a-f]+) "Gazebo": \("gazebo" "gazebo"\)\s+(\d+)x', tree)
+                    if int(m.group(2)) > 800), None)
+        # Recorders run at low CPU and I/O priority: at normal priority their encoding starved Nav2's controller.
+        low = ['nice', '-n', '15', 'ionice', '-c3']
+        procs = [subprocess.Popen([*low, 'node', str(ROOT / 'product/scripts/record_dashboard.mjs'), str(out)], cwd=ROOT)]
     if xid:
         procs.append(subprocess.Popen(
             ['nice', '-n', '19', 'ionice', '-c3', 'gst-launch-1.0', '-e', 'ximagesrc', f'xid={xid}', 'use-damage=0', '!',
@@ -185,7 +189,8 @@ def main():
             (out / 'timeline.json').write_text(json.dumps(state()['timeline'], indent=2))
         except Exception:
             pass
-        (out / 'STOP').touch()
+        if not a.no_record:  # under record_take.py, the take ends when the wrapper stops its recorders
+            (out / 'STOP').touch()
         for proc in procs[1:]:
             proc.send_signal(signal.SIGINT)
         for proc in procs:

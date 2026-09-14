@@ -189,7 +189,7 @@ sequenceDiagram
 ## Testing
 
 ```bash
-product/scripts/test_all.sh unit   # 121 offline unit + integration tests, with coverage
+product/scripts/test_all.sh unit   # 123 offline unit + integration tests, with coverage
 product/scripts/test_all.sh tui    # the setup dialogs, driven by keypresses in a pseudo-terminal
 product/scripts/test_all.sh live   # against the simulator: doctor, via, recovery, learning, second profile
 ```

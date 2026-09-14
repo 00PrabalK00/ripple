@@ -125,6 +125,15 @@ class OrchestratorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.channel.sent, [('dm-1', 'Heading to Packing B now.')])
         self.assertNotIn('ask_engineer', o.llm.requests[0]['tools'])
 
+    async def test_an_identical_refused_call_is_not_run_again(self):
+        self.edge.tools.results['navigate_to'] = {'status': 'denied', 'reason': 'unknown destination "Q"'}
+        o = self.orch({'content': '', 'tool_calls': [call('navigate_to', destination='Q')]},
+                      {'content': '', 'tool_calls': [call('navigate_to', destination='Q')]},
+                      {'content': 'There is no station called Q.'})
+        await o.on_operator(dm('send the robot to Q'))
+        self.assertEqual([name for name, _ in self.edge.tools.calls], ['navigate_to'])  # the repeat never reached the edge
+        self.assertIn('already refused', o.llm.requests[-1]['messages'][-1]['content'])
+
     async def test_unlisted_sender_gets_no_model_turn(self):
         o = self.orch()
         await o.on_operator(dm('send the robot to B', who='someone-else'))

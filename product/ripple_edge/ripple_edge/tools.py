@@ -478,7 +478,8 @@ class EdgeTools:
         goal = (incident or {}).get('goal') or {}
         wanted = a.destination or goal.get('destination')
         if not wanted:
-            return {'status': 'denied', 'reason': 'give a destination, or an incident whose goal to reroute'}
+            return {'status': 'denied', 'reason': 'destination is required: no open incident has a goal to reroute. Pass '
+                    'destination (a station name, e.g. "' + next(iter(self.rt.site.destinations(geom)), 'B') + '") with the via points'}
         key, dest = self.rt.site.resolve(wanted, geom)
         if not key:
             return {'status': 'denied', 'reason': 'unknown destination "' + wanted + '"; known: ' +

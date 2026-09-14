@@ -1,0 +1,108 @@
+{
+  "checks": [
+    {
+      "check": "round 1 recovered with a verified arrival",
+      "ok": true,
+      "detail": {
+        "round": 2,
+        "ok": true,
+        "incident": "inc-08ababc327",
+        "state": "RESOLVED",
+        "recovery_s": 29,
+        "steps": [
+          "\u2a2f teleop refused: safety controller holding (obstacle); pass override_safety if the profile allows it",
+          "\u2713 Teleop backward \u2014 teleop backward overriding the safety hold moved 0.314 m",
+          "\u2713 Route probe to Z3: path 2.47 m",
+          "\u2713 Retried the goal \u2014 route 2.47 m"
+        ],
+        "lesson": "Site memory updated \u2014 near (-3.3, 0.0): blocked by an obstacle 1 time on the way to Staging Z3. Worked: teleop auto with override \u2192 retry_navigation (1 of 1). Refused here (skip it): teleop auto (1\u00d7). Evidence: inc-08ababc327."
+      }
+    },
+    {
+      "check": "round 1 left a lesson for the place",
+      "ok": true,
+      "detail": "Site memory updated \u2014 near (-3.3, 0.0): blocked by an obstacle 1 time on the way to Staging Z3. Worked: teleop auto with override \u2192 retry_navigation (1 of 1). Refused here (skip it): teleop auto (1\u00d7). Evidence: inc-08ababc327."
+    },
+    {
+      "check": "incident 2 recovered with a verified arrival",
+      "ok": true,
+      "detail": {
+        "round": 3,
+        "ok": true,
+        "incident": "inc-5abace3775",
+        "state": "RESOLVED",
+        "recovery_s": 27,
+        "steps": [
+          "\u2713 Teleop backward \u2014 teleop backward overriding the safety hold moved 0.314 m",
+          "\u2713 Route probe to Z3: path 2.28 m",
+          "\u2713 Retried the goal \u2014 route 2.28 m"
+        ],
+        "lesson": "Site memory updated \u2014 near (-3.3, 0.0): blocked by an obstacle 2 times on the way to Staging Z3. Worked: teleop auto with override \u2192 retry_navigation (2 of 2). Refused here (skip it): teleop auto (1\u00d7). Evidence: inc-08ababc327, inc-5abace3775."
+      }
+    },
+    {
+      "check": "incident 3 recovered with a verified arrival",
+      "ok": true,
+      "detail": {
+        "round": 4,
+        "ok": true,
+        "incident": "inc-133ffa6f42",
+        "state": "RESOLVED",
+        "recovery_s": 29,
+        "steps": [
+          "\u2713 Teleop backward \u2014 teleop backward overriding the safety hold moved 0.31 m",
+          "\u2713 Route probe to Z3: path 2.28 m",
+          "\u2713 Retried the goal \u2014 route 2.28 m"
+        ],
+        "lesson": "Site memory updated \u2014 near (-3.4, -0.0): blocked by an obstacle 3 times on the way to Staging Z3. Worked: teleop auto with override \u2192 retry_navigation (3 of 3). Refused here (skip it): teleop auto (1\u00d7). Evidence: inc-08ababc327, inc-5abace3775, inc-133ffa6f42."
+      }
+    },
+    {
+      "check": "all 3 incidents are one lesson for one place, upvoted 3 times",
+      "ok": true,
+      "detail": "near (-3.4, -0.0): blocked by an obstacle 3 times on the way to Staging Z3. Worked: teleop auto with override \u2192 retry_navigation (3 of 3). Refused here (skip it): teleop auto (1\u00d7). Evidence: inc-08ababc327, inc-5abace3775, inc-133ffa6f42."
+    }
+  ],
+  "rounds": [
+    {
+      "round": 2,
+      "ok": true,
+      "incident": "inc-08ababc327",
+      "state": "RESOLVED",
+      "recovery_s": 29,
+      "steps": [
+        "\u2a2f teleop refused: safety controller holding (obstacle); pass override_safety if the profile allows it",
+        "\u2713 Teleop backward \u2014 teleop backward overriding the safety hold moved 0.314 m",
+        "\u2713 Route probe to Z3: path 2.47 m",
+        "\u2713 Retried the goal \u2014 route 2.47 m"
+      ],
+      "lesson": "Site memory updated \u2014 near (-3.3, 0.0): blocked by an obstacle 1 time on the way to Staging Z3. Worked: teleop auto with override \u2192 retry_navigation (1 of 1). Refused here (skip it): teleop auto (1\u00d7). Evidence: inc-08ababc327."
+    },
+    {
+      "round": 3,
+      "ok": true,
+      "incident": "inc-5abace3775",
+      "state": "RESOLVED",
+      "recovery_s": 27,
+      "steps": [
+        "\u2713 Teleop backward \u2014 teleop backward overriding the safety hold moved 0.314 m",
+        "\u2713 Route probe to Z3: path 2.28 m",
+        "\u2713 Retried the goal \u2014 route 2.28 m"
+      ],
+      "lesson": "Site memory updated \u2014 near (-3.3, 0.0): blocked by an obstacle 2 times on the way to Staging Z3. Worked: teleop auto with override \u2192 retry_navigation (2 of 2). Refused here (skip it): teleop auto (1\u00d7). Evidence: inc-08ababc327, inc-5abace3775."
+    },
+    {
+      "round": 4,
+      "ok": true,
+      "incident": "inc-133ffa6f42",
+      "state": "RESOLVED",
+      "recovery_s": 29,
+      "steps": [
+        "\u2713 Teleop backward \u2014 teleop backward overriding the safety hold moved 0.31 m",
+        "\u2713 Route probe to Z3: path 2.28 m",
+        "\u2713 Retried the goal \u2014 route 2.28 m"
+      ],
+      "lesson": "Site memory updated \u2014 near (-3.4, -0.0): blocked by an obstacle 3 times on the way to Staging Z3. Worked: teleop auto with override \u2192 retry_navigation (3 of 3). Refused here (skip it): teleop auto (1\u00d7). Evidence: inc-08ababc327, inc-5abace3775, inc-133ffa6f42."
+    }
+  ]
+}

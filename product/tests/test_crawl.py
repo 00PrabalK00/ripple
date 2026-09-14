@@ -90,6 +90,15 @@ class CrawlTests(unittest.TestCase):
         self.assertEqual(p.drift, [{'field': 'odometry', 'configured': '/old/odom', 'observed': '/wheel/odometry'}])
         self.assertEqual(p.value('localization'), '/amcl_pose')
 
+    def test_rerunning_setup_over_its_own_profile_keeps_it_valid(self):
+        # Setup run a second time reads the ripple.json it wrote; scans are stored there as {name: {topic, max_age_s}}.
+        first = propose({}, LIVE).profile()
+        p = propose({}, LIVE, first)
+        self.assertEqual(p.drift, [])
+        self.assertEqual(p.value('scans'), {'front': '/lidar/front', 'rear': '/lidar/rear'})
+        self.assertEqual(p.value('recovery.backup_action'), '/backup')
+        Profile.model_validate(p.profile())
+
 
 if __name__ == '__main__':
     unittest.main()
