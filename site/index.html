@@ -11,7 +11,7 @@
 @media (prefers-color-scheme:dark){:root{--ink:#eee;--muted:#aaa;--line:#333;--bg:#000;--soft:#0c0c0c}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--sans)}
-main{max-width:1200px;margin:0 auto;padding:28px 24px 40px}
+main{max-width:1320px;margin:0 auto;padding:28px 24px 40px}
 h1{font-size:36px;line-height:1.1;margin:0 0 8px;letter-spacing:-.02em}
 h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin:34px 0 10px;color:var(--muted);font-weight:600}
 h3{font-size:17px;margin:0 0 8px}
@@ -20,6 +20,7 @@ p{margin:0 0 10px}
 a{color:var(--ink)}
 .links{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 18px;font-weight:600}
 video{width:100%;border:1px solid var(--line);display:block;background:#000}
+img{max-width:100%;display:block}
 .caption{font-size:14px;color:var(--muted);margin-top:6px}
 ol,ul{padding-left:20px;margin:0 0 10px}
 li{margin-bottom:4px}
@@ -31,8 +32,22 @@ td,th{border-top:1px solid var(--line);padding:7px 8px 7px 0;text-align:left;ver
 th{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .note{font-size:15px;color:var(--muted)}
 .clip{margin:0 0 12px}
-.clip video{width:100%;border:1px solid var(--line);display:block;background:#000}
+.clip video,.clip img{width:100%;border:1px solid var(--line);display:block;background:#000}
 .clip figcaption{font-size:13px;color:var(--muted);margin-top:4px}
+.evidence-head{margin-top:34px}
+.evidence-head h2{margin:0 0 10px}
+.evidence-head p{max-width:760px}
+.gallery{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px;margin-top:14px}
+.tile{grid-column:span 3;margin:0}
+.tile.wide{grid-column:span 6}
+.tile.full{grid-column:span 12}
+.tile img,.tile video{width:100%;aspect-ratio:16/10;object-fit:cover;border:1px solid var(--line);background:#000}
+.tile video{height:auto}
+.tile figcaption{font-size:13px;color:var(--muted);margin-top:5px}
+.tile b{color:var(--ink);font-weight:600}
+.evidence-links{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:14px;font-weight:600}
+@media (max-width:980px){.tile,.tile.wide{grid-column:span 6}}
+@media (max-width:680px){.gallery{grid-template-columns:1fr}.tile,.tile.wide,.tile.full{grid-column:1}.tile img,.tile video{aspect-ratio:auto}}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
 .cols.demo{grid-template-columns:3fr 2fr}
 .cols > *{min-width:0}
@@ -45,7 +60,7 @@ footer{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);font-si
 <main>
 <h1>Ripple</h1>
 <p class="lede">An always-on site engineer for Nav2 robots. It watches the robot, works out why it stopped, recovers within limits you set, asks a person when software can't fix what's happening on the floor, and gets better at each place it works.</p>
-<div class="links"><a href="https://github.com/00PrabalK00/ripple">Source on GitHub</a><a href="#how">How it works</a><a href="#learning">How it improves</a><a href="#start">Set it up</a></div>
+<div class="links"><a href="https://github.com/00PrabalK00/ripple">Source on GitHub</a><a href="#evidence">Evidence</a><a href="#how">How it works</a><a href="#learning">How it improves</a><a href="#start">Set it up</a></div>
 
 <div class="cols demo">
 <div>
@@ -64,6 +79,32 @@ footer{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);font-si
 </ol>
 </div>
 </div>
+
+<section id="evidence">
+<div class="evidence-head">
+<div>
+<h2>Evidence</h2>
+<p class="lede">Screenshots, rollouts and result figures from the local research and tool repos. These are the media captures used for the research pages, not placeholder tiles.</p>
+</div>
+<div class="evidence-links"><a href="media/evidence/rosscope-live-observation.json">RosScope JSON</a><a href="media/evidence/so101-rollout.mp4">SO101 rollout</a><a href="media/evidence/rosscope-demo.mp4">RosScope demo</a></div>
+</div>
+<div class="gallery">
+<figure class="tile wide"><img src="media/evidence/so101-cameras.jpg" loading="lazy" alt="SO101 front and wrist camera evidence montage"><figcaption><b>SO101 cameras.</b> Front RealSense and wrist camera frames from the real-arm evidence set.</figcaption></figure>
+<figure class="tile"><img src="media/evidence/so101-hardware.jpg" loading="lazy" alt="SO101 hardware on the workspace"><figcaption><b>SO101 hardware.</b> Physical arm evidence from the research workspace.</figcaption></figure>
+<figure class="tile"><video src="media/evidence/so101-rollout.mp4" controls playsinline preload="metadata"></video><figcaption><b>SO101 rollout.</b> Captured rollout video from the real-arm run.</figcaption></figure>
+<figure class="tile wide"><img src="media/evidence/ripple-architecture.png" loading="lazy" alt="Ripple recovery-condition comparison charts"><figcaption><b>Recovery comparison.</b> Cost, scene outcome, probe and pooled recovery figures from the research arm.</figcaption></figure>
+<figure class="tile wide"><img src="media/evidence/ripple-results.png" loading="lazy" alt="Ripple injected pooled results figure"><figcaption><b>Ripple results.</b> Injected pooled recovery-condition result figure.</figcaption></figure>
+<figure class="tile wide"><img src="media/evidence/rosscope-ui.jpg" loading="lazy" alt="RosScope showing a live ROS 2 graph with talker listener and parameter blackboard"><figcaption><b>RosScope live graph.</b> Built locally and captured against ROS 2 nodes: talker, listener and parameter_blackboard.</figcaption></figure>
+<figure class="tile wide"><video src="media/evidence/rosscope-demo.mp4" controls playsinline preload="metadata"></video><figcaption><b>RosScope demo.</b> Recorded SMR300/Ripple demo footage for the dashed evidence tile.</figcaption></figure>
+<figure class="tile wide"><img src="media/evidence/smr300-nodered.jpg" loading="lazy" alt="FlowPilot Node-RED control plane screenshot"><figcaption><b>FlowPilot / Node-RED.</b> AI control plane showing a guarded robot task queue flow.</figcaption></figure>
+<figure class="tile"><img src="media/evidence/opendronekit-ui.jpg" loading="lazy" alt="OpenDroneKit main interface screenshot"><figcaption><b>OpenDroneKit.</b> Drone inspection operations workbench UI.</figcaption></figure>
+<figure class="tile"><img src="media/evidence/odk-mission.jpg" loading="lazy" alt="OpenDroneKit mission planning screenshot"><figcaption><b>Mission planning.</b> OpenDroneKit mission map and planning panels.</figcaption></figure>
+<figure class="tile"><img src="media/evidence/odk-reconstruction.jpg" loading="lazy" alt="OpenDroneKit reconstruction hub screenshot"><figcaption><b>Reconstruction.</b> OpenDroneKit survey operations and processing workspace.</figcaption></figure>
+<figure class="tile"><img src="media/evidence/prabalos-ui.png" loading="lazy" alt="PrabalOS terminal portfolio UI screenshot"><figcaption><b>PrabalOS.</b> Terminal-style portfolio surface used for the PrabalOS UI capture.</figcaption></figure>
+<figure class="tile"><img src="media/evidence/continuum-extension.png" loading="lazy" alt="Continuum browser extension side panel screenshot"><figcaption><b>Continuum extension.</b> Browser-native side panel for agent context and workflows.</figcaption></figure>
+<figure class="tile"><img src="media/evidence/continuum-ui.png" loading="lazy" alt="Continuum control center screenshot"><figcaption><b>Continuum.</b> Local shared-memory control center for AI coding agents.</figcaption></figure>
+</div>
+</section>
 
 <h2 id="how">How it works</h2>
 <div class="cols">

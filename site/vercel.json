@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "echo 'No dependencies to install'",
-  "buildCommand": "mkdir -p dist && cp index.html demo.mp4 poster.jpg dist/",
+  "buildCommand": "mkdir -p dist && cp index.html demo.mp4 film.mp4 poster.jpg dist/ && cp -R clips media dist/",
   "outputDirectory": "dist"
 }
